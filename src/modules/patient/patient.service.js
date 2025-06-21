@@ -1,25 +1,25 @@
-import { PATIENT_MODEL } from "./patient.model.js";
+import { PATIENT_MODEL } from '../patient/patient.model.js';
 
 class PatientService {
   async getAll() {
-    return PATIENT_MODEL.find();
+    return await PATIENT_MODEL.find({});
   }
 
-  async create(patientData){
-      const patient= new PATIENT_MODEL(patientData);
-      return await patient.save();
+  async create(patientData) {
+    const patient = new PATIENT_MODEL(patientData);
+    return await patient.save();
   }
 
-  async update(patientId, patientData){
-     return PATIENT_MODEL.findByIdAndUpdate(patientId, patientData, {new:true});
+  async update(patientId, patientData) {
+    return await PATIENT_MODEL.findByIdAndUpdate(patientId, patientData, {new: true });
   }
 
-  async delete(id){
-    return PATIENT_MODEL.findByIdAndDelete(id);
+  async delete(id) {
+    return await PATIENT_MODEL.findByIdAndDelete(id);
   }
-
-  async getById(id){
-    return PATIENT_MODEL.findById(id);
+  
+   async getById(id) {
+    return await PATIENT_MODEL.findById(id);
   }
 }
 

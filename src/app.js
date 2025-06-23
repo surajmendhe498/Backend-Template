@@ -21,6 +21,7 @@ import BedMasterRoutes from './modules/hospital_master/bed_master/bed_master.rou
 import FloorMasterRoutes from './modules/hospital_master/word_or_floor_master/word_or_floor_master.routes.js';
 import LabMasterRoutes from './modules/hospital_master/lab_master/lab_master.routes.js';
 import OtMasterRoutes from './modules/hospital_master/ot_master/ot_master.routes.js';
+import AdmissionFormRoutes from './modules/document_master/admission_form_master/admission_form_master.routes.js';
 
 // default middlewares
 app.use(helmet());
@@ -41,6 +42,7 @@ app.use('/api/v1/hospital-master/bed-master', BedMasterRoutes);
 app.use('/api/v1/hospital-master/floor-master', FloorMasterRoutes);
 app.use('/api/v1/hospital-master/lab-master', LabMasterRoutes);
 app.use('/api/v1/hospital-master/ot-master', OtMasterRoutes);
+app.use('/api/v1/document-master/admissionform-master', AdmissionFormRoutes);
      
 app.use(notFound);
 app.use(errorHandler);

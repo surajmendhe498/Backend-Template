@@ -23,8 +23,8 @@ import LabMasterRoutes from './modules/hospital_master/lab_master/lab_master.rou
 import OtMasterRoutes from './modules/hospital_master/ot_master/ot_master.routes.js';
 import AdmissionFormRoutes from './modules/document_master/admission_form_master/admission_form_master.routes.js';
 import DischargeTemplateRoute from './modules/document_master/discharge_template/discharge_template.routes.js';
+import OtNotesTemplateRoute from './modules/document_master/ot_notes_template/ot_notes_template.routes.js';
 
-// default middlewares
 app.use(helmet());
 app.use(morgan('dev'));
 app.use(cors());
@@ -45,6 +45,7 @@ app.use('/api/v1/hospital-master/lab-master', LabMasterRoutes);
 app.use('/api/v1/hospital-master/ot-master', OtMasterRoutes);
 app.use('/api/v1/document-master/admissionform-master', AdmissionFormRoutes);
 app.use('/api/v1/document-master/dischargetemplate-master', DischargeTemplateRoute);
+app.use('/api/v1/document-master/otnotestemplate-master', OtNotesTemplateRoute);
      
 app.use(notFound);
 app.use(errorHandler);

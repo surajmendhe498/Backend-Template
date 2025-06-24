@@ -24,6 +24,7 @@ import OtMasterRoutes from './modules/hospital_master/ot_master/ot_master.routes
 import AdmissionFormRoutes from './modules/document_master/admission_form_master/admission_form_master.routes.js';
 import DischargeTemplateRoute from './modules/document_master/discharge_template/discharge_template.routes.js';
 import OtNotesTemplateRoute from './modules/document_master/ot_notes_template/ot_notes_template.routes.js';
+import OperativeNotesOrderRoute from './modules/document_master/operative_notes_order/operative_notes_order.routes.js';
 
 app.use(helmet());
 app.use(morgan('dev'));
@@ -46,6 +47,7 @@ app.use('/api/v1/hospital-master/ot-master', OtMasterRoutes);
 app.use('/api/v1/document-master/admissionform-master', AdmissionFormRoutes);
 app.use('/api/v1/document-master/dischargetemplate-master', DischargeTemplateRoute);
 app.use('/api/v1/document-master/otnotestemplate-master', OtNotesTemplateRoute);
+app.use('/api/v1/document-master/operative-notes', OperativeNotesOrderRoute);
      
 app.use(notFound);
 app.use(errorHandler);

@@ -9,7 +9,7 @@ export default class Ot_notes_templateController {
   getAll = async (req, res, next) => {
     try {
       const templates = await this.ot_notes_templateService.getAll();
-      res.status(statusCode.OK).json({ success: true, message: "Templates fetched successfully", data: templates });
+      res.status(statusCode.OK).json({ success: true, message: "OT Notes Templates fetched successfully", data: templates });
     } catch (err) {
       next(err);
     }
@@ -18,7 +18,7 @@ export default class Ot_notes_templateController {
   create = async (req, res, next) => {
     try {
       const newTemplate = await this.ot_notes_templateService.create(req.body);
-      res.status(statusCode.CREATED).json({ success: true, message: "Template created successfully", data: newTemplate });
+      res.status(statusCode.CREATED).json({ success: true, message: "OT Notes Template created successfully", data: newTemplate });
     } catch (err) {
       next(err);
     }
@@ -30,10 +30,10 @@ export default class Ot_notes_templateController {
 
       const updateTemplate= await this.ot_notes_templateService.update(id, req.body);
       if(!updateTemplate){
-        return res.status(statusCode.NOT_FOUND).json({message: 'Discharge template not found'});
+        return res.status(statusCode.NOT_FOUND).json({message: 'OT Notes Template not found'});
       }
 
-      res.status(statusCode.OK).json({message: 'Discharge template updated successfully', updateTemplate});
+      res.status(statusCode.OK).json({message: 'OT Notes Template updated successfully', updateTemplate});
       
     } catch (error) {
       next(error);
@@ -46,10 +46,10 @@ export default class Ot_notes_templateController {
 
       const deleteTemplate= await this.ot_notes_templateService.delete(id);
       if(!deleteTemplate){
-        return res.status(statusCode.NOT_FOUND).json({message: 'Discharge template not found'});
+        return res.status(statusCode.NOT_FOUND).json({message: 'OT Notes Template not found'});
       }
 
-      res.status(statusCode.OK).json({message: 'Discharge template deleted successfully'});
+      res.status(statusCode.OK).json({message: 'OT Notes Template deleted successfully'});
       
     } catch (error) {
       next(error);

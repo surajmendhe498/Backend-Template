@@ -25,6 +25,7 @@ import AdmissionFormRoutes from './modules/document_master/admission_form_master
 import DischargeTemplateRoute from './modules/document_master/discharge_template/discharge_template.routes.js';
 import OtNotesTemplateRoute from './modules/document_master/ot_notes_template/ot_notes_template.routes.js';
 import OperativeNotesOrderRoute from './modules/document_master/operative_notes_order/operative_notes_order.routes.js';
+import NoteLableMasterRoute from './modules/document_master/note_lable_master/note_lable_master.routes.js';
 
 app.use(helmet());
 app.use(morgan('dev'));
@@ -48,6 +49,7 @@ app.use('/api/v1/document-master/admissionform-master', AdmissionFormRoutes);
 app.use('/api/v1/document-master/dischargetemplate-master', DischargeTemplateRoute);
 app.use('/api/v1/document-master/otnotestemplate-master', OtNotesTemplateRoute);
 app.use('/api/v1/document-master/operative-notes', OperativeNotesOrderRoute);
+app.use('/api/v1/document-master/notelable-master', NoteLableMasterRoute);
      
 app.use(notFound);
 app.use(errorHandler);

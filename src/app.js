@@ -26,6 +26,7 @@ import DischargeTemplateRoute from './modules/document_master/discharge_template
 import OtNotesTemplateRoute from './modules/document_master/ot_notes_template/ot_notes_template.routes.js';
 import OperativeNotesOrderRoute from './modules/document_master/operative_notes_order/operative_notes_order.routes.js';
 import NoteLableMasterRoute from './modules/document_master/note_lable_master/note_lable_master.routes.js';
+import DischargeFieldMasterRoute from './modules/document_master/discharge_field_master/discharge_field_master.routes.js';
 
 app.use(helmet());
 app.use(morgan('dev'));
@@ -50,6 +51,7 @@ app.use('/api/v1/document-master/dischargetemplate-master', DischargeTemplateRou
 app.use('/api/v1/document-master/otnotestemplate-master', OtNotesTemplateRoute);
 app.use('/api/v1/document-master/operative-notes', OperativeNotesOrderRoute);
 app.use('/api/v1/document-master/notelable-master', NoteLableMasterRoute);
+app.use('/api/v1/document-master/dischargefield-master', DischargeFieldMasterRoute);
      
 app.use(notFound);
 app.use(errorHandler);

@@ -14,11 +14,12 @@ export default class Patient_masterController {
       next(err);
     }
   };
+
   create = async (req, res, next) => {
     try {
-      const patientPhoto = req.file?.path; // Cloudinary URL
+      const patientPhoto = req.file?.path; 
   
-      const patientData = { ...req.body, patientPhoto }; // Add photo URL to patient data
+      const patientData = { ...req.body, patientPhoto }; 
   
       const newPatient = await this.patient_masterService.create(patientData);
   
@@ -31,5 +32,46 @@ export default class Patient_masterController {
       next(err);
     }
   };
+
+  search = async (req, res, next) => {
+    try {
+      const filters = req.query; 
+      const patients = await this.patient_masterService.search(filters);
+  
+      res.success("Search results fetched successfully", patients, statusCode.OK);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+    getAdmittedPatients = async (req, res, next) => {
+    try {
+      const admittedPatients = await this.patient_masterService.search({ status: "Admitted" });
+
+      if(admittedPatients.length == 0){
+        return res.status(statusCode.NOT_FOUND).json({message: "No admitted patients found"});
+      }
+
+      res.success("Fetched admitted patients successfully", admittedPatients, statusCode.OK);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getDischargedPatients = async (req, res, next) => {
+    try {
+      const dischargedPatients = await this.patient_masterService.search({ status: "Discharged" });
+
+      if(dischargedPatients.length == 0){
+        return res.status(statusCode.NOT_FOUND).json({message: "No discharged patients found"});
+      }
+      
+      res.success("Fetched discharged patients successfully", dischargedPatients, statusCode.OK);
+    } catch (err) {
+      next(err);
+    }
+  };
   
 }
+
+

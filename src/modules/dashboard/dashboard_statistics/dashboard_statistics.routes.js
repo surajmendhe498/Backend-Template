@@ -5,5 +5,6 @@ const router = Router();
 const dashboard_statisticsController = new Dashboard_statisticsController();
 
 router.get("/", dashboard_statisticsController.getAll);
+router.get("/trends", dashboard_statisticsController.getTrends);
 
 export default router;

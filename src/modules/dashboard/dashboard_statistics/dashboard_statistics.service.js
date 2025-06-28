@@ -21,6 +21,58 @@ class Dashboard_statisticsService {
 
     return stats;
   }
+  
+  async getTrends(year = new Date().getFullYear()) {
+    // Aggregation pipeline to group by months and count admitted/discharged patients
+    const trends = await PATIENT_MASTER.aggregate([
+      {
+        $match: {
+          $or: [{ admissionDate: { $exists: true } }, { dischargeDate: { $exists: true } }],
+          $expr: { $eq: [{ $year: "$admissionDate" }, year] }, 
+        },
+      },
+      {
+        $project: {
+          month: { $month: "$admissionDate" },
+          status: 1,
+        },
+      },
+      {
+        $group: {
+          _id: "$month",
+          admitted: {
+            $sum: { $cond: [{ $eq: ["$status", "Admitted"] }, 1, 0] },
+          },
+          discharged: {
+            $sum: { $cond: [{ $eq: ["$status", "Discharged"] }, 1, 0] },
+          },
+        },
+      },
+      {
+        $project: {
+          month: "$_id",
+          admitted: 1,
+          discharged: 1,
+          _id: 0,
+        },
+      },
+      {
+        $sort: { month: 1 },
+      },
+    ]);
+
+    const months = [
+      "January", "February", "March", "April", "May", "June",
+      "July", "August", "September", "October", "November", "December",
+    ];
+    const trendsWithMonthNames = trends.map((t) => ({
+      month: months[t.month - 1],
+      admitted: t.admitted,
+      discharged: t.discharged,
+    }));
+
+    return trendsWithMonthNames;
+  }
 }
 
 export default new Dashboard_statisticsService();

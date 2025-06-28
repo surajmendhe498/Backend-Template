@@ -28,6 +28,7 @@ import OperativeNotesOrderRoute from './modules/document_master/operative_notes_
 import NoteLableMasterRoute from './modules/document_master/note_lable_master/note_lable_master.routes.js';
 import DischargeFieldMasterRoute from './modules/document_master/discharge_field_master/discharge_field_master.routes.js';
 import SignatureMasterRoute from './modules/document_master/signature_master/signature_master.routes.js';
+import DashboardRoute from './modules/dashboard/dashboard_statistics/dashboard_statistics.routes.js';
 
 app.use(helmet());
 app.use(morgan('dev'));
@@ -54,6 +55,7 @@ app.use('/api/v1/document-master/operative-notes', OperativeNotesOrderRoute);
 app.use('/api/v1/document-master/notelable-master', NoteLableMasterRoute);
 app.use('/api/v1/document-master/dischargefield-master', DischargeFieldMasterRoute);
 app.use('/api/v1/document-master/signature-master', SignatureMasterRoute);
+app.use('/api/v1/dashboard/statistics', DashboardRoute);
      
 app.use(notFound);
 app.use(errorHandler);

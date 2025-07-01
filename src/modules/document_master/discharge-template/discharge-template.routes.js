@@ -1,7 +1,7 @@
 import { Router } from 'express';
-import DischargeTemplateController from './discharge_template.controller.js';
+import DischargeTemplateController from './discharge-template.controller.js';
 import validate from '../../../middlewares/default/validate.js';
-import { createDischargeTemplateSchema } from './discharge_template.validator.js';
+import { createDischargeTemplateSchema } from './discharge-template.validator.js';
 
 const router = Router();
 const dischargeTemplateController = new DischargeTemplateController();

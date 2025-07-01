@@ -1,8 +1,5 @@
 import mongoose from 'mongoose';
 
-import {config} from 'dotenv';
-config();
-
 const connectDB= async()=>{
     mongoose.connect(process.env.DB_URL)
         .then(()=>{
@@ -11,6 +8,6 @@ const connectDB= async()=>{
         .catch((err)=>{
             console.log(err);
         })
-}
+};
 
 export default connectDB;

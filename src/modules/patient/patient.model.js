@@ -4,19 +4,51 @@ const AdmissionSchema = new mongoose.Schema(
   {
     existingPatient: { type: Boolean, default: false },
     reasonForAdmission: { type: String },
+    uhidNo: { type: String, required: true, unique: true },
     IPD: { type: String, required: true },
     emergencyNo: { type: String },
     salutation: { type: String },
     patientName: { type: String, required: true },
+    patientPhoto: { type: String }, 
+    gender: { type: String, enum: ['Male', 'Female', 'Other'] },
+    contactNo: { type: String },
+    whatsappNo: { type: String },
+    email: { type: String },
+    floorDetails: { type: String },
+    bedName: { type: String },
+    applicableClass: { type: String },
+    bedDepartment: { type: String },
+    admissionDate: { type: Date },
+    timeOfAdmission: { type: String },
+    dischargeDate: { type: Date }, 
+    timeOfDischarge: { type: String }, 
+    consultingDoctor: { type: String },
+    referredByDoctor: { type: String },
+    otherConsultant: { type: String },
+    patientStatus: { type: String, enum: ['Admitted', 'Discharged'], default: 'Admitted' },
+    mlc: { type: Boolean, default: false }, // true for mlc false for non-mlc
+    mlcNo: { type: String },
     dateOfBirth: { type: Date },
     age: {
       years: { type: Number },
       months: { type: Number },
     },
+    patientReligion: { type: String },
+    paymentMode: { 
+      type: String, 
+      enum: ['Cash', 'Card', 'Insurance', 'Scheme', 'Corporate', 'Package'] 
+    },
+    paymentDetails: { type: String },
+    cashType: { type: String },
+    freeText: { type: String },
+    remarks: { type: String },
+    provisionalDiagnosis: { type: String },
+    finalDiagnosis: { type: String },
+    finalDiagnosisICDCode: { type: String },
+    dischargeSummaryStatus: { type: String }, 
   },
-  { _id: false } 
+  { timestamps: true }
 );
-
 const IdentityDetailsSchema = new mongoose.Schema(
   {
     address: { type: String},
@@ -40,7 +72,6 @@ const IdentityDetailsSchema = new mongoose.Schema(
 
 const PatientRegistrationSchema = new mongoose.Schema(
   {
-    UHID: { type: String, unique: true, required: true },
     registrationType: {
       type: String,
       enum: ['IPD', 'OPD', 'Registration', 'Day Care', 'Dialysis'],
@@ -54,3 +85,4 @@ const PatientRegistrationSchema = new mongoose.Schema(
 
 
 export const PATIENT_MODEL = mongoose.model('patients', PatientRegistrationSchema);
+

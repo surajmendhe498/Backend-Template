@@ -20,43 +20,30 @@ export default class PatientController {
     }
   };
 
- create = async (req, res, next) => {
+  create = async (req, res, next) => {
   try {
-    const patient = await this.patientService.create(req.body);
-    res.success("Patient created successfully", patient, statusCode.CREATED);
+    const { admissionDetails, identityDetails, ...otherData } = req.body;
+    const patientData = {
+      ...otherData,
+      admissionDetails: {
+        ...admissionDetails,
+        patientPhoto: req.file?.path, 
+      },
+      identityDetails,
+    };
+
+    const newPatient = await this.patientService.create(patientData);
+
+    res.status(201).json({
+      success: true,
+      message: 'Patient created successfully',
+      data: newPatient,
+    });
   } catch (error) {
-    if (error.code === 11000) {
-      const duplicateField = Object.keys(error.keyValue)[0]; 
-      return res.status(400).json({
-        message: `${duplicateField} value already exists. Please use a unique value.`,
-      });
-    }
-    next(error); 
+    next(error);
   }
 };
 
-  update = async (req, res, next) => {
-    try {
-      const { id } = req.params;
-
-      const updatedPatient = await this.patientService.update(id, req.body);
-
-      if (!updatedPatient) {
-        return res.status(statusCode.NOT_FOUND).json({ message: 'Patient not found.' });
-      }
-
-      res.success('Patient updated successfully', updatedPatient, statusCode.OK);
-
-    } catch (error) {
-      if (error.code === 11000) {
-        const duplicateField = Object.keys(error.keyValue)[0]; 
-        return res.status(400).json({
-          message: `${duplicateField} value already exists. Please use a unique value.`,
-        });
-      }
-      next(err);
-    }
-  };
 
   delete = async (req, res, next) => {
     try {

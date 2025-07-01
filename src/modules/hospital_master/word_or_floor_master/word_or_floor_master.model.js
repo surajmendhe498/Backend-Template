@@ -12,6 +12,6 @@ const FloorMasterSchema = new mongoose.Schema({
   updatedAt: { type: Date, default: Date.now }, 
 });
 
-export const FLOORMASTER_MODEL = mongoose.model('FloorMaster', FloorMasterSchema);
+export const FLOORMASTER_MODEL = mongoose.model('floormaster', FloorMasterSchema);
 
 

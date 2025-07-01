@@ -1,4 +1,4 @@
-import { DISCHARGETEMPLATE_MODEL } from "./discharge_template.model.js";
+import { DISCHARGETEMPLATE_MODEL } from "./discharge-template.model.js";
 
 class DischargeTemplateService {
   async getAll() {

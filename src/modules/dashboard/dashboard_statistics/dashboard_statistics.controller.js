@@ -20,18 +20,36 @@ export default class Dashboard_statisticsController {
     }
   };
 
+  
   getTrends = async (req, res, next) => {
-    try {
-      const year = req.query.year ? parseInt(req.query.year) : undefined;
-      const trends = await this.dashboard_statisticsService.getTrends(year);
+  try {
+    const year = req.query.year ? parseInt(req.query.year) : undefined;
+    const trends = await this.dashboard_statisticsService.getTrends(year);
 
-      res.status(statusCode.OK).json({
-        success: true,
-        message: "Trends data fetched successfully",
-        data: trends,
-      });
-    } catch (err) {
-      next(err);
-    }
-  };
+    res.status(statusCode.OK).json({
+      success: true,
+      message: "Trends data fetched successfully",
+      data: trends,
+    });
+  } catch (err) {
+    console.error("Error fetching trends:", err);
+    next(err);
+  }
+};
+
+getGenderDistribution = async (req, res, next) => {
+  try {
+    const genderDistribution = await this.dashboard_statisticsService.getGenderDistribution();
+
+    res.status(200).json({
+      success: true,
+      message: "Patient gender distribution fetched successfully",
+      data: genderDistribution,
+    });
+  } catch (err) {
+    console.error("Error fetching gender distribution:", err);
+    next(err);
+  }
+};
+
 }

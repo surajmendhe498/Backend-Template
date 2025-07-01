@@ -22,13 +22,15 @@ import FloorMasterRoutes from './modules/hospital_master/word_or_floor_master/wo
 import LabMasterRoutes from './modules/hospital_master/lab_master/lab_master.routes.js';
 import OtMasterRoutes from './modules/hospital_master/ot_master/ot_master.routes.js';
 import AdmissionFormRoutes from './modules/document_master/admission_form_master/admission_form_master.routes.js';
-import DischargeTemplateRoute from './modules/document_master/discharge_template/discharge_template.routes.js';
+import DischargeTemplateRoute from './modules/document_master/discharge-template/discharge-template.routes.js';
 import OtNotesTemplateRoute from './modules/document_master/ot_notes_template/ot_notes_template.routes.js';
 import OperativeNotesOrderRoute from './modules/document_master/operative_notes_order/operative_notes_order.routes.js';
 import NoteLableMasterRoute from './modules/document_master/note_lable_master/note_lable_master.routes.js';
 import DischargeFieldMasterRoute from './modules/document_master/discharge_field_master/discharge_field_master.routes.js';
 import SignatureMasterRoute from './modules/document_master/signature_master/signature_master.routes.js';
+import MonthlyReportRoute from './modules/reports_master/reports_master.routes.js';
 import DashboardRoute from './modules/dashboard/dashboard_statistics/dashboard_statistics.routes.js';
+import DoctorRoute from './modules/doctor_master/doctor_master.routes.js';
 
 app.use(helmet());
 app.use(morgan('dev'));
@@ -55,7 +57,9 @@ app.use('/api/v1/document-master/operative-notes', OperativeNotesOrderRoute);
 app.use('/api/v1/document-master/notelable-master', NoteLableMasterRoute);
 app.use('/api/v1/document-master/dischargefield-master', DischargeFieldMasterRoute);
 app.use('/api/v1/document-master/signature-master', SignatureMasterRoute);
-app.use('/api/v1/dashboard/statistics', DashboardRoute);
+app.use('/api/v1/report-master', MonthlyReportRoute);
+app.use('/api/v1/dashboard', DashboardRoute);
+app.use('/api/v1/doctor-master', DoctorRoute);
      
 app.use(notFound);
 app.use(errorHandler);

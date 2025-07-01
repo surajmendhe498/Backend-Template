@@ -1,4 +1,4 @@
-import DischargeTemplateService from "./discharge_template.service.js";
+import DischargeTemplateService from "./discharge-template.service.js";
 import { statusCode } from '../../../utils/constants/statusCode.js';
 
 export default class DischargeTemplateController {

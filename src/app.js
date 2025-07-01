@@ -31,6 +31,7 @@ import SignatureMasterRoute from './modules/document_master/signature_master/sig
 import MonthlyReportRoute from './modules/reports_master/reports_master.routes.js';
 import DashboardRoute from './modules/dashboard/dashboard_statistics/dashboard_statistics.routes.js';
 import DoctorRoute from './modules/doctor_master/doctor_master.routes.js';
+import ReferredDoctorRoute from './modules/doctor_master/referred_doctor/referred_doctor.routes.js';
 
 app.use(helmet());
 app.use(morgan('dev'));
@@ -60,6 +61,7 @@ app.use('/api/v1/document-master/signature-master', SignatureMasterRoute);
 app.use('/api/v1/report-master', MonthlyReportRoute);
 app.use('/api/v1/dashboard', DashboardRoute);
 app.use('/api/v1/doctor-master', DoctorRoute);
+app.use('/api/v1/doctor-master/referred-doctor', ReferredDoctorRoute);
      
 app.use(notFound);
 app.use(errorHandler);

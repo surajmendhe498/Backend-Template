@@ -17,6 +17,23 @@ class Bed_masterService {
     return await BEDMASTER_MODEL.find({ bedStatus: status }); 
   }
 
+  async filterBeds(query) {
+  const filters = {};
+
+  filters.applicableClass = query.selectClass || query.applicableClass;
+  filters.status = query.selectStatus || query.status;
+  filters.bedStatus = query.selectOccupancy || query.bedStatus;
+
+  Object.keys(filters).forEach((key) => {
+    if (!filters[key]) delete filters[key];
+  });
+
+  return await BEDMASTER_MODEL.find(filters).select(
+    'floorName bedName applicableClass bedStatus status'
+  );
+}
+
+
   async search(query) {
     const filters = {};
     if (query.floorName) filters.floorName = { $regex: query.floorName, $options: 'i' }; 

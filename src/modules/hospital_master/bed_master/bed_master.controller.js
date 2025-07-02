@@ -77,6 +77,22 @@ export default class Bed_masterController {
     }
   };
 
+  filterBeds = async (req, res, next) => {
+  try {
+    const query = req.query;
+    const beds = await this.bed_masterService.filterBeds(query);
+
+    if (beds.length === 0) {
+      return res.status(statusCode.NOT_FOUND).json({ message: 'No beds found for given filters' });
+    }
+
+    res.success("Filtered beds fetched successfully", beds, statusCode.OK);
+  } catch (err) {
+    next(err);
+  }
+};
+
+
   search = async (req, res, next) => {
     try {
       const query = req.query;

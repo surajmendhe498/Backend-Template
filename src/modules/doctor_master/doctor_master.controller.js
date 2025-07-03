@@ -55,4 +55,71 @@ export default class Doctor_masterController {
   }
 };
 
+getDoctorById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const doctor = await this.doctor_masterService.getDoctorById(id);
+
+    if (!doctor) {
+      return res.status(statusCode.NOT_FOUND).json({ message: 'Doctor not found' });
+    }
+
+    res.status(statusCode.OK).json({
+      success: true,
+      message: 'Doctor fetched successfully',
+      data: doctor,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+updateDoctor = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    if (updateData.status) {
+      updateData.status = updateData.status === "true";
+    }
+
+    if (req.file) {
+      updateData.photo = req.file.path;
+    }
+
+    const updatedDoctor = await this.doctor_masterService.updateDoctor(id, updateData);
+
+    if (!updatedDoctor) {
+      return res.status(statusCode.NOT_FOUND).json({ message: 'Doctor not found' });
+    }
+
+    res.status(statusCode.OK).json({
+      success: true,
+      message: 'Doctor updated successfully',
+      data: updatedDoctor,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+deleteDoctor = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const deleted = await this.doctor_masterService.deleteDoctor(id);
+
+    if (!deleted) {
+      return res.status(statusCode.NOT_FOUND).json({ message: 'Doctor not found' });
+    }
+
+    res.status(statusCode.OK).json({
+      success: true,
+      message: 'Doctor deleted successfully',
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
 }

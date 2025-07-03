@@ -28,6 +28,19 @@ class Nursing_masterService {
   );
 }
 
+async getById(id) {
+  return await NURSE_MODEL.findById(id);
+}
+
+async update(id, data) {
+  return await NURSE_MODEL.findByIdAndUpdate(id, data, { new: true });
+}
+
+async delete(id) {
+  return await NURSE_MODEL.findByIdAndDelete(id);
+}
+
+
 }
 
 export default new Nursing_masterService();

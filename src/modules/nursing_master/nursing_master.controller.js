@@ -70,4 +70,59 @@ export default class Nursing_masterController {
   }
 };
 
+getById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const nurse = await this.nursing_masterService.getById(id);
+
+    if (!nurse) {
+      return res.status(statusCode.NOT_FOUND).json({ message: "Nurse not found" });
+    }
+
+    res.status(statusCode.OK).json({ message: "Nurse fetched successfully", data: nurse });
+  } catch (err) {
+    next(err);
+  }
+};
+
+update = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const updateData = req.body;
+
+    if (updateData.status) {
+      updateData.status = updateData.status === "true";
+    }
+
+    if (req.file) {
+      updateData.photo = req.file.path;
+    }
+
+    const updatedNurse = await this.nursing_masterService.update(id, updateData);
+
+    if (!updatedNurse) {
+      return res.status(statusCode.NOT_FOUND).json({ message: "Nurse not found" });
+    }
+
+    res.status(statusCode.OK).json({ message: "Nurse updated successfully", data: updatedNurse });
+  } catch (err) {
+    next(err);
+  }
+};
+
+delete = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const deletedNurse = await this.nursing_masterService.delete(id);
+
+    if (!deletedNurse) {
+      return res.status(statusCode.NOT_FOUND).json({ message: "Nurse not found" });
+    }
+
+    res.status(statusCode.OK).json({ message: "Nurse deleted successfully" });
+  } catch (err) {
+    next(err);
+  }
+};
+
 }

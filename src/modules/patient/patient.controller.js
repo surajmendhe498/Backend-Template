@@ -76,4 +76,31 @@ export default class PatientController {
       next(err);
     }
   };
+
+  update = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { admissionDetails, identityDetails, ...otherData } = req.body;
+
+    const updateData = {
+      ...otherData,
+      admissionDetails: {
+        ...admissionDetails,
+        patientPhoto: req.file?.path, 
+      },
+      identityDetails,
+    };
+
+    const updatedPatient = await this.patientService.update(id, updateData);
+
+    if (!updatedPatient) {
+      return res.status(statusCode.NOT_FOUND).json({ message: 'Patient not found.' });
+    }
+
+    res.success('Patient updated successfully', updatedPatient, statusCode.OK);
+  } catch (error) {
+    next(error);
+  }
+};
+
 }

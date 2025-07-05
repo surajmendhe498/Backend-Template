@@ -1,5 +1,6 @@
 import { DashboardStatistics } from "./dashboard_statistics.model.js";
 import { PATIENT_MODEL } from "../../patient/patient.model.js";
+import { startOfDay, endOfDay } from 'date-fns';
 
 class Dashboard_statisticsService {
   async getAll() {
@@ -112,6 +113,39 @@ async getGenderDistribution() {
     return result;
   }
 
+  // Get patient admitted by time
+  async getPatientAdmittedByTime(date) {
+  const selectedDate = new Date(date);
+  const start = startOfDay(selectedDate);
+  const end = endOfDay(selectedDate);
+
+  const patients = await PATIENT_MODEL.find({
+    "admissionDetails.admissionDate": { $gte: start, $lte: end },
+    "admissionDetails.patientStatus": "Admitted"  //  Only Admitted
+  });
+
+  const hourlyCount = Array.from({ length: 24 }, (_, i) => ({
+    hour: `${i.toString().padStart(2, '0')}:00`,
+    count: 0,
+  }));
+
+  for (const patient of patients) {
+    const timeStr = patient.admissionDetails?.timeOfAdmission; // e.g., "2:00 PM"
+    if (!timeStr) continue;
+
+    const [time, modifier] = timeStr.split(" ");
+    let [hours, minutes] = time.split(":").map(Number);
+    if (modifier === "PM" && hours < 12) hours += 12;
+    if (modifier === "AM" && hours === 12) hours = 0;
+
+    const hourLabel = `${hours.toString().padStart(2, '0')}:00`;
+
+    const slot = hourlyCount.find((h) => h.hour === hourLabel);
+    if (slot) slot.count += 1;
+  }
+
+  return hourlyCount;
+}
 }
 
 export default new Dashboard_statisticsService();

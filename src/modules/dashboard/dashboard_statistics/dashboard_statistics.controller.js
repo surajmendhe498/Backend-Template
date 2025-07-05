@@ -52,4 +52,28 @@ getGenderDistribution = async (req, res, next) => {
   }
 };
 
+  // Get patient admitted by time
+getPatientAdmittedByTime = async (req, res, next) => {
+    try {
+      const { date } = req.query;
+      if (!date) {
+        return res.status(statusCode.BAD_REQUEST).json({
+          success: false,
+          message: "Query parameter 'date' is required",
+        });
+      }
+
+      const result = await this.dashboard_statisticsService.getPatientAdmittedByTime(date);
+
+      res.status(statusCode.OK).json({
+        success: true,
+        message: "Patient admission by time fetched successfully",
+        data: result,
+      });
+    } catch (err) {
+      console.error("Error fetching admission by time:", err);
+      next(err);
+    }
+  };
+
 }

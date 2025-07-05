@@ -121,7 +121,7 @@ async getGenderDistribution() {
 
   const patients = await PATIENT_MODEL.find({
     "admissionDetails.admissionDate": { $gte: start, $lte: end },
-    "admissionDetails.patientStatus": "Admitted"  //  Only Admitted
+    // "admissionDetails.patientStatus": "Admitted" 
   });
 
   const hourlyCount = Array.from({ length: 24 }, (_, i) => ({
@@ -130,7 +130,7 @@ async getGenderDistribution() {
   }));
 
   for (const patient of patients) {
-    const timeStr = patient.admissionDetails?.timeOfAdmission; // e.g., "2:00 PM"
+    const timeStr = patient.admissionDetails?.timeOfAdmission; 
     if (!timeStr) continue;
 
     const [time, modifier] = timeStr.split(" ");

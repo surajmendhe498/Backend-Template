@@ -17,6 +17,14 @@ getFilteredIpdPatients = async (req, res, next) => {
 
       const patients = await this.ipd_patient_detailsService.getFilteredIpdPatients(filters);
 
+      if (filters.floorDetails && patients.length === 0) {
+      return res.status(statusCode.NOT_FOUND).json({
+        success: false,
+        message: 'No patients found for the given floor details.',
+        data: [],
+      });
+    }
+
       res.success('Fetched filtered IPD patients successfully', patients, statusCode.OK);
     } catch (err) {
       next(err);

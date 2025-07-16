@@ -18,7 +18,7 @@ import patientRoutes from './modules/patient/patient.routes.js';
 import patientMasterRoutes from './modules/patient_master/patient_master.routes.js';
 import IpdPatientDetailsRoutes from './modules/patient_master/ipd_patient_details/ipd_patient_details.routes.js';
 import BedMasterRoutes from './modules/hospital_master/bed_master/bed_master.routes.js';
-import FloorMasterRoutes from './modules/hospital_master/word_or_floor_master/word_or_floor_master.routes.js';
+import FloorMasterRoutes from './modules/hospital_master/ward_or_floor_master/ward_or_floor_master.routes.js';
 import LabMasterRoutes from './modules/hospital_master/lab_master/lab_master.routes.js';
 import OtMasterRoutes from './modules/hospital_master/ot_master/ot_master.routes.js';
 import AdmissionFormRoutes from './modules/document_master/admission_form_master/admission_form_master.routes.js';
@@ -33,6 +33,8 @@ import DashboardRoute from './modules/dashboard/dashboard_statistics/dashboard_s
 import DoctorRoute from './modules/doctor_master/doctor_master.routes.js';
 import ReferredDoctorRoute from './modules/doctor_master/referred_doctor/referred_doctor.routes.js';
 import NurseRoute from './modules/nursing_master/nursing_master.routes.js';
+import PreRegistrationPatient from './modules/patient/pre_registration_patient/pre_registration_patient.routes.js';
+import AdmissionReasonRoute from './modules/admissionreasons/admissionreasons.routes.js';
 
 app.use(helmet());
 app.use(morgan('dev'));
@@ -64,6 +66,8 @@ app.use('/api/v1/dashboard', DashboardRoute);
 app.use('/api/v1/doctor-master', DoctorRoute);
 app.use('/api/v1/doctor-master/referred-doctor', ReferredDoctorRoute);
 app.use('/api/v1/nursing-master', NurseRoute);
+app.use('/api/v1/patient/pre-registration', PreRegistrationPatient);
+app.use('/api/v1/admission-reason', AdmissionReasonRoute);
      
 app.use(notFound);
 app.use(errorHandler);

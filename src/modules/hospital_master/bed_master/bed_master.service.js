@@ -1,20 +1,39 @@
 import { BEDMASTER_MODEL } from './bed_master.model.js';
+import { FLOORMASTER_MODEL } from '../ward_or_floor_master/ward_or_floor_master.model.js';
 
 class Bed_masterService {
   async getAll() {
-    return await BEDMASTER_MODEL.find(); 
+    return await BEDMASTER_MODEL.find().populate('floorId', 'floorName');
   }
+
+  // async create(data) {
+  //   return await BEDMASTER_MODEL.create(data); 
+  // }
 
   async create(data) {
-    return await BEDMASTER_MODEL.create(data); 
+  const floorExists = await FLOORMASTER_MODEL.findById(data.floorId);
+  if (!floorExists) {
+    throw new Error('Floor with given ID does not exist');
   }
+  return (await BEDMASTER_MODEL.create(data)).populate('floorId', 'floorName');
+}
+
+  // async update(id, data) {
+  //   return await BEDMASTER_MODEL.findByIdAndUpdate(id, data, { new: true }); 
+  // }
 
   async update(id, data) {
-    return await BEDMASTER_MODEL.findByIdAndUpdate(id, data, { new: true }); 
+  if (data.floorId) {
+    const floorExists = await FLOORMASTER_MODEL.findById(data.floorId);
+    if (!floorExists) {
+      throw new Error('Floor with given ID does not exist');
+    }
   }
+  return await BEDMASTER_MODEL.findByIdAndUpdate(id, data, { new: true }).populate('floorId', 'floorName');
+}
 
   async getBedsByStatus(status) {
-    return await BEDMASTER_MODEL.find({ bedStatus: status }); 
+    return await BEDMASTER_MODEL.find({ bedStatus: status }).populate('floorId', 'floorName');; 
   }
 
   async filterBeds(query) {
@@ -28,22 +47,11 @@ class Bed_masterService {
     if (!filters[key]) delete filters[key];
   });
 
-  return await BEDMASTER_MODEL.find(filters).select(
-    'floorName bedName applicableClass bedStatus status'
-  );
+  return await BEDMASTER_MODEL.find(filters)
+    .select('floorId bedName applicableClass bedStatus status')
+    .populate('floorId', 'floorName');
 }
 
-
-  async search(query) {
-    const filters = {};
-    if (query.floorName) filters.floorName = { $regex: query.floorName, $options: 'i' }; 
-    if (query.bedName) filters.bedName = { $regex: query.bedName, $options: 'i' };
-    if (query.applicableClass) filters.applicableClass = { $regex: query.applicableClass, $options: 'i' }; ;
-    if (query.bedStatus) filters.bedStatus = { $regex: query.bedStatus, $options: 'i' }; 
-    if (query.status) filters.status = { $regex: query.status, $options: 'i' }; 
-
-    return await BEDMASTER_MODEL.find(filters); 
-  }
 }
 
 export default new Bed_masterService();

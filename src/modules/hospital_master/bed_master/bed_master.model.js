@@ -1,12 +1,20 @@
 import mongoose from 'mongoose';
 
 const BedMasterSchema = new mongoose.Schema({
-  floorName: { type: String},
+  floorId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'floormaster', 
+    required: true,
+  },
   bedName: { type: String}, 
   applicableClass: { type: String},
   bedStatus: {
     type: String,
     enum: ['Vacant', 'Occupied', 'Under Maintenance'], 
+  },
+  department: {
+    type: String,
+    required: true
   },
   status: {
     type: String,

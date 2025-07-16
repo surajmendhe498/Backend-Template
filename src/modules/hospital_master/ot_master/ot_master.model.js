@@ -8,7 +8,8 @@ const OTMasterSchema = new mongoose.Schema({
       status: { type: String, enum: ['Available', 'Occupied', 'Maintenance'] },
     },
   ],
-  floorNumber: { type: String }, 
+
+  floorId: {type: mongoose.Schema.Types.ObjectId, ref: 'floormaster',required: true},
   currentStatus: { type: String, enum: ['Active', 'Maintenance'] }, 
 });
 

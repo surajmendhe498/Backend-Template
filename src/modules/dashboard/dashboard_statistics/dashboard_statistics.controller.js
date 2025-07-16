@@ -52,7 +52,6 @@ getGenderDistribution = async (req, res, next) => {
   }
 };
 
-  // Get patient admitted by time
 getPatientAdmittedByTime = async (req, res, next) => {
     try {
       const { date } = req.query;

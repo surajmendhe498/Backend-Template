@@ -1,62 +1,6 @@
-import { PATIENT_MODEL } from '../patient/patient.model.js';
-import { REFERRED_DOCTOR_MODEL } from '../doctor_master/referred_doctor/referred_doctor.model.js';
-
-class PatientService {
-  async getAll() {
-    return await PATIENT_MODEL.find().populate('admissionDetails.referredByDoctor', 'doctorName');;
-  }
-
-  async create(patientData) {
-    if (patientData.admissionDetails.referredByDoctor) {
-      const doctorExists = await REFERRED_DOCTOR_MODEL.findById(patientData.admissionDetails.referredByDoctor);
-
-      if (!doctorExists) {
-        throw new Error('Referred doctor does not exists');
-      }
-    }
-    const patient = new PATIENT_MODEL(patientData);
-    const savedPatient = await patient.save();
-
-    return await PATIENT_MODEL.findById(savedPatient._id).populate('admissionDetails.referredByDoctor', 'doctorName');
-  }
-
-  async delete(id) {
-    return await PATIENT_MODEL.findByIdAndDelete(id);
-  }
-  
-  async getById(id) {
-  return await PATIENT_MODEL.findById(id)
-    .populate('admissionDetails.referredByDoctor', 'doctorName');
-}
-
-async update(id, updateData) {
-  if (updateData.admissionDetails?.referredByDoctor) {
-    const doctorExists = await REFERRED_DOCTOR_MODEL.findById(updateData.admissionDetails.referredByDoctor);
-    if (!doctorExists) {
-      throw new Error('Referred doctor does not exist');
-    }
-  }
-
-  const updatedPatient = await PATIENT_MODEL.findByIdAndUpdate(
-    id,
-    updateData,
-    { new: true } 
-  ).populate('admissionDetails.referredByDoctor', 'doctorName');
-
-  return updatedPatient;
-}
-
-}
-
-export default new PatientService();
-
-
-
-
-
 // import { PATIENT_MODEL } from '../patient/patient.model.js';
 // import { REFERRED_DOCTOR_MODEL } from '../doctor_master/referred_doctor/referred_doctor.model.js';
-// import { FLOORMASTER_MODEL } from '../hospital_master/word_or_floor_master/word_or_floor_master.model.js';
+// import { FLOORMASTER_MODEL } from '../hospital_master/ward_or_floor_master/ward_or_floor_master.model.js';
 // import { BEDMASTER_MODEL } from '../hospital_master/bed_master/bed_master.model.js';
 
 
@@ -64,7 +8,7 @@ export default new PatientService();
 //   async getAll() {
 //     return await PATIENT_MODEL.find({})
 //       .populate('admissionDetails.referredByDoctor', 'doctorName')
-//       .populate('admissionDetails.floorDetails', 'floorNumber')
+//       .populate('admissionDetails.floorDetails', 'floorName')
 //       .populate('admissionDetails.bedName', 'bedName')
 //       .populate('admissionDetails.applicableClass', 'applicableClass');
 //   }
@@ -72,15 +16,14 @@ export default new PatientService();
 //   async getById(id) {
 //     return await PATIENT_MODEL.findById(id)
 //       .populate('admissionDetails.referredByDoctor', 'doctorName')
-//       .populate('admissionDetails.floorDetails', 'floorName floorNumber')
+//       .populate('admissionDetails.floorDetails', 'floorName')
 //       .populate('admissionDetails.bedName', 'bedName')
 //       .populate('admissionDetails.applicableClass', 'applicableClass');
 //   }
 
 //   async create(patientData) {
-//   const admission = patientData.admissionDetails; // ✅ FIXED LINE
+//   const admission = patientData.admissionDetails;
 
-//   // Validate referredByDoctor
 //   if (admission.referredByDoctor) {
 //     const doctorExists = await REFERRED_DOCTOR_MODEL.findById(admission.referredByDoctor);
 //     if (!doctorExists) {
@@ -88,7 +31,6 @@ export default new PatientService();
 //     }
 //   }
 
-//   // Validate floorDetails
 //   if (admission.floorDetails) {
 //     const floorExists = await FLOORMASTER_MODEL.findById(admission.floorDetails);
 //     if (!floorExists) {
@@ -96,7 +38,6 @@ export default new PatientService();
 //     }
 //   }
 
-//   // Validate bedName
 //   if (admission.bedName) {
 //     const bedExists = await BEDMASTER_MODEL.findById(admission.bedName);
 //     if (!bedExists) {
@@ -104,7 +45,6 @@ export default new PatientService();
 //     }
 //   }
 
-//   // Validate applicableClass
 //   if (admission.applicableClass) {
 //     const classExists = await BEDMASTER_MODEL.findById(admission.applicableClass);
 //     if (!classExists) {
@@ -117,7 +57,7 @@ export default new PatientService();
 
 //   return await PATIENT_MODEL.findById(savedPatient._id)
 //     .populate('admissionDetails.referredByDoctor', 'doctorName')
-//     .populate('admissionDetails.floorDetails', 'floorNumber')
+//     .populate('admissionDetails.floorDetails', 'floorName')
 //     .populate('admissionDetails.bedName', 'bedName')
 //     .populate('admissionDetails.applicableClass', 'applicableClass');
 // }
@@ -126,7 +66,7 @@ export default new PatientService();
 //     const updatedPatient = await PATIENT_MODEL.findByIdAndUpdate(patientId, patientData, { new: true });
 //     return await PATIENT_MODEL.findById(updatedPatient._id)
 //       .populate('admissionDetails.referredByDoctor', 'doctorName')
-//       .populate('admissionDetails.floorDetails', 'floorName floorNumber')
+//       .populate('admissionDetails.floorDetails', 'floorName')
 //       .populate('admissionDetails.bedName', 'bedName')
 //       .populate('admissionDetails.applicableClass', 'applicableClass');
 //   }
@@ -134,6 +74,129 @@ export default new PatientService();
 //   async delete(id) {
 //     return await PATIENT_MODEL.findByIdAndDelete(id);
 //   }
+
+//   async getAdmissionReasons() {
+//   return await PATIENT_MODEL.find({}, { 'admissionDetails.reasonForAdmission': 1, _id: 0 });
+// }
+
 // }
 
 // export default new PatientService();
+
+
+import { PATIENT_MODEL } from '../patient/patient.model.js';
+import { REFERRED_DOCTOR_MODEL } from '../doctor_master/referred_doctor/referred_doctor.model.js';
+import { FLOORMASTER_MODEL } from '../hospital_master/ward_or_floor_master/ward_or_floor_master.model.js';
+import { BEDMASTER_MODEL } from '../hospital_master/bed_master/bed_master.model.js';
+import { DOCTOR_MODEL } from '../doctor_master/doctor_master.model.js';
+import { ADMISSION_REASON_MODEL } from '../admissionreasons/admissionreasons.model.js';
+
+class PatientService {
+  async getAll() {
+    return await PATIENT_MODEL.find({})
+      .populate('admissionDetails.referredByDoctor', 'doctorName')
+      .populate('admissionDetails.consultingDoctor', 'doctorName')
+      .populate('admissionDetails.reasonForAdmission', 'admissionReason')
+      .populate('admissionDetails.floorDetails', 'floorName')
+      .populate('admissionDetails.bedName', 'bedName');
+  }
+
+  async getById(id) {
+    return await PATIENT_MODEL.findById(id)
+      .populate('admissionDetails.referredByDoctor', 'doctorName')
+      .populate('admissionDetails.consultingDoctor', 'doctorName')
+      .populate('admissionDetails.reasonForAdmission', 'admissionReason')
+      .populate('admissionDetails.floorDetails', 'floorName')
+      .populate('admissionDetails.bedName', 'bedName');
+  }
+
+  async create(patientData) {
+    const admission = patientData.admissionDetails;
+
+    if (admission.referredByDoctor) {
+      const doctorExists = await REFERRED_DOCTOR_MODEL.findById(admission.referredByDoctor);
+      if (!doctorExists) throw new Error('Referred doctor does not exist');
+    }
+
+    if (admission.consultingDoctor) {
+      const consultingDoc = await DOCTOR_MODEL.findById(admission.consultingDoctor);
+      if (!consultingDoc) throw new Error('Consulting doctor does not exist');
+    }
+
+    if (admission.reasonForAdmission) {
+      const reasonExists = await ADMISSION_REASON_MODEL.findById(admission.reasonForAdmission);
+      if (!reasonExists) throw new Error('Admission reason does not exist');
+    }
+
+    if (admission.floorDetails) {
+      const floorExists = await FLOORMASTER_MODEL.findById(admission.floorDetails);
+      if (!floorExists) throw new Error('Floor does not exist');
+    }
+
+    if (admission.bedName) {
+      const bed = await BEDMASTER_MODEL.findById(admission.bedName);
+      if (!bed) throw new Error('Bed does not exist');
+
+      admission.applicableClass = bed.applicableClass;
+      admission.bedDepartment = bed.department;
+    }
+
+    const patient = new PATIENT_MODEL(patientData);
+    const savedPatient = await patient.save();
+
+    return await PATIENT_MODEL.findById(savedPatient._id)
+      .populate('admissionDetails.referredByDoctor', 'doctorName')
+      .populate('admissionDetails.consultingDoctor', 'doctorName')
+      .populate('admissionDetails.reasonForAdmission', 'admissionReason')
+      .populate('admissionDetails.floorDetails', 'floorName')
+      .populate('admissionDetails.bedName', 'bedName');
+  }
+
+  async update(patientId, patientData) {
+    const admission = patientData.admissionDetails;
+
+    if (admission?.referredByDoctor) {
+      const doctorExists = await REFERRED_DOCTOR_MODEL.findById(admission.referredByDoctor);
+      if (!doctorExists) throw new Error('Referred doctor does not exist');
+    }
+
+    if (admission?.consultingDoctor) {
+      const consultingDoc = await DOCTOR_MODEL.findById(admission.consultingDoctor);
+      if (!consultingDoc) throw new Error('Consulting doctor does not exist');
+    }
+
+    if (admission?.reasonForAdmission) {
+      const reasonExists = await ADMISSION_REASON_MODEL.findById(admission.reasonForAdmission);
+      if (!reasonExists) throw new Error('Admission reason does not exist');
+    }
+
+    if (admission?.floorDetails) {
+      const floor = await FLOORMASTER_MODEL.findById(admission.floorDetails);
+      if (!floor) throw new Error('Floor does not exist');
+    }
+
+    if (admission?.bedName) {
+      const bed = await BEDMASTER_MODEL.findById(admission.bedName);
+      if (!bed) throw new Error('Bed does not exist');
+
+      admission.applicableClass = bed.applicableClass;
+      admission.bedDepartment = bed.department;
+    }
+
+    const updatedPatient = await PATIENT_MODEL.findByIdAndUpdate(patientId, patientData, { new: true });
+
+    return await PATIENT_MODEL.findById(updatedPatient._id)
+      .populate('admissionDetails.referredByDoctor', 'doctorName')
+      .populate('admissionDetails.consultingDoctor', 'doctorName')
+      .populate('admissionDetails.reasonForAdmission', 'admissionReason')
+      .populate('admissionDetails.floorDetails', 'floorName')
+      .populate('admissionDetails.bedName', 'bedName');
+  }
+
+  async delete(id) {
+    return await PATIENT_MODEL.findByIdAndDelete(id);
+  }
+
+}
+
+export default new PatientService();

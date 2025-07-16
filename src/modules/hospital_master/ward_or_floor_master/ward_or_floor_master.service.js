@@ -1,4 +1,4 @@
-import { FLOORMASTER_MODEL } from './word_or_floor_master.model.js';
+import { FLOORMASTER_MODEL } from './ward_or_floor_master.model.js';
 
 class Word_or_floor_masterService {
   async getAll() {
@@ -12,6 +12,10 @@ class Word_or_floor_masterService {
   async update(id, data) {
     return await FLOORMASTER_MODEL.findByIdAndUpdate(id, data, { new: true });
   }
+
+  async delete(id) {
+  return await FLOORMASTER_MODEL.findByIdAndDelete(id);
+}
 
   async search(query) {
     const filters = {};

@@ -23,4 +23,22 @@ export default class Ot_masterController {
       next(err);
     }
   };
+
+  update = async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const updatedOT = await this.ot_masterService.update(id, req.body);
+
+      if (!updatedOT) {
+        return res.fail("OT Master not found", statusCode.NOT_FOUND);
+      }
+
+      res.success("OT Master updated successfully", updatedOT, statusCode.OK);
+    } catch (err) {
+      if (err.message.includes('Floor with given ID does not exist')) {
+        return res.status(statusCode.BAD_REQUEST).json({ message: err.message });
+      }
+      next(err);
+    }
+  };
 }

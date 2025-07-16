@@ -92,14 +92,4 @@ export default class Bed_masterController {
   }
 };
 
-
-  search = async (req, res, next) => {
-    try {
-      const query = req.query;
-      const beds = await this.bed_masterService.search(query);
-      res.success("Search results", beds, statusCode.OK);
-    } catch (err) {
-      next(err);
-    }
-  };
 }

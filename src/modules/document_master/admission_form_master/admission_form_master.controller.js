@@ -8,30 +8,53 @@ export default class Admission_form_masterController {
 
   getAll = async (req, res, next) => {
     try {
-      const patient = await this.admission_form_masterService.getAll();
-      res.success("Get All Admission Fields", patient, statusCode.OK);
+      await this.admission_form_masterService.seedIfEmpty();
+      const fields = await this.admission_form_masterService.getAll();
+      res.success("Admission form fields fetched successfully", fields, statusCode.OK);
     } catch (err) {
       next(err);
     }
   };
 
-  create = async (req, res, next) => {
+// updateField = async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+
+//     const field = await this.admission_form_masterService.getById(id);
+//     if (!field) {
+//       return res.status(statusCode.NOT_FOUND).json({
+//         success: false,
+//         message: "Field not found"
+//       });
+//     }
+
+//     const toggledValue = !field.isSelected;
+
+//     const updated = await this.admission_form_masterService.updateField(id, toggledValue);
+//     res.success("Admission form field toggled successfully", updated, statusCode.OK);
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+
+updateField = async (req, res, next) => {
     try {
-      const createdField = await this.admission_form_masterService.create(req.body);
-      res.success("Admission Field Created Successfully", createdField, statusCode.CREATED);
+      const { id } = req.params;
+      const updateData = req.body;
+
+      const field = await this.admission_form_masterService.getById(id);
+      if (!field) {
+        return res.status(statusCode.NOT_FOUND).json({
+          success: false,
+          message: "Field not found"
+        });
+      }
+
+      const updated = await this.admission_form_masterService.updateField(id, updateData);
+      res.success("Admission form field updated successfully", updated, statusCode.OK);
     } catch (err) {
       next(err);
     }
   };
-
-  search= async(req, res, next)=>{
-    try {
-      const data = await Admission_form_masterService.search(req.query);
-      res.status(200).json({success: true, message: "Search results retrieved successfully", data });
-      
-    } catch (error) {
-      next(err);
-    }
-  };
-
+  
 }

@@ -10,137 +10,71 @@ class Reports_masterService {
       endDate.setMonth(endDate.getMonth() + 1);
       query['admissionDetails.admissionDate'] = { $gte: startDate, $lt: endDate };
     }
+
     if (filters?.year && !filters?.month) {
       const startDate = new Date(`${filters.year}-01-01`);
       const endDate = new Date(`${filters.year}-12-31`);
       query['admissionDetails.admissionDate'] = { $gte: startDate, $lt: endDate };
     }
+
     if (filters?.patientStatus) {
       query['admissionDetails.patientStatus'] = filters.patientStatus;
     }
+
     if (filters?.gender) {
       query['admissionDetails.gender'] = filters.gender;
     }
 
     try {
-      const patients = await PATIENT_MODEL.find(query).lean();
+      const patients = await PATIENT_MODEL.find(query)
+        .populate('admissionDetails.bedName', 'bedName')
+        .populate('admissionDetails.consultingDoctor', 'doctorName')
+        .lean();
 
-      return patients.map((patient) => {
-        const admissionDate = patient.admissionDetails.admissionDate;
-        const dischargeDate = patient.admissionDetails.dischargeDate;
-        const timeOfAdmission = patient.admissionDetails.timeOfAdmission;
-        const timeOfDischarge = patient.admissionDetails.timeOfDischarge;
-        const duration = this.calculateDuration(admissionDate, dischargeDate, timeOfAdmission, timeOfDischarge);
-
-        return {
-          patientPhoto: patient.admissionDetails.patientPhoto,
-          patientName: patient.admissionDetails.patientName,
-          doctor: patient.admissionDetails.consultingDoctor,
-          paymentMode: patient.admissionDetails.paymentMode,
-          bedNo: patient.admissionDetails.bedName,
-          admissionDate,
-          dischargeDate,
-          duration,
-        };
-      });
+      return patients.map((patient) => this.formatPatient(patient));
     } catch (error) {
       console.error('Error fetching monthly reports:', error);
       throw new Error('Failed to fetch monthly reports.');
     }
   }
 
-  calculateDuration(admissionDate, dischargeDate, timeOfAdmission, timeOfDischarge) {
-    if (!admissionDate || !dischargeDate) return 'N/A';
+   async getReportsByDateRange({ fromDate, toDate, fromTime, toTime }) {
+  const query = {};
 
-    const admission = new Date(`${admissionDate.toISOString().split('T')[0]}T${this.formatTimeToISO(timeOfAdmission)}`);
-    const discharge = new Date(`${dischargeDate.toISOString().split('T')[0]}T${this.formatTimeToISO(timeOfDischarge)}`);
-    const diffMs = discharge - admission;
-
-    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-
-    return `${days} Days ${hours} Hours ${minutes} Minutes`;
+  if (fromDate && toDate) {
+    query['admissionDetails.admissionDate'] = {
+      $gte: new Date(fromDate),
+      $lte: new Date(toDate),
+    };
+  } else if (fromDate) {
+    query['admissionDetails.admissionDate'] = {
+      $gte: new Date(fromDate),
+    };
+  } else if (toDate) {
+    query['admissionDetails.admissionDate'] = {
+      $lte: new Date(toDate),
+    };
   }
 
-  formatTimeToISO(time) {
-    const [timePart, modifier] = time.split(' ');
-    let [hours, minutes] = timePart.split(':').map(Number);
-
-    if (modifier === 'PM' && hours !== 12) hours += 12;
-    if (modifier === 'AM' && hours === 12) hours = 0;
-
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
+  if (fromTime && toTime) {
+    query['admissionDetails.timeOfAdmission'] = {
+      $gte: fromTime,
+      $lte: toTime,
+    };
   }
 
-  async getReportsByDateRange({ fromDate, toDate, fromTime, toTime }) {
-    const query = {};
+  try {
+    const patients = await PATIENT_MODEL.find(query)
+      .populate('admissionDetails.bedName', 'bedName')
+      .populate('admissionDetails.consultingDoctor', 'doctorName')
+      .lean();
 
-    if (fromDate && toDate) {
-      query['admissionDetails.admissionDate'] = {
-        $gte: new Date(fromDate),
-        $lte: new Date(toDate),
-      };
-    }
-
-    if (fromTime && toTime) {
-      query['admissionDetails.timeOfAdmission'] = {
-        $gte: fromTime,
-        $lte: toTime,
-      };
-    }
-
-    try {
-      const patients = await PATIENT_MODEL.find(query).lean();
-
-      return patients.map((patient) => {
-        const admissionDate = patient.admissionDetails.admissionDate;
-        const dischargeDate = patient.admissionDetails.dischargeDate;
-        const timeOfAdmission = patient.admissionDetails.timeOfAdmission;
-        const timeOfDischarge = patient.admissionDetails.timeOfDischarge;
-        const duration = this.calculateDuration(admissionDate, dischargeDate, timeOfAdmission, timeOfDischarge);
-
-        return {
-          patientPhoto: patient.admissionDetails.patientPhoto,
-          patientName: patient.admissionDetails.patientName,
-          doctor: patient.admissionDetails.consultingDoctor,
-          paymentMode: patient.admissionDetails.paymentMode,
-          bedNo: patient.admissionDetails.bedName,
-          admissionDate,
-          dischargeDate,
-          duration,
-        };
-      });
-    } catch (error) {
-      console.error('Error fetching date range reports:', error);
-      throw new Error('Failed to fetch date range reports.');
-    }
+    return patients.map((patient) => this.formatPatient(patient));
+  } catch (error) {
+    console.error('Error fetching date range reports:', error);
+    throw new Error('Failed to fetch date range reports.');
   }
-
-  calculateDuration(admissionDate, dischargeDate, timeOfAdmission, timeOfDischarge) {
-    if (!admissionDate || !dischargeDate) return 'N/A';
-
-    const admission = new Date(`${admissionDate.toISOString().split('T')[0]}T${this.formatTimeToISO(timeOfAdmission)}`);
-    const discharge = new Date(`${dischargeDate.toISOString().split('T')[0]}T${this.formatTimeToISO(timeOfDischarge)}`);
-    const diffMs = discharge - admission;
-
-    const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diffMs % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-    const minutes = Math.floor((diffMs % (1000 * 60 * 60)) / (1000 * 60));
-
-    return `${days} Days ${hours} Hours ${minutes} Minutes`;
-  }
-
-  formatTimeToISO(time) {
-    const [timePart, modifier] = time.split(' ');
-    let [hours, minutes] = timePart.split(':').map(Number);
-
-    if (modifier === 'PM' && hours !== 12) hours += 12;
-    if (modifier === 'AM' && hours === 12) hours = 0;
-
-    return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:00`;
-  }
-
+}
 
   async getConsultantReports({ admissionDate, dischargeDate, mlcType, patientStatus }) {
     const query = {};
@@ -159,30 +93,39 @@ class Reports_masterService {
     }
 
     try {
-      const patients = await PATIENT_MODEL.find(query).lean();
+      const patients = await PATIENT_MODEL.find(query)
+        .populate('admissionDetails.bedName', 'bedName')
+        .populate('admissionDetails.consultingDoctor', 'doctorName')
+        .lean();
 
-      return patients.map((patient) => {
-        const admissionDate = patient.admissionDetails.admissionDate;
-        const dischargeDate = patient.admissionDetails.dischargeDate;
-        const timeOfAdmission = patient.admissionDetails.timeOfAdmission;
-        const timeOfDischarge = patient.admissionDetails.timeOfDischarge;
-        const duration = this.calculateDuration(admissionDate, dischargeDate, timeOfAdmission, timeOfDischarge);
-
-        return {
-          patientPhoto: patient.admissionDetails.patientPhoto,
-          patientName: patient.admissionDetails.patientName,
-          doctor: patient.admissionDetails.consultingDoctor,
-          paymentMode: patient.admissionDetails.paymentMode,
-          bedNo: patient.admissionDetails.bedName,
-          admissionDate,
-          dischargeDate,
-          duration,
-        };
-      });
+      return patients.map((patient) => this.formatPatient(patient));
     } catch (error) {
       console.error('Error fetching consultant reports:', error);
       throw new Error('Failed to fetch consultant reports.');
     }
+  }
+
+  formatPatient(patient) {
+    const admissionDate = patient.admissionDetails.admissionDate;
+    const dischargeDate = patient.admissionDetails.dischargeDate;
+    const timeOfAdmission = patient.admissionDetails.timeOfAdmission;
+    const timeOfDischarge = patient.admissionDetails.timeOfDischarge;
+    const duration = this.calculateDuration(admissionDate, dischargeDate, timeOfAdmission, timeOfDischarge);
+
+    const bed = patient.admissionDetails.bedName;
+    const bedNo = typeof bed === 'string' ? bed : bed?.bedName || 'N/A';
+
+    return {
+      patientPhoto: patient.admissionDetails.patientPhoto,
+      patientName: patient.admissionDetails.patientName,
+      // doctor: patient.admissionDetails.consultingDoctor,
+      doctor: patient.admissionDetails.consultingDoctor?.doctorName || 'N/A',
+      paymentMode: patient.admissionDetails.paymentMode,
+      bedNo,
+      admissionDate,
+      dischargeDate,
+      duration,
+    };
   }
 
   calculateDuration(admissionDate, dischargeDate, timeOfAdmission, timeOfDischarge) {
@@ -200,6 +143,8 @@ class Reports_masterService {
   }
 
   formatTimeToISO(time) {
+    if (!time) return '00:00:00';
+
     const [timePart, modifier] = time.split(' ');
     let [hours, minutes] = timePart.split(':').map(Number);
 

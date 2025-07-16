@@ -1,19 +1,15 @@
 import mongoose from 'mongoose';
 
 const DischargeFieldMasterSchema= new mongoose.Schema({
-    dischargeSummaryTitle: {
+    SummaryTitle: {
         type: String,
         required: true
     },
     summarySection: {
         type: String,
     },
-    status: {
-        type: String,
-        enum: ['Active', 'Inactive'],
-        default: 'Active'
-    },
-},{timestamps:true},
+    status: { type: Boolean, default: false}
+},
 );
 
 export const DISCHARGEFIELDMASTER_MODEL= mongoose.model('dischargefiledmaster', DischargeFieldMasterSchema);

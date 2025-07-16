@@ -5,14 +5,10 @@ const signatureMasterSchema= new mongoose.Schema({
         type: String,
         required: true
     },
-    otherTitle: {
+    SignatureOtherTitle: {
         type: String
     },
-    status: {
-        type: String,
-        enum: ['Active', 'Inactive'],
-        default: 'Active'
-    }
+    status: { type: Boolean, default: false}
 }, {timestamps: true}
 );
 

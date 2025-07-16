@@ -15,20 +15,22 @@ export default class Discharge_field_masterController {
     }
   };
 
-  search = async (req, res, next) => {
+  updateField = async (req, res, next) => {
     try {
-      const query = req.query;
-      const dischargeFields = await this.discharge_field_masterService.search(query);
-      res.success("Search results", dischargeFields, statusCode.OK);
-    } catch (err) {
-      next(err);
-    }
-  };
+      const { id } = req.params;
+      const { summarySection, status } = req.body;
 
-  create = async (req, res, next) => {
-    try {
-      const dischargeField = await this.discharge_field_masterService.create(req.body);
-      res.success("Discharge field master created successfully", dischargeField, statusCode.CREATED);
+      // if (!summarySection || !status) {
+      //   return res.fail("Both summarySection and status are required", statusCode.BAD_REQUEST);
+      // }
+
+      const updated = await this.discharge_field_masterService.update(id, { summarySection, status });
+
+      if (!updated) {
+        return res.fail("Discharge field not found", statusCode.NOT_FOUND);
+      }
+
+      res.success("Discharge field updated successfully", updated, statusCode.OK);
     } catch (err) {
       next(err);
     }

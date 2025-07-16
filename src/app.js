@@ -35,6 +35,7 @@ import ReferredDoctorRoute from './modules/doctor_master/referred_doctor/referre
 import NurseRoute from './modules/nursing_master/nursing_master.routes.js';
 import PreRegistrationPatient from './modules/patient/pre_registration_patient/pre_registration_patient.routes.js';
 import AdmissionReasonRoute from './modules/admissionreasons/admissionreasons.routes.js';
+import TransferPatient from './modules/patient/transfer_patient/transfer_patient.routes.js';
 
 app.use(helmet());
 app.use(morgan('dev'));
@@ -68,6 +69,7 @@ app.use('/api/v1/doctor-master/referred-doctor', ReferredDoctorRoute);
 app.use('/api/v1/nursing-master', NurseRoute);
 app.use('/api/v1/patient/pre-registration', PreRegistrationPatient);
 app.use('/api/v1/admission-reason', AdmissionReasonRoute);
+app.use('/api/v1/patient/transfer_patient', TransferPatient);
      
 app.use(notFound);
 app.use(errorHandler);

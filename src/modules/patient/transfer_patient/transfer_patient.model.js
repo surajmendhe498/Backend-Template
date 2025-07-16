@@ -20,4 +20,4 @@ const TransferSchema = new mongoose.Schema({
   timestamps: true
 });
 
-export const TRANSFER_MODEL = mongoose.model('transfers', TransferSchema);
+export const TRANSFER_MODEL = mongoose.model('transfer-patients', TransferSchema);

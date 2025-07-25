@@ -32,6 +32,14 @@ class Ot_masterService {
 
     return updatedOT;
   }
+
+  async delete(id){
+    return await OTMASTER_MODEL.findByIdAndDelete(id);
+  }
+
+  async getById(id){
+    return await OTMASTER_MODEL.findById(id);
+  }
 }
 
 export default new Ot_masterService();

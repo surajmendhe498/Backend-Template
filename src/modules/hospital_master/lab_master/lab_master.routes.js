@@ -10,6 +10,6 @@ router.get('/', lab_masterController.getAll);
 router.post('/', validate(createLab_masterSchema), lab_masterController.create);
 router.put('/:id', validate(updateLab_masterSchema), lab_masterController.update);
 router.get('/search', lab_masterController.search);
-
+router.delete('/:id', lab_masterController.delete);
 
 export default router;

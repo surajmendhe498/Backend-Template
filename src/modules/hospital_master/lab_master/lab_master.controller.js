@@ -46,4 +46,17 @@ export default class Lab_masterController {
       next(err);
     }
   };
+
+  delete = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const deletedLab = await this.lab_masterService.delete(id);
+    if(!deletedLab){
+      return res.fail("Lab master not found", statusCode.NOT_FOUND);
+    }
+    res.success("Lab master deleted successfully", deletedLab, statusCode.OK);
+  } catch (err) {
+    next(err);
+  }
+};
 }

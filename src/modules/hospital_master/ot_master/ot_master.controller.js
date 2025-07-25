@@ -41,4 +41,34 @@ export default class Ot_masterController {
       next(err);
     }
   };
+
+  delete= async(req, res, next)=>{
+    try {
+      const deleteOt= await this.ot_masterService.delete(req.params.id);
+
+      if(!deleteOt){
+         return res.fail("OT Master not found", statusCode.NOT_FOUND);
+      }
+
+      res.success("OT Master deleted successfully", statusCode.OK);
+      
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  getById= async(req, res, next)=>{
+    try {
+      const otMaster= await this.ot_masterService.getById(req.params.id);
+
+      if(!otMaster){
+         return res.fail("OT Master not found", statusCode.NOT_FOUND);
+      }
+
+      res.success("OT Master fetched successfully", otMaster, statusCode.OK);
+      
+    } catch (error) {
+      next(error);
+    }
+  }
 }

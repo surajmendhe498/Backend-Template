@@ -6,11 +6,6 @@ class Lab_masterService {
     return await LABMASTER_MODEL.find().populate('floorId', 'floorName');
   }
 
-  // async create(data) {
-  //   const newLab = new LABMASTER_MODEL(data);
-  //   return await newLab.save();
-  // }
-
 async create(data) {
   const floorExists = await FLOORMASTER_MODEL.findById(data.floorId);
   if (!floorExists) throw new Error('Floor with given ID does not exist');
@@ -19,11 +14,6 @@ async create(data) {
   const savedLab = await newLab.save();
   return await savedLab.populate('floorId', 'floorName');
 }
-
-
-  // async update(id, data) {
-  //   return await LABMASTER_MODEL.findByIdAndUpdate(id, data, { new: true });
-  // }
 
   async update(id, data) {
   if (data.floorId) {
@@ -34,24 +24,30 @@ async create(data) {
   return await LABMASTER_MODEL.findByIdAndUpdate(id, data, { new: true }).populate('floorId', 'floorName');
 }
 
-  // async search(filters) {
-  //   const query = {};
-  //   if (filters.labName) query.labName = { $regex: filters.labName, $options: 'i' };
-  //   if (filters.department) query.department = { $regex: filters.department, $options: 'i' }; 
-  //   if (filters.floorNumber) query.floorNumber = filters.floorNumber;
-  //   if (filters.status) query.status = filters.status;
-
-  //   return await LABMASTER_MODEL.find(query);
-  // }
-
   async search(filters) {
   const query = {};
   if (filters.labName) query.labName = { $regex: filters.labName, $options: 'i' };
   if (filters.department) query.department = { $regex: filters.department, $options: 'i' };
   if (filters.floorId) query.floorId = filters.floorId;
-  if (filters.status) query.status = filters.status;
+
+  if (filters.status !== undefined) {
+    query.status = filters.status;
+  }
+  
+  if (filters.assignedDoctor) {
+    query.assignedDoctor = { $regex: filters.assignedDoctor, $options: 'i' };
+  }
+
+  if (filters.assistantDoctor) {
+    query.assistantDoctor = { $regex: filters.assistantDoctor, $options: 'i' };
+  }
 
   return await LABMASTER_MODEL.find(query).populate('floorId', 'floorName');
+}
+
+async delete(id) {
+  const deletedLab = await LABMASTER_MODEL.findByIdAndDelete(id);
+  return deletedLab;
 }
 
 }

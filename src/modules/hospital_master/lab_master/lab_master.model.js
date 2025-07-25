@@ -4,13 +4,10 @@ const LabMasterSchema = new mongoose.Schema(
   {
     labName: { type: String, required: true }, 
     department: { type: String, required: true }, 
-    // floorNumber: { type: String, required: true }, 
     floorId: {type: mongoose.Schema.Types.ObjectId, ref: 'floormaster',required: true},
-    status: { 
-      type: String, 
-      enum: ['Active', 'Maintenance'], 
-      default: 'Active' 
-    }, 
+    assignedDoctor: {type: String, required: true},
+    assistantDoctor: {type: String, required: true},
+    status: {type: Boolean, default: true}
   },
   { timestamps: true }
 );

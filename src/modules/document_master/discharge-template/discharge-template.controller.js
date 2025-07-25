@@ -56,10 +56,16 @@ export default class DischargeTemplateController {
     }
   };
 
-  search = async (req, res, next) => {
+  
+  getById = async (req, res, next) => {
     try {
-      const templates = await this.dischargeTemplateService.search(req.query);
-      res.status(statusCode.OK).json({ success: true, message: "Search results", data: templates });
+      const template = await this.dischargeTemplateService.getById(req.params.id);
+
+      if(!template){
+        return res.status(statusCode.NOT_FOUND).json({message: 'Discharged template not found'});
+      }
+
+      res.status(statusCode.OK).json({ success: true, message: "Discharged Template fetched successfully", data: template });
     } catch (error) {
       next(error);
     }

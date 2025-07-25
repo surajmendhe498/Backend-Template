@@ -19,14 +19,8 @@ class Ot_notes_templateService {
       return OTNOTESTEMPLATE_MODEL.findByIdAndDelete(id);
     }
   
-    async search(query) {
-      const searchCriteria = {};
-  
-      if (query.templateName) {
-        searchCriteria.templateName = { $regex: query.templateName, $options: 'i' }; 
-      }
-  
-      return await OTNOTESTEMPLATE_MODEL.find(searchCriteria);
+    async getById(id) {
+      return await OTNOTESTEMPLATE_MODEL.findById(id);
     }
 }
 

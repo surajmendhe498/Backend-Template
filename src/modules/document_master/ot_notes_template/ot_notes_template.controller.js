@@ -56,10 +56,15 @@ export default class Ot_notes_templateController {
     }
   };
 
-  search = async (req, res, next) => {
+  getById = async (req, res, next) => {
     try {
-      const templates = await this.ot_notes_templateService.search(req.query);
-      res.status(statusCode.OK).json({ success: true, message: "Search results", data: templates });
+      const template = await this.ot_notes_templateService.getById(req.params.id);
+
+      if(!template){
+        return res.status(statusCode.NOT_FOUND).json({message: 'OT Notes template not found'});
+      }
+
+      res.status(statusCode.OK).json({ success: true, message: "Ot Notes Template fetched successfully", data: template });
     } catch (error) {
       next(error);
     }

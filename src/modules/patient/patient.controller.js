@@ -42,7 +42,7 @@ export default class PatientController {
 
       const newPatient = await this.patientService.create(patientData);
 
-      res.status(201).json({
+      res.status(statusCode.CREATED).json({
         success: true,
         message: 'Patient created successfully',
         data: newPatient,
@@ -52,38 +52,129 @@ export default class PatientController {
     }
   };
 
-  update = async (req, res, next) => {
+//   update = async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+//     const { admissionDetails, identityDetails, ...otherData } = req.body;
+//     const files = req.files;
+
+//     const updateData = {
+//       ...otherData,
+//       admissionDetails: {
+//         ...admissionDetails,
+//         patientPhoto: files?.['admissionDetails[patientPhoto]']?.[0]?.path || null,
+//       },
+//       identityDetails: {
+//         ...identityDetails,
+//         aadharCardFrontImage: files?.['identityDetails[aadharCardFrontImage]']?.[0]?.path,
+//         aadharCardBackImage: files?.['identityDetails[aadharCardBackImage]']?.[0]?.path,
+//         panCardImage: files?.['identityDetails[panCardImage]']?.[0]?.path,
+//         healthCardImage: files?.['identityDetails[healthCardImage]']?.[0]?.path,
+//       },
+//     };
+
+//     const updatedPatient = await this.patientService.update(id, updateData);
+
+//     if (!updatedPatient) {
+//       return res.status(statusCode.NOT_FOUND).json({ message: 'Patient not found.' });
+//     }
+
+//     res.success('Patient updated successfully', updatedPatient, statusCode.OK);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+// update = async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+//     const { admissionDetails, identityDetails, ...otherData } = req.body;
+//     const files = req.files;
+
+//     // Get current patient data from DB
+//     const existingPatient = await this.patientService.getById(id);
+//     if (!existingPatient) {
+//       return res.status(statusCode.NOT_FOUND).json({ message: 'Patient not found.' });
+//     }
+
+//     const updateData = {
+//       ...otherData,
+//       admissionDetails: {
+//         ...admissionDetails,
+//         patientPhoto: files?.['admissionDetails[patientPhoto]']?.[0]?.path || existingPatient.admissionDetails.patientPhoto || null,
+//       },
+//       identityDetails: {
+//         ...identityDetails,
+//         aadharCardFrontImage: files?.['identityDetails[aadharCardFrontImage]']?.[0]?.path || existingPatient.identityDetails.aadharCardFrontImage || null,
+//         aadharCardBackImage: files?.['identityDetails[aadharCardBackImage]']?.[0]?.path || existingPatient.identityDetails.aadharCardBackImage || null,
+//         panCardImage: files?.['identityDetails[panCardImage]']?.[0]?.path || existingPatient.identityDetails.panCardImage || null,
+//         healthCardImage: files?.['identityDetails[healthCardImage]']?.[0]?.path || existingPatient.identityDetails.healthCardImage || null,
+//       },
+//     };
+
+//     const updatedPatient = await this.patientService.update(id, updateData);
+
+//     res.success('Patient updated successfully', updatedPatient, statusCode.OK);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+update = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const { admissionDetails, identityDetails, ...otherData } = req.body;
+    const { admissionDetails = {}, identityDetails = {}, ...otherData } = req.body;
     const files = req.files;
 
+    const existingPatient = await this.patientService.getById(id);
+    if (!existingPatient) {
+      return res.status(statusCode.NOT_FOUND).json({ message: 'Patient not found.' });
+    }
+
+    const updatedAdmissionDetails = {
+      ...existingPatient.admissionDetails.toObject(),
+      ...admissionDetails,
+      patientPhoto:
+        files?.['admissionDetails[patientPhoto]']?.[0]?.path ||
+        existingPatient.admissionDetails.patientPhoto ||
+        null,
+    };
+
+    const updatedIdentityDetails = {
+      ...existingPatient.identityDetails.toObject(),
+      ...identityDetails,
+      aadharCardFrontImage:
+        files?.['identityDetails[aadharCardFrontImage]']?.[0]?.path ||
+        existingPatient.identityDetails.aadharCardFrontImage ||
+        null,
+      aadharCardBackImage:
+        files?.['identityDetails[aadharCardBackImage]']?.[0]?.path ||
+        existingPatient.identityDetails.aadharCardBackImage ||
+        null,
+      panCardImage:
+        files?.['identityDetails[panCardImage]']?.[0]?.path ||
+        existingPatient.identityDetails.panCardImage ||
+        null,
+      healthCardImage:
+        files?.['identityDetails[healthCardImage]']?.[0]?.path ||
+        existingPatient.identityDetails.healthCardImage ||
+        null,
+    };
+
     const updateData = {
-      ...otherData,
-      admissionDetails: {
-        ...admissionDetails,
-        patientPhoto: files?.['admissionDetails[patientPhoto]']?.[0]?.path || null,
-      },
-      identityDetails: {
-        ...identityDetails,
-        aadharCardFrontImage: files?.['identityDetails[aadharCardFrontImage]']?.[0]?.path,
-        aadharCardBackImage: files?.['identityDetails[aadharCardBackImage]']?.[0]?.path,
-        panCardImage: files?.['identityDetails[panCardImage]']?.[0]?.path,
-        healthCardImage: files?.['identityDetails[healthCardImage]']?.[0]?.path,
-      },
+      ...existingPatient.toObject(), 
+      ...otherData, 
+      admissionDetails: updatedAdmissionDetails,
+      identityDetails: updatedIdentityDetails,
     };
 
     const updatedPatient = await this.patientService.update(id, updateData);
-
-    if (!updatedPatient) {
-      return res.status(statusCode.NOT_FOUND).json({ message: 'Patient not found.' });
-    }
 
     res.success('Patient updated successfully', updatedPatient, statusCode.OK);
   } catch (error) {
     next(error);
   }
 };
+
 
   getById = async (req, res, next) => {
     try {

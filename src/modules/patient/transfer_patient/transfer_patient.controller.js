@@ -49,4 +49,17 @@ export default class Transfer_patientController {
       next(err);
     }
   };
+
+  getTransferHistory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const transfers = await this.transfer_patientService.getTransferHistoryByPatientId(id);
+
+    res.success("Transfer history fetched successfully", transfers, statusCode.OK);
+  } catch (err) {
+    next(err);
+  }
+};
+
 }

@@ -14,8 +14,8 @@ const TransferSchema = new mongoose.Schema({
     floor: { type: String, required: true },
     bed: { type: String, required: true }
   },
-  transferDate: { type: String, required: true },
-  transferTime: { type: String, required: true }
+  transferDate: { type: Date },
+  transferTime: { type: String}
 }, {
   timestamps: true
 });

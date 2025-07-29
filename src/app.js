@@ -37,6 +37,7 @@ import PreRegistrationPatient from './modules/patient/pre_registration_patient/p
 import AdmissionReasonRoute from './modules/admissionreasons/admissionreasons.routes.js';
 import ScheduleRoute from './modules/schedule/schedule.routes.js';
 import TransferPatient from './modules/patient/transfer_patient/transfer_patient.routes.js';
+import ChangeConsultant from './modules/patient/change_consultant/change_consultant.routes.js';
 
 app.use(helmet());
 app.use(morgan('dev'));
@@ -72,6 +73,7 @@ app.use('/api/v1/patient/pre-registration', PreRegistrationPatient);
 app.use('/api/v1/admission-reason', AdmissionReasonRoute);
 app.use('/api/v1/schedules', ScheduleRoute);
 app.use('/api/v1/patient/transfer_patient', TransferPatient);
+app.use('/api/v1/patient/change_consultant', ChangeConsultant);
      
 app.use(notFound);
 app.use(errorHandler);

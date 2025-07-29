@@ -46,6 +46,18 @@ const AdmissionSchema = new mongoose.Schema(
     finalDiagnosis: { type: String },
     finalDiagnosisICDCode: { type: String },
     dischargeSummaryStatus: { type: String },
+    tpaName: { type: String },
+    policyNo: { type: String },
+    ccnNo: { type: String },
+    insurance: { type: String },
+    scheme: { type: String },
+    corporate: { type: String },
+    companyName: { type: String },
+    claimStatus: { type: String },
+    patientDetail: {
+      type: String,
+      enum: ['Birth', 'Expired'],
+    },
   },
   { _id: false } 
 );

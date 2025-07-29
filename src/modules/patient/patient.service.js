@@ -1,89 +1,3 @@
-// import { PATIENT_MODEL } from '../patient/patient.model.js';
-// import { REFERRED_DOCTOR_MODEL } from '../doctor_master/referred_doctor/referred_doctor.model.js';
-// import { FLOORMASTER_MODEL } from '../hospital_master/ward_or_floor_master/ward_or_floor_master.model.js';
-// import { BEDMASTER_MODEL } from '../hospital_master/bed_master/bed_master.model.js';
-
-
-// class PatientService {
-//   async getAll() {
-//     return await PATIENT_MODEL.find({})
-//       .populate('admissionDetails.referredByDoctor', 'doctorName')
-//       .populate('admissionDetails.floorDetails', 'floorName')
-//       .populate('admissionDetails.bedName', 'bedName')
-//       .populate('admissionDetails.applicableClass', 'applicableClass');
-//   }
-
-//   async getById(id) {
-//     return await PATIENT_MODEL.findById(id)
-//       .populate('admissionDetails.referredByDoctor', 'doctorName')
-//       .populate('admissionDetails.floorDetails', 'floorName')
-//       .populate('admissionDetails.bedName', 'bedName')
-//       .populate('admissionDetails.applicableClass', 'applicableClass');
-//   }
-
-//   async create(patientData) {
-//   const admission = patientData.admissionDetails;
-
-//   if (admission.referredByDoctor) {
-//     const doctorExists = await REFERRED_DOCTOR_MODEL.findById(admission.referredByDoctor);
-//     if (!doctorExists) {
-//       throw new Error('Referred doctor does not exist');
-//     }
-//   }
-
-//   if (admission.floorDetails) {
-//     const floorExists = await FLOORMASTER_MODEL.findById(admission.floorDetails);
-//     if (!floorExists) {
-//       throw new Error('Floor does not exist');
-//     }
-//   }
-
-//   if (admission.bedName) {
-//     const bedExists = await BEDMASTER_MODEL.findById(admission.bedName);
-//     if (!bedExists) {
-//       throw new Error('Bed does not exist');
-//     }
-//   }
-
-//   if (admission.applicableClass) {
-//     const classExists = await BEDMASTER_MODEL.findById(admission.applicableClass);
-//     if (!classExists) {
-//       throw new Error('Applicable class does not exist');
-//     }
-//   }
-
-//   const patient = new PATIENT_MODEL(patientData);
-//   const savedPatient = await patient.save();
-
-//   return await PATIENT_MODEL.findById(savedPatient._id)
-//     .populate('admissionDetails.referredByDoctor', 'doctorName')
-//     .populate('admissionDetails.floorDetails', 'floorName')
-//     .populate('admissionDetails.bedName', 'bedName')
-//     .populate('admissionDetails.applicableClass', 'applicableClass');
-// }
-
-//   async update(patientId, patientData) {
-//     const updatedPatient = await PATIENT_MODEL.findByIdAndUpdate(patientId, patientData, { new: true });
-//     return await PATIENT_MODEL.findById(updatedPatient._id)
-//       .populate('admissionDetails.referredByDoctor', 'doctorName')
-//       .populate('admissionDetails.floorDetails', 'floorName')
-//       .populate('admissionDetails.bedName', 'bedName')
-//       .populate('admissionDetails.applicableClass', 'applicableClass');
-//   }
-
-//   async delete(id) {
-//     return await PATIENT_MODEL.findByIdAndDelete(id);
-//   }
-
-//   async getAdmissionReasons() {
-//   return await PATIENT_MODEL.find({}, { 'admissionDetails.reasonForAdmission': 1, _id: 0 });
-// }
-
-// }
-
-// export default new PatientService();
-
-
 import { PATIENT_MODEL } from '../patient/patient.model.js';
 import { REFERRED_DOCTOR_MODEL } from '../doctor_master/referred_doctor/referred_doctor.model.js';
 import { FLOORMASTER_MODEL } from '../hospital_master/ward_or_floor_master/ward_or_floor_master.model.js';
@@ -137,8 +51,8 @@ class PatientService {
       const bed = await BEDMASTER_MODEL.findById(admission.bedName);
       if (!bed) throw new Error('Bed does not exist');
 
-      admission.applicableClass = bed.applicableClass;
-      admission.bedDepartment = bed.department;
+      // admission.applicableClass = bed.applicableClass;
+      // admission.bedDepartment = bed.department;
     }
 
     const patient = new PATIENT_MODEL(patientData);
@@ -179,8 +93,8 @@ class PatientService {
       const bed = await BEDMASTER_MODEL.findById(admission.bedName);
       if (!bed) throw new Error('Bed does not exist');
 
-      admission.applicableClass = bed.applicableClass;
-      admission.bedDepartment = bed.department;
+      // admission.applicableClass = bed.applicableClass;
+      // admission.bedDepartment = bed.department;
     }
 
     const updatedPatient = await PATIENT_MODEL.findByIdAndUpdate(patientId, patientData, { new: true });

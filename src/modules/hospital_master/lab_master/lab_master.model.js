@@ -7,7 +7,11 @@ const LabMasterSchema = new mongoose.Schema(
     floorId: {type: mongoose.Schema.Types.ObjectId, ref: 'floormaster',required: true},
     assignedDoctor: {type: String, required: true},
     assistantDoctor: {type: String, required: true},
-    status: {type: Boolean, default: true}
+    status: {
+      type: String,
+      enum: ['Active', 'Inactive', 'Maintenance'],
+      default: 'Active'
+    }
   },
   { timestamps: true }
 );

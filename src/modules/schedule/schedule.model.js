@@ -7,24 +7,26 @@ const ScheduleSchema = new mongoose.Schema(
       ref: 'otmasters',
       required: true
     },
-    date: {
-      type: String,
-      required: true
-    },
-    time: {
-      type: String,
-      required: true
-    },
     surgeryName: {
       type: String,
       required: true
     },
-    patientName: {
-      type: String,
+    patientId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'patients',
       required: true
     },
-    doctorName: {
-      type: String,
+    doctorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'doctor',
+      required: true
+    },
+    startDateTime: {
+      type: Date,
+      required: true
+    },
+    endDateTime: {
+      type: Date,
       required: true
     }
   },

@@ -57,4 +57,16 @@ update = async (req, res, next) => {
   }
 };
 
+getByOtId = async (req, res, next) => {
+  try {
+    const { otId } = req.params;
+    const schedules = await this.scheduleService.getSchedulesByOtId(otId);
+
+    res.success("Schedules for OT fetched successfully", schedules, statusCode.OK);
+  } catch (err) {
+    next(err);
+  }
+};
+
+
 }

@@ -17,6 +17,9 @@ const dischargeTemplateSchema= new mongoose.Schema({
     dischargeSummaryFinalizedBy: {type: String},
     saveAsTemplate: {type: String},
     acknowledgment: {type: Boolean, default: false},
+    diagnosisICDCode: { type: String },               
+    treatment: { type: String },                     
+    conditionAtDischarge: { type: String },  
 })
    
 export const DISCHARGETEMPLATE_MODEL= mongoose.model('DischargeTemplate', dischargeTemplateSchema);

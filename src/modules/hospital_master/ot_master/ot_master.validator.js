@@ -7,7 +7,7 @@ export const createOt_masterSchema = z.object({
       .string()
       .nonempty("Floor ID is required")
       .regex(/^[0-9a-fA-F]{24}$/, "Invalid Floor ID"),
-    status: z.boolean().optional(), 
+    status: z.enum(['Active', 'Inactive', 'Maintenance']).optional(),
   }),
 });
 
@@ -18,7 +18,7 @@ export const updateOt_masterSchema = z.object({
       .string()
       .regex(/^[0-9a-fA-F]{24}$/, "Invalid Floor ID")
       .optional(),
-    status: z.boolean().optional(),
+    status: z.enum(['Active', 'Inactive', 'Maintenance']).optional(),
   }),
   params: z.object({
     id: z

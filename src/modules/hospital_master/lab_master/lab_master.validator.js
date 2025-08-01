@@ -10,7 +10,7 @@ export const createLab_masterSchema = z.object({
       .regex(/^[0-9a-fA-F]{24}$/, "Invalid Floor ID"),
     assignedDoctor: z.string().nonempty("Assigned doctor is required"),
     assistantDoctor: z.string().nonempty("Assistant doctor is required"),
-    status: z.boolean().optional(), 
+    status: z.enum(['Active', 'Inactive', 'Maintenance']).optional(), 
   }),
 });
 
@@ -24,7 +24,7 @@ export const updateLab_masterSchema = z.object({
       .optional(),
     assignedDoctor: z.string().optional(),
     assistantDoctor: z.string().optional(),
-    status: z.boolean().optional(), 
+    status: z.enum(['Active', 'Inactive', 'Maintenance']).optional(), 
   }),
   params: z.object({
     id: z

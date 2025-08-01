@@ -9,7 +9,7 @@ export default class DischargeTemplateController {
   getAll = async (req, res, next) => {
     try {
       const templates = await this.dischargeTemplateService.getAll();
-      res.status(statusCode.OK).json({ success: true, message: "Templates fetched successfully", data: templates });
+      res.status(statusCode.OK).json({ success: true, message: "Discharge Templates fetched successfully", data: templates });
     } catch (err) {
       next(err);
     }
@@ -18,7 +18,7 @@ export default class DischargeTemplateController {
   create = async (req, res, next) => {
     try {
       const newTemplate = await this.dischargeTemplateService.create(req.body);
-      res.status(statusCode.CREATED).json({ success: true, message: "Template created successfully", data: newTemplate });
+      res.status(statusCode.CREATED).json({ success: true, message: "Discharge Template created successfully", data: newTemplate });
     } catch (err) {
       next(err);
     }

@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import Doctor_masterController from './doctor_master.controller.js';
 import validate from '../../middlewares/default/validate.js';
-import { createDoctorSchema } from './doctor_master.validator.js';
+import { createDoctorSchema, updateDoctorSchema } from './doctor_master.validator.js';
 import { uploadDoctorImage } from '../../helpers/upload.js';
 
 const router = Router();
@@ -11,7 +11,7 @@ router.get('/', doctor_masterController.getAll);
 router.post('/', uploadDoctorImage.single('photo'), validate(createDoctorSchema), doctor_masterController.create);
 router.get("/filter", doctor_masterController.getFilteredDoctors);
 router.get('/:id', doctor_masterController.getDoctorById);
-router.put('/:id', uploadDoctorImage.single('photo'), validate(createDoctorSchema), doctor_masterController.updateDoctor);
+router.put('/:id', uploadDoctorImage.single('photo'), validate(updateDoctorSchema), doctor_masterController.updateDoctor);
 router.delete('/:id', doctor_masterController.deleteDoctor);
 
 

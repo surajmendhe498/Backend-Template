@@ -43,15 +43,15 @@ export default class Nursing_masterController {
 
   filterByDepartment = async (req, res, next) => {
   try {
-    const { department } = req.query;
+    const { departmentId } = req.query;
 
-    if (!department) {
+    if (!departmentId) {
       return res.status(statusCode.BAD_REQUEST).json({
         message: "Department query parameter is required",
       });
     }
 
-    const filteredNurses = await this.nursing_masterService.filterByDepartment(department);
+    const filteredNurses = await this.nursing_masterService.filterByDepartment(departmentId);
 
     if (filteredNurses.length === 0) {
       return res.status(statusCode.NOT_FOUND).json({

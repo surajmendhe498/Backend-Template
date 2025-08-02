@@ -92,4 +92,19 @@ export default class Bed_masterController {
   }
 };
 
+getById = async (req, res, next) => {
+    try {
+      const { id } = req.params;
+      const bed = await this.bed_masterService.getById(id);
+
+      if (!bed) {
+        return res.fail("Bed not found", statusCode.NOT_FOUND);
+      }
+
+      res.success("Bed fetched successfully", bed, statusCode.OK);
+    } catch (err) {
+      next(err);
+    }
+  };
+
 }

@@ -10,10 +10,10 @@ export const createDoctorSchema = z.object({
     hospitalLandline: z.string().optional(),
     education: z.string().min(1, "Education is required"),
     speciality: z.string().min(1, "Speciality is required"),
-    department: z.string().min(1, "Department is required"),
+    departmentId: z.string().min(1, "Department ID is required"),
     status: z.preprocess((val) => val === "true", z.boolean()), 
     photo: z.string().optional(),
-     dateOfJoin: z
+    dateOfJoin: z
       .string()
       .optional()
       .refine((val) => !val || !isNaN(Date.parse(val)), {
@@ -32,7 +32,7 @@ export const updateDoctorSchema = z.object({
     hospitalLandline: z.string().optional(),
     education: z.string().min(1, "Education is required").optional(),
     speciality: z.string().min(1, "Speciality is required").optional(),
-    department: z.string().min(1, "Department is required").optional(),
+    departmentId: z.string().min(1, "Department ID is required").optional(),
     status: z
       .preprocess((val) => (val === "true" ? true : val === "false" ? false : val), z.boolean())
       .optional(),

@@ -21,6 +21,8 @@ import BedMasterRoutes from './modules/hospital_master/bed_master/bed_master.rou
 import FloorMasterRoutes from './modules/hospital_master/ward_or_floor_master/ward_or_floor_master.routes.js';
 import LabMasterRoutes from './modules/hospital_master/lab_master/lab_master.routes.js';
 import OtMasterRoutes from './modules/hospital_master/ot_master/ot_master.routes.js';
+import WardMasterRoutes from './modules/hospital_master/ward_master/ward_master.routes.js';
+import DepartmentRoutes from './modules/hospital_master/department/department.routes.js';
 import AdmissionFormRoutes from './modules/document_master/admission_form_master/admission_form_master.routes.js';
 import DischargeTemplateRoute from './modules/document_master/discharge-template/discharge-template.routes.js';
 import OtNotesTemplateRoute from './modules/document_master/ot_notes_template/ot_notes_template.routes.js';
@@ -57,6 +59,8 @@ app.use('/api/v1/hospital-master/bed-master', BedMasterRoutes);
 app.use('/api/v1/hospital-master/floor-master', FloorMasterRoutes);
 app.use('/api/v1/hospital-master/lab-master', LabMasterRoutes);
 app.use('/api/v1/hospital-master/ot-master', OtMasterRoutes);
+app.use('/api/v1/hospital-master/ward-master', WardMasterRoutes);
+app.use('/api/v1/hospital-master/department', DepartmentRoutes);
 app.use('/api/v1/document-master/admissionform-master', AdmissionFormRoutes);
 app.use('/api/v1/document-master/dischargetemplate-master', DischargeTemplateRoute);
 app.use('/api/v1/document-master/otnotestemplate-master', OtNotesTemplateRoute);

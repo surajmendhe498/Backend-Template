@@ -13,6 +13,7 @@ router.get('/vacant', bed_masterController.getVacantBeds);
 router.get('/occupied', bed_masterController.getOccupiedBeds); 
 router.get('/under-maintenance', bed_masterController.getUnderMaintainanceBed); 
 router.get('/filter', bed_masterController.filterBeds);
+router.get('/:id', bed_masterController.getById);
 
 
 export default router;

@@ -12,8 +12,8 @@ const BedMasterSchema = new mongoose.Schema({
     type: String,
     enum: ['Vacant', 'Occupied', 'Under Maintenance'], 
   },
-  department: {
-    type: String,
+  departmentId: {
+    type: mongoose.Schema.Types.ObjectId, ref: 'department',
     required: true
   },
   status: {
@@ -21,8 +21,9 @@ const BedMasterSchema = new mongoose.Schema({
     enum: ['Active', 'Inactive'], 
     required: true,
   },
-  createdAt: { type: Date, default: Date.now },
-  updatedAt: { type: Date, default: Date.now }, 
+  wardId: {
+    type: mongoose.Schema.Types.ObjectId, ref: 'wardmaster',
+  }
 });
 
 export const BEDMASTER_MODEL = mongoose.model('bedmaster', BedMasterSchema);

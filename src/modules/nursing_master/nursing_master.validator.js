@@ -9,17 +9,16 @@ export const createNurseSchema = z.object({
     city: z.string().optional(),
     education: z.string().optional(),
     speciality: z.string().optional(),
-    department: z.string().optional(),
+    departmentId: z.string().optional(), 
     shift: z.string().optional(),
-    word: z.string().optional(),
-     status: z.coerce.boolean().optional(),
-    photo: z.string().optional(), 
+    wardId: z.string().optional(),       
+    status: z.coerce.boolean().optional(),
+    photo: z.string().optional(),
     dateOfJoin: z.string().refine((val) => !isNaN(Date.parse(val)), {
       message: "Invalid date format for dateOfJoin",
     }),
   }),
 });
-
 
 export const updateNurseSchema = z.object({
   body: z.object({
@@ -30,9 +29,9 @@ export const updateNurseSchema = z.object({
     city: z.string().optional(),
     education: z.string().optional(),
     speciality: z.string().optional(),
-    department: z.string().optional(),
+    departmentId: z.string().optional(), 
     shift: z.string().optional(),
-    word: z.string().optional(),
+    wardId: z.string().optional(),       
     status: z.coerce.boolean().optional(),
     photo: z.string().optional(),
     dateOfJoin: z.string().optional().refine((val) => !val || !isNaN(Date.parse(val)), {
@@ -40,4 +39,3 @@ export const updateNurseSchema = z.object({
     }),
   }),
 });
-

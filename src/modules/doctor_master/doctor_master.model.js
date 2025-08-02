@@ -10,7 +10,7 @@ const DoctorSchema = new mongoose.Schema(
     hospitalLandline: { type: String },
     education: { type: String, required: true },
     speciality: { type: String, required: true },
-    department: { type: String, required: true },
+    departmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'department', required: true },
     status: { type: Boolean, default: true },
     photo: { type: String }, 
     dateOfJoin: {type: Date}

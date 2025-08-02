@@ -1,39 +1,74 @@
 import { BEDMASTER_MODEL } from './bed_master.model.js';
 import { FLOORMASTER_MODEL } from '../ward_or_floor_master/ward_or_floor_master.model.js';
+import { DEPARTMENT_MODEL } from '../department/department.model.js';
+import { WARDMASTER_MODEL } from '../ward_master/ward_master.model.js';
 
 class Bed_masterService {
   async getAll() {
-    return await BEDMASTER_MODEL.find().populate('floorId', 'floorName');
+    return await BEDMASTER_MODEL.find()
+      .populate('floorId', 'floorName')
+      .populate('departmentId', 'name')
+      .populate('wardId', 'wardName');
   }
-
-  // async create(data) {
-  //   return await BEDMASTER_MODEL.create(data); 
-  // }
 
   async create(data) {
   const floorExists = await FLOORMASTER_MODEL.findById(data.floorId);
   if (!floorExists) {
-    throw new Error('Floor with given ID does not exist');
+    throw new Error('Floor with the given ID does not exist');
   }
-  return (await BEDMASTER_MODEL.create(data)).populate('floorId', 'floorName');
+
+  const departmentExists = await DEPARTMENT_MODEL.findById(data.departmentId);
+  if (!departmentExists) {
+    throw new Error('Department with the given ID does not exist');
+  }
+
+  const wardExists = await WARDMASTER_MODEL.findById(data.wardId);
+  if (!wardExists) {
+    throw new Error('Ward with the given ID does not exist');
+  }
+
+  const newBed = await BEDMASTER_MODEL.create(data);
+
+  return await BEDMASTER_MODEL.findById(newBed._id)
+    .populate('floorId', 'floorName')
+    .populate('departmentId', 'name')
+    .populate('wardId', 'wardName');
 }
 
-  // async update(id, data) {
-  //   return await BEDMASTER_MODEL.findByIdAndUpdate(id, data, { new: true }); 
-  // }
 
   async update(id, data) {
-  if (data.floorId) {
-    const floorExists = await FLOORMASTER_MODEL.findById(data.floorId);
-    if (!floorExists) {
-      throw new Error('Floor with given ID does not exist');
+    if (data.floorId) {
+      const floorExists = await FLOORMASTER_MODEL.findById(data.floorId);
+      if (!floorExists) {
+        throw new Error('Floor with the given ID does not exist');
+      }
     }
+
+    if (data.departmentId) {
+      const departmentExists = await DEPARTMENT_MODEL.findById(data.departmentId);
+      if (!departmentExists) {
+        throw new Error('Department with the given ID does not exist');
+      }
+    }
+
+    if (data.wardId) {
+      const wardExists = await WARDMASTER_MODEL.findById(data.wardId);
+      if (!wardExists) {
+        throw new Error('Ward with the given ID does not exist');
+      }
+    }
+
+    return await BEDMASTER_MODEL.findByIdAndUpdate(id, data, { new: true })
+      .populate('floorId', 'floorName')
+      .populate('departmentId', 'name')
+      .populate('wardId', 'wardName');
   }
-  return await BEDMASTER_MODEL.findByIdAndUpdate(id, data, { new: true }).populate('floorId', 'floorName');
-}
 
   async getBedsByStatus(status) {
-    return await BEDMASTER_MODEL.find({ bedStatus: status }).populate('floorId', 'floorName');; 
+    return await BEDMASTER_MODEL.find({ bedStatus: status })
+    .populate('floorId', 'floorName')
+    .populate('departmentId', 'name')
+    .populate('wardId', 'wardName')
   }
 
   async filterBeds(query) {
@@ -49,7 +84,16 @@ class Bed_masterService {
 
   return await BEDMASTER_MODEL.find(filters)
     .select('floorId bedName applicableClass bedStatus status')
-    .populate('floorId', 'floorName');
+    .populate('floorId', 'floorName')
+    .populate('departmentId', 'name')
+    .populate('wardId', 'wardName')
+}
+
+async getById(id) {
+  return await BEDMASTER_MODEL.findById(id)
+    .populate('floorId', 'floorName')
+    .populate('departmentId', 'name')
+    .populate('wardId', 'wardName'); 
 }
 
 }

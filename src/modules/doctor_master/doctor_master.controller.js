@@ -42,8 +42,8 @@ export default class Doctor_masterController {
 
   getFilteredDoctors = async (req, res, next) => {
   try {
-    const { department } = req.query; 
-    const doctors = await this.doctor_masterService.filterByDepartment(department);
+    const { departmentId } = req.query; 
+    const doctors = await this.doctor_masterService.filterByDepartment(departmentId);
 
     res.status(200).json({
       success: true,

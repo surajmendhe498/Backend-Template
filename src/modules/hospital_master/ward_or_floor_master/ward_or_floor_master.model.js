@@ -4,7 +4,7 @@ const FloorMasterSchema = new mongoose.Schema({
   floorName: { type: String, required: true }, 
   status: {
     type: String,
-    enum: ['Active', 'Inactive'], 
+    enum: ['Active', 'Inactive', 'Maintenance '], 
     default: 'Active',
   },
 });

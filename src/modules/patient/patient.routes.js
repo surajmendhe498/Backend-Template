@@ -11,7 +11,7 @@ router.post('/',uploadPatientAndIdentityImages, patientController.create);
 router.get('/', patientController.getAll);
 router.delete('/:id', patientController.delete);
 router.get('/:id', patientController.getById);
-router.put('/:id', uploadPatientAndIdentityImages, patientController.update);
+router.put('/:id',uploadPatientAndIdentityImages, patientController.update);
 
 
 export default router;

@@ -482,7 +482,9 @@ update = async (req, res, next) => {
 
     const updatedPatient = await patient.save();
 
-    res.success('Patient updated successfully', updatedPatient, statusCode.OK);
+    const populatedPatient = await this.patientService.getById(updatedPatient._id);
+
+    res.success('Patient updated successfully', populatedPatient, statusCode.OK);
   } catch (err) {
     next(err);
   }

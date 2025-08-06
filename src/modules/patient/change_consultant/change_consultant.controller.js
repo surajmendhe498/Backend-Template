@@ -18,9 +18,10 @@ export default class Change_consultantController {
   changeConsultant = async (req, res, next) => {
     try {
       const { patientId } = req.params;
-      const { consultingDoctor, changeDate, changeTime } = req.body;
+      const {admissionId, consultingDoctor, changeDate, changeTime } = req.body;
 
       const updatedPatient = await this.change_consultantService.changeConsultant(patientId, {
+        admissionId,
         consultingDoctor,
         changeDate,
         changeTime,

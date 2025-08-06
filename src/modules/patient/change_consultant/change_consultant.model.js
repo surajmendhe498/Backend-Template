@@ -7,6 +7,10 @@ const ConsultantChangeSchema = new mongoose.Schema(
       ref: 'patients',
       required: true,
     },
+    admissionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      required: true,
+    },
     consultingDoctorName: {
       type: String,
       required: true,

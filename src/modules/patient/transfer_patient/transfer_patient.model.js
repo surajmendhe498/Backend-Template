@@ -6,6 +6,11 @@ const TransferSchema = new mongoose.Schema({
     ref: 'patients',
     required: true
   },
+  admissionId: {  
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: 'patients.admissionDetails'
+  },
   from: {
     floor: { type: String, required: true },
     bed: { type: String, required: true }

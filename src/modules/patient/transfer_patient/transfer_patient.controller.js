@@ -10,6 +10,7 @@ export default class Transfer_patientController {
     try {
       const { id } = req.params;
       const {
+        admissionId,
         currentFloor,
         currentBed,
         newFloor,
@@ -19,6 +20,7 @@ export default class Transfer_patientController {
       } = req.body;
 
       const result = await this.transfer_patientService.transferPatient(id, {
+        admissionId,
         currentFloor,
         currentBed,
         newFloor,

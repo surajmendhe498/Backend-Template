@@ -183,32 +183,65 @@ const response = {
 }
 
 
-
-  async getTransferredPatients() {
+async getTransferredPatients() {
   const transfers = await TRANSFER_MODEL.find()
-    .populate('patient') 
+    .populate('patient', 'identityDetails.patientName') 
     .populate('from.floor', 'floorName')
     .populate('from.bed', 'bedName')
     .populate('to.floor', 'floorName')
-    .populate('to.bed', 'bedName');
+    .populate('to.bed', 'bedName')
+    .lean();
 
-  return transfers;
+  const formattedTransfers = transfers.map(transfer => ({
+    _id: transfer._id,
+    patient: transfer.patient ? {
+      _id: transfer.patient._id,
+      patientName: transfer.patient.identityDetails?.patientName || null
+    } : null,
+    admissionId: transfer.admissionId,
+    from: transfer.from,
+    to: transfer.to,
+    transferDate: transfer.transferDate,
+    transferTime: transfer.transferTime,
+    createdAt: transfer.createdAt,
+    updatedAt: transfer.updatedAt
+  }));
+
+  return formattedTransfers;
 }
 
-  async getTransferHistoryByPatientId(patientId) {
+
+async getTransferHistoryByPatientId(patientId) {
   const transfers = await TRANSFER_MODEL.find({ patient: patientId })
-    .populate('patient')
+    .populate('patient', 'identityDetails.patientName') 
     .populate('from.floor', 'floorName')
     .populate('from.bed', 'bedName')
     .populate('to.floor', 'floorName')
-    .populate('to.bed', 'bedName');
+    .populate('to.bed', 'bedName')
+    .lean();
 
   if (!transfers.length) {
     throw new Error('No transfer history found for this patient');
   }
 
-  return transfers;
+  const formattedTransfers = transfers.map(transfer => ({
+    _id: transfer._id,
+    patient: transfer.patient ? {
+      _id: transfer.patient._id,
+      patientName: transfer.patient.identityDetails?.patientName || null
+    } : null,
+    admissionId: transfer.admissionId,
+    from: transfer.from,
+    to: transfer.to,
+    transferDate: transfer.transferDate,
+    transferTime: transfer.transferTime,
+    createdAt: transfer.createdAt,
+    updatedAt: transfer.updatedAt
+  }));
+
+  return formattedTransfers;
 }
+
 
 }
 

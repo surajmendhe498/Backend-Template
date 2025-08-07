@@ -122,6 +122,14 @@ async getByPatientId(patientId) {
     .lean();
 }
 
+
+async getByPatientAndAdmissionId(patientId, admissionId) {
+  return await CONSULTANT_CHANGE_MODEL.find({ patientId, admissionId })
+    .select('patientId admissionId consultingDoctorName changeDate changeTime createdAt updatedAt')
+    .sort({ createdAt: -1 })
+    .lean();
+}
+
 }
 
 export default new Change_consultantService();

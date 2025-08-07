@@ -243,6 +243,36 @@ async getTransferHistoryByPatientId(patientId) {
 }
 
 
+async getTransferHistoryByPatientAndAdmission(patientId, admissionId) {
+  const transfers = await TRANSFER_MODEL.find({
+    patient: patientId,
+    admissionId: admissionId,
+  })
+    .populate('patient', 'identityDetails.patientName')
+    .lean();
+
+  if (!transfers.length) {
+    return []; 
+  }
+
+  const formattedTransfers = transfers.map(transfer => ({
+    _id: transfer._id,
+    patient: transfer.patient ? {
+      _id: transfer.patient._id,
+      patientName: transfer.patient.identityDetails?.patientName || null
+    } : null,
+    admissionId: transfer.admissionId,
+    from: transfer.from,
+    to: transfer.to,
+    transferDate: transfer.transferDate,
+    transferTime: transfer.transferTime,
+    createdAt: transfer.createdAt,
+    updatedAt: transfer.updatedAt
+  }));
+
+  return formattedTransfers;
+}
+
 }
 
 export default new TransferService();

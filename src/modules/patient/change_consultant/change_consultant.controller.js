@@ -43,4 +43,15 @@ export default class Change_consultantController {
   }
 };
 
+
+getByPatientAndAdmissionId = async (req, res, next) => {
+  try {
+    const { patientId, admissionId } = req.params;
+    const result = await this.change_consultantService.getByPatientAndAdmissionId(patientId, admissionId);
+    res.success('Consultant change history fetched successfully', result, statusCode.OK);
+  } catch (err) {
+    res.fail('Error fetching consultant change history', err.message, statusCode.INTERNAL_SERVER_ERROR);
+  }
+};
+
 }

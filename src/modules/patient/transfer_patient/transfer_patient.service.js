@@ -128,9 +128,12 @@ async transferPatient(patientId, transferData) {
   // --- Validate New Floor and Bed Exist ---
   const newFloor = await FLOORMASTER_MODEL.findById(transferData.newFloor);
   if (!newFloor) throw new Error('New floor not found');
+  // if (newFloor.status !== 'Active') throw new Error('Selected floor is not active');
+
 
   const newBed = await BEDMASTER_MODEL.findById(transferData.newBed);
   if (!newBed) throw new Error('New bed not found');
+  // if (newBed.status !== 'Active') throw new Error('Selected bed is not active');
 
   const fromFloor = await FLOORMASTER_MODEL.findById(transferData.currentFloor);
   const fromBed = await BEDMASTER_MODEL.findById(transferData.currentBed);

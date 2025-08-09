@@ -75,4 +75,20 @@ getPatientAdmittedByTime = async (req, res, next) => {
     }
   };
 
+  getTotalHospitalStaff = async (req, res, next) => {
+  try {
+    const result = await this.dashboard_statisticsService.getTotalHospitalStaff();
+
+    res.status(statusCode.OK).json({
+      success: true,
+      message: "Total hospital staff count fetched successfully",
+      data: result,
+    });
+  } catch (err) {
+    console.error("Error fetching total hospital staff:", err);
+    next(err);
+  }
+};
+
+
 }

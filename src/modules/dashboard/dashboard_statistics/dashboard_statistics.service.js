@@ -1,6 +1,9 @@
 import { DashboardStatistics } from "./dashboard_statistics.model.js";
 import { PATIENT_MODEL } from "../../patient/patient.model.js";
 import { startOfDay, endOfDay } from 'date-fns';
+import {DOCTOR_MODEL} from "../../doctor_master/doctor_master.model.js";
+import {REFERRED_DOCTOR_MODEL} from "../../doctor_master/referred_doctor/referred_doctor.model.js";
+import {NURSE_MODEL} from "../../nursing_master/nursing_master.model.js";
 
 class Dashboard_statisticsService {
   async getAll() {
@@ -82,36 +85,37 @@ class Dashboard_statisticsService {
 }
 
 async getGenderDistribution() {
-    const genderStats = await PATIENT_MODEL.aggregate([
-      {
-        $group: {
-          _id: "$admissionDetails.gender",
-          count: { $sum: 1 },
-        },
+  const genderStats = await PATIENT_MODEL.aggregate([
+    {
+      $group: {
+        _id: "$identityDetails.gender", 
+        count: { $sum: 1 },
       },
-      {
-        $project: {
-          gender: "$_id",
-          count: 1,
-          _id: 0,
-        },
+    },
+    {
+      $project: {
+        gender: "$_id",
+        count: 1,
+        _id: 0,
       },
-    ]);
+    },
+  ]);
 
-    const result = genderStats.reduce(
-      (acc, curr) => {
-        if (curr.gender.toLowerCase() === "male") {
-          acc.male += curr.count;
-        } else if (curr.gender.toLowerCase() === "female") {
-          acc.female += curr.count;
-        }
-        return acc;
-      },
-      { male: 0, female: 0 }
-    );
+  const result = genderStats.reduce(
+    (acc, curr) => {
+      const gender = typeof curr.gender === 'string' ? curr.gender.toLowerCase() : '';
+      if (gender === "male") acc.male += curr.count;
+      else if (gender === "female") acc.female += curr.count;
+      else if (gender === "other") acc.other += curr.count;
+      return acc;
+    },
+    { male: 0, female: 0, other: 0 }
+  );
 
-    return result;
-  }
+  return result;
+}
+
+
 
   // Get patient admitted by time
   async getPatientAdmittedByTime(date) {
@@ -146,6 +150,23 @@ async getGenderDistribution() {
 
   return hourlyCount;
 }
+
+async getTotalHospitalStaff() {
+    const [doctors, referredDoctors, nurses] = await Promise.all([
+      DOCTOR_MODEL.countDocuments(),
+      REFERRED_DOCTOR_MODEL.countDocuments(),
+      NURSE_MODEL.countDocuments()
+    ]);
+
+    const totalHospitalStaff = doctors + referredDoctors + nurses;
+
+    return {
+      doctors,
+      referredDoctors,
+      nurses,
+      totalHospitalStaff,
+    };
+  }
 }
 
 export default new Dashboard_statisticsService();

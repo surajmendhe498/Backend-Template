@@ -3,6 +3,19 @@ import { PATIENT_MODEL } from '../patient/patient.model.js';
 
 class Files_recordingsService {
  async uploadFiles({ patientId, admissionId, files }) {
+
+  const patientExists = await PATIENT_MODEL.findById(patientId);
+  if (!patientExists) {
+    throw new Error("Invalid Patient ID: Patient not found");
+  }
+
+  const admissionExists = patientExists.admissionDetails.find(
+    admission => admission._id.toString() === admissionId
+  );
+  if (!admissionExists) {
+    throw new Error("Invalid Admission ID: Admission not found for the given patient.");
+  }
+
     const data = {
       patientId,
       admissionId,
@@ -33,22 +46,65 @@ class Files_recordingsService {
     return await FILERECORDING_MODEL.find().populate('patientId');
   }
 
-  // async getByPatientId(patientId) {
-  //   return await FILERECORDING_MODEL.find({ patientId }).populate('patientId');
-  // }
-  
-  // async getByPatientId(patientId) {
-  //   return await FILERECORDING_MODEL
-  // .find({ patientId })
-  // .select('-docs -labReports -audioRecordings -videoRecordings -__v')
-  // .populate('patientId');
-// }
+async getByPatientId(patientId) {
+  const patient = await PATIENT_MODEL.findById(patientId)
+    .select(
+      'identityDetails.patientName admissionDetails._id admissionDetails.docs admissionDetails.labReports admissionDetails.audioRecordings admissionDetails.videoRecordings'
+    );
 
-  async getByPatientId(patientId) {
-  return await FILERECORDING_MODEL
-    .find({ patientId })
-    .select('admissionId docs labReports audioRecordings videoRecordings')
-    .populate('patientId', 'identityDetails.patientName'); 
+  if (!patient) return [];
+
+  return patient.admissionDetails.map(admission => ({
+    admissionId: admission._id,  
+    docs: admission.docs,
+    labReports: admission.labReports,
+    audioRecordings: admission.audioRecordings,
+    videoRecordings: admission.videoRecordings,
+    patientName: patient.identityDetails?.patientName
+  }));
+}
+
+
+
+async updateSingleFile({ patientId, admissionId, fileId, file, fieldType }) {
+  if (!file) throw new Error(`No file uploaded in ${fieldType} field`);
+
+  const validFields = ['docs', 'labReports', 'audioRecordings', 'videoRecordings'];
+  if (!validFields.includes(fieldType)) {
+    throw new Error(`Invalid fieldType. Must be one of: ${validFields.join(', ')}`);
+  }
+
+  const admission = await PATIENT_MODEL.findOne(
+    { _id: patientId, "admissionDetails._id": admissionId },
+    { "admissionDetails.$": 1 }
+  );
+
+  if (!admission) throw new Error("Admission not found");
+
+  const fieldArray = admission.admissionDetails[0][fieldType];
+  const fileExists = fieldArray.some(f => f._id.toString() === fileId);
+
+  if (!fileExists) {
+    throw new Error(`No file with id ${fileId} found in ${fieldType}`);
+  }
+
+  const updatedFile = { name: file.originalname, path: file.path };
+
+  await PATIENT_MODEL.updateOne(
+    { _id: patientId, "admissionDetails._id": admissionId },
+    {
+      $set: {
+        [`admissionDetails.$.${fieldType}.$[elem].name`]: updatedFile.name,
+        [`admissionDetails.$.${fieldType}.$[elem].path`]: updatedFile.path
+      }
+    },
+    { arrayFilters: [{ "elem._id": fileId }] }
+  );
+
+  return {
+    message: `${fieldType} file updated successfully`,
+    updatedFile
+  };
 }
 
   

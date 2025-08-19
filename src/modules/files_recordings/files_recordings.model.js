@@ -6,8 +6,8 @@ admissionId: { type: mongoose.Schema.Types.ObjectId, required: true },
 
 docs: [{ _id: false, name: String, path: String }],
 labReports: [{ _id: false, name: String, path: String }],
-audioRecordings: [{ _id: false, name: String, path: String }],
-videoRecordings: [{ _id: false, name: String, path: String }],
+audioRecordings: [{ _id: false, name: String, path: String, label: String }],
+videoRecordings: [{ _id: false, name: String, path: String, label: String }],
 
 });
 

@@ -107,4 +107,15 @@ getById = async (req, res, next) => {
     }
   };
 
+  
+getAllBedsWithPatient = async (req, res, next) => {
+  try {
+    const beds = await this.bed_masterService.getAllBedsWithPatient();
+    res.success("Fetched beds with patient info", beds, statusCode.OK);
+  } catch (err) {
+    next(err);
+  }
+};
+
+
 }

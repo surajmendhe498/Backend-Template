@@ -240,6 +240,137 @@ async checkAdmissionReasonExists(id) {
 }
 
 
+async assignBed(patientId, admissionId, bedId) {
+  const clickedBed = await BEDMASTER_MODEL.findById(bedId);
+  if (!clickedBed) throw new Error('Bed not found');
+  if (clickedBed.status !== 'Active') throw new Error('Bed is not Active');
+
+  const patient = await PATIENT_MODEL.findById(patientId);
+  if (!patient) throw new Error('Patient not found');
+
+  const admissionIndex = patient.admissionDetails.findIndex(
+    (adm) => adm._id.toString() === admissionId
+  );
+  if (admissionIndex === -1) throw new Error('Admission entry not found');
+
+  // === CASE 1: Vacant bed → Assign ===
+  if (clickedBed.bedStatus === 'Vacant') {
+    const freshCheck = await BEDMASTER_MODEL.findById(bedId);
+    if (!freshCheck || freshCheck.bedStatus !== 'Vacant') {
+      throw new Error('Bed is no longer vacant');
+    }
+
+    // Free old bed
+    if (patient.admissionDetails[admissionIndex].bedId) {
+      await BEDMASTER_MODEL.findByIdAndUpdate(
+        patient.admissionDetails[admissionIndex].bedId,
+        { bedStatus: 'Vacant', patientId: null }
+      );
+    }
+
+    // Assign new bed
+    patient.admissionDetails[admissionIndex].bedId = bedId;
+    await BEDMASTER_MODEL.findByIdAndUpdate(bedId, {
+      bedStatus: 'Occupied',
+      patientId
+    });
+
+    await patient.save();
+    return { message: 'Bed assigned successfully', patient };
+  }
+
+  // === CASE 2: Occupied bed → Exchange ===
+  // if (clickedBed.bedStatus === 'Occupied') {
+  
+  //   const freshCheck = await BEDMASTER_MODEL.findById(bedId);
+  //   if (!freshCheck || freshCheck.bedStatus !== 'Occupied') {
+  //     throw new Error('Bed is no longer occupied');
+  //   }
+
+  //   const otherPatient = await PATIENT_MODEL.findOne({
+  //     'admissionDetails.bedId': bedId,
+  //     _id: { $ne: patientId }
+  //   });
+  //   if (!otherPatient) throw new Error('No patient found in clicked occupied bed');
+
+  //   const otherAdmissionIndex = otherPatient.admissionDetails.findIndex(
+  //     (adm) => adm.bedId?.toString() === bedId.toString()
+  //   );
+
+  //   const currentPatientOldBed = patient.admissionDetails[admissionIndex].bedId;
+
+  //   patient.admissionDetails[admissionIndex].bedId = bedId;
+  //   otherPatient.admissionDetails[otherAdmissionIndex].bedId = currentPatientOldBed || null;
+
+  //   await patient.save();
+  //   await otherPatient.save();
+
+  //   if (currentPatientOldBed) {
+  //     await BEDMASTER_MODEL.findByIdAndUpdate(currentPatientOldBed, {
+  //       bedStatus: 'Occupied',
+  //       patientId: otherPatient._id
+  //     });
+  //   } else if (currentPatientOldBed === null) {
+  //     // If patient had no bed before, free the clicked bed’s old occupant's slot
+  //     await BEDMASTER_MODEL.findByIdAndUpdate(bedId, { patientId });
+  //   }
+
+  //   await BEDMASTER_MODEL.findByIdAndUpdate(bedId, {
+  //     bedStatus: 'Occupied',
+  //     patientId
+  //   });
+
+  //   return {
+  //     message: 'Bed exchanged successfully',
+  //     patient,
+  //     exchangedWith: otherPatient
+  //   };
+  // }
+
+  throw new Error('Invalid bed status');
+}
+
+async exchangePatients(patientAId, admissionAId, patientBId, admissionBId) {
+  const patientA = await PATIENT_MODEL.findById(patientAId);
+  const patientB = await PATIENT_MODEL.findById(patientBId);
+
+  if (!patientA || !patientB) throw new Error("One or both patients not found");
+
+  const admissionAIndex = patientA.admissionDetails.findIndex(
+    (adm) => adm._id.toString() === admissionAId
+  );
+  const admissionBIndex = patientB.admissionDetails.findIndex(
+    (adm) => adm._id.toString() === admissionBId
+  );
+
+  if (admissionAIndex === -1 || admissionBIndex === -1) {
+    throw new Error("One or both admission entries not found");
+  }
+
+  // Get beds of both patients
+  const bedA = patientA.admissionDetails[admissionAIndex].bedId;
+  const bedB = patientB.admissionDetails[admissionBIndex].bedId;
+
+  if (!bedA || !bedB) throw new Error("Both patients must be assigned to beds");
+
+  // Swap beds
+  patientA.admissionDetails[admissionAIndex].bedId = bedB;
+  patientB.admissionDetails[admissionBIndex].bedId = bedA;
+
+  await patientA.save();
+  await patientB.save();
+
+  // Update bed master
+  await BEDMASTER_MODEL.findByIdAndUpdate(bedA, { patientId: patientB._id, bedStatus: 'Occupied' });
+  await BEDMASTER_MODEL.findByIdAndUpdate(bedB, { patientId: patientA._id, bedStatus: 'Occupied' });
+
+  return {
+    message: "Patients exchanged successfully",
+    patientA,
+    patientB
+  };
+}
+
 }
 
 export default new PatientService();

@@ -2,6 +2,7 @@ import { BEDMASTER_MODEL } from './bed_master.model.js';
 import { FLOORMASTER_MODEL } from '../ward_or_floor_master/ward_or_floor_master.model.js';
 import { DEPARTMENT_MODEL } from '../department/department.model.js';
 import { WARDMASTER_MODEL } from '../ward_master/ward_master.model.js';
+import { PATIENT_MODEL } from '../../patient/patient.model.js';
 
 class Bed_masterService {
   async getAll() {
@@ -94,6 +95,49 @@ async getById(id) {
     .populate('floorId', 'floorName')
     .populate('departmentId', 'name')
     .populate('wardId', 'wardName'); 
+}
+
+async getAllBedsWithPatient() {
+  const beds = await BEDMASTER_MODEL.find()
+    .populate("floorId", "floorName")
+    .populate("departmentId", "name")
+    .populate("wardId", "wardName");
+
+  const result = await Promise.all(
+    beds.map(async (bed) => {
+
+      const patient = await PATIENT_MODEL.findOne(
+        { "admissionDetails.bedId": bed._id },
+        {
+          _id: 1,
+          "identityDetails.patientName": 1,
+          "admissionDetails._id": 1,
+          "admissionDetails.bedId": 1,
+        }
+      ).lean();
+
+      let occupiedBy = null;
+
+      if (patient) {
+        const admissionId = patient.admissionDetails
+          .filter((adm) => adm.bedId?.toString() === bed._id.toString())
+          .map((adm) => adm._id);
+
+        occupiedBy = {
+          patientId: patient._id,
+          name: patient.identityDetails.patientName,
+          admissionId: admissionId,
+        };
+      }
+
+      return {
+        ...bed.toObject(),
+        occupiedBy,
+      };
+    })
+  );
+
+  return result;
 }
 
 }

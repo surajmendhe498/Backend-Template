@@ -12,6 +12,8 @@ router.get('/', patientController.getAll);
 router.delete('/:id', patientController.delete);
 router.get('/:id', patientController.getById);
 router.put('/:id',uploadPatientAndIdentityImages, patientController.update);
+router.post('/assign-bed', patientController.assignBed);
+router.post('/exchange-patients', patientController.exchangePatients);
 
 
 export default router;

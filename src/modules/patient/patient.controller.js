@@ -562,4 +562,43 @@ update = async (req, res, next) => {
 };
 
 
+assignBed = async (req, res, next) => {
+  try {
+    const { patientId, admissionId, bedId } = req.body;
+
+    if (!patientId || !admissionId || !bedId) {
+      return res.status(statusCode.BAD_REQUEST).json({
+        message: 'patientId, admissionId, and bedId are required'
+      });
+    }
+
+    const result = await this.patientService.assignBed(
+      patientId,
+      admissionId,
+      bedId
+    );
+
+    res.success(result.message, result, statusCode.OK);
+  } catch (err) {
+    next(err);
+  }
+};
+
+exchangePatients = async (req, res, next) => {
+  try {
+    const { patientAId, admissionAId, patientBId, admissionBId } = req.body;
+
+    const result = await this.patientService.exchangePatients(
+      patientAId,
+      admissionAId,
+      patientBId,
+      admissionBId
+    );
+
+    res.success('Patients exchanged successfully', result);
+  } catch (err) {
+    next(err);
+  }
+};
+
 }

@@ -339,8 +339,8 @@ const AdmissionSchema = new mongoose.Schema(
     ipdNo: {type: String},
     docs: [{  name: String, path: String }],
     labReports: [{ name: String, path: String }],
-    audioRecordings: [{  name: String, path: String }],
-    videoRecordings: [{  name: String, path: String }],
+    audioRecordings: [{  name: String, path: String, label: String }],
+    videoRecordings: [{  name: String, path: String, label: String }],
   },
 );
 

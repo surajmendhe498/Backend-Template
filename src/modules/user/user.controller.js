@@ -47,4 +47,28 @@ export default class UserController {
       next(err);
     }
   };
+
+  update = async (req, res, next) => {
+  try {
+    const user = await this.userService.update(req.params.id, req.body);
+    res.success("User updated successfully", user, statusCode.OK);
+  } catch (err) {
+    next(err);
+  }
+};
+
+  delete = async (req, res, next) => {
+  try {
+    const user = await this.userService.delete(req.params.id);
+    if(!user){
+      return res.status(statusCode.NOT_FOUND).json({message: 'User not found'});
+    }
+
+    res.success("User deleted successfully", statusCode.OK);
+  } catch (err) {
+    next(err);
+  }
+};
+
+
 }

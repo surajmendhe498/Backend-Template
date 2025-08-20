@@ -47,6 +47,44 @@ import jwt from "jsonwebtoken";
     return await USER_MODEL.findById(id).select('-password');
   }
 
+  async update(id, { firstName, lastName, email, password, role }) {
+  const user = await USER_MODEL.findById(id);
+  if (!user) {
+    throw new Error("User not found");
+  }
+
+  if (email && email !== user.email) {
+    const emailExists = await USER_MODEL.findOne({ email });
+    if (emailExists) {
+      throw new Error("Email already in use");
+    }
+    user.email = email;
+  }
+
+  if (firstName) user.firstName = firstName;
+  if (lastName) user.lastName = lastName;
+  if (role) user.role = role;
+
+  if (password) {
+    user.password = await bcrypt.hash(password, 10);
+  }
+
+  await user.save();
+
+  return {
+    id: user._id,
+    email: user.email,
+    firstName: user.firstName,
+    lastName: user.lastName,
+    role: user.role,
+  };
+}
+
+async delete(id){
+  return await USER_MODEL.findByIdAndDelete(id);
+}
+
+
 }
 
 export default new UserService();

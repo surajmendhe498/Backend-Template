@@ -179,6 +179,19 @@
 import { FILERECORDING_MODEL } from './files_recordings.model.js';
 import { PATIENT_MODEL } from '../patient/patient.model.js';
 
+function formatDate(date) {
+  return new Date(date).toLocaleString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    weekday: "short",
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit"
+  });
+}
+
 class Files_recordingsService {
 
 async uploadFiles({ patientId, admissionId, files, labels, user }) {
@@ -230,8 +243,26 @@ async uploadFiles({ patientId, admissionId, files, labels, user }) {
         }
       }
     );
+     // 🔥 Format uploadedAt before sending back
+    const formattedRecord = newRecord.toObject();
+    formattedRecord.docs = formattedRecord.docs.map(doc => ({
+      ...doc,
+      uploadedAt: formatDate(doc.uploadedAt)
+    }));
+    formattedRecord.labReports = formattedRecord.labReports.map(report => ({
+      ...report,
+      uploadedAt: formatDate(report.uploadedAt)
+    }));
+    formattedRecord.audioRecordings = formattedRecord.audioRecordings.map(audio => ({
+      ...audio,
+      uploadedAt: formatDate(audio.uploadedAt)
+    }));
+    formattedRecord.videoRecordings = formattedRecord.videoRecordings.map(video => ({
+      ...video,
+      uploadedAt: formatDate(video.uploadedAt)
+    }));
 
-    return newRecord;
+    return formattedRecord;
   }
 
 

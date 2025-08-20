@@ -337,10 +337,10 @@ const AdmissionSchema = new mongoose.Schema(
     admissionDate: { type: Date},
     admissionTime: { type: String},
     ipdNo: {type: String},
-    docs: [{  name: String, path: String }],
-    labReports: [{ name: String, path: String }],
-    audioRecordings: [{  name: String, path: String, label: String }],
-    videoRecordings: [{  name: String, path: String, label: String }],
+    docs: [{  name: String, path: String, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+    labReports: [{ name: String, path: String, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+    audioRecordings: [{  name: String, path: String, label: String, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+    videoRecordings: [{  name: String, path: String, label: String, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
   },
 );
 

@@ -8,7 +8,7 @@
 
 //   upload = async (req, res, next) => {
 //     try {
-//       const { patientId, admissionId } = req.body;
+//       const { patientId, admissionId, audioLabel, videoLabel } = req.body;
 
 //       if (!patientId || !admissionId) {
 //         return res.status(statusCode.BAD_REQUEST).json({
@@ -20,7 +20,8 @@
 //       const result = await this.files_recordingsService.uploadFiles({
 //         patientId,
 //         admissionId,
-//         files: req.files
+//         files: req.files,
+//         labels: { audioLabel, videoLabel }  
 //       });
 
 //       res.status(statusCode.OK).json({
@@ -46,20 +47,6 @@
 //     }
 //   };
 
-//   // getByPatientId = async (req, res, next) => {
-//   //   try {
-//   //     const { patientId } = req.params;
-//   //     const data = await this.files_recordingsService.getByPatientId(patientId);
-//   //     res.status(statusCode.OK).json({
-//   //       success: true,
-//   //       message: `Files for patient ${patientId} fetched`,
-//   //       data
-//   //     });
-//   //   } catch (err) {
-//   //     next(err);
-//   //   }
-//   // };
-
 // getByPatientId = async (req, res, next) => {
 //   try {
 //     const { patientId, admissionId } = req.params;
@@ -77,10 +64,9 @@
 //   }
 // };
 
-
 // updateSingleFile = async (req, res, next) => {
 //   try {
-//     const { patientId, admissionId, fileId, fieldType } = req.body;
+//     const { patientId, admissionId, fileId, fieldType, audioLabel, videoLabel } = req.body;
 
 //     if (!patientId || !admissionId || !fileId || !fieldType) {
 //       return res.status(400).json({
@@ -106,18 +92,52 @@
 //       });
 //     }
 
+//     // pick correct label
+//     let label = null;
+//     if (fieldType === "audioRecordings") label = audioLabel;
+//     if (fieldType === "videoRecordings") label = videoLabel;
+
 //     const result = await this.files_recordingsService.updateSingleFile({
 //       patientId,
 //       admissionId,
 //       fileId,
 //       file,
-//       fieldType
+//       fieldType,
+//       label
 //     });
 
 //     res.status(200).json({
 //       success: true,
 //       message: result.message,
 //       data: result.updatedFile
+//     });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+
+// deleteSingleFile = async (req, res, next) => {
+//   try {
+//     const { patientId, admissionId, fileId, fieldType } = req.body;
+
+//     if (!patientId || !admissionId || !fileId || !fieldType) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Missing required fields: patientId, admissionId, fileId, fieldType"
+//       });
+//     }
+
+//     const result = await this.files_recordingsService.deleteSingleFile({
+//       patientId,
+//       admissionId,
+//       fileId,
+//       fieldType
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       message: result.message,
+//       data: { fileId }
 //     });
 //   } catch (err) {
 //     next(err);
@@ -151,7 +171,8 @@ export default class Files_recordingsController {
         patientId,
         admissionId,
         files: req.files,
-        labels: { audioLabel, videoLabel }  
+        labels: { audioLabel, videoLabel },
+        user: req.user  
       });
 
       res.status(statusCode.OK).json({

@@ -19,7 +19,12 @@ export default class UserController {
 
   register = async (req, res, next) => {
     try {
-      const result = await this.userService.register(req.body);
+      const userData = {
+      ...req.body,
+      photo: req.file?.path || null  
+    };
+
+      const result = await this.userService.register(userData);
       res.success("User registered successfully", result, statusCode.CREATED);
     } catch (err) {
       next(err);
@@ -48,9 +53,37 @@ export default class UserController {
     }
   };
 
+  forgotPassword = async (req, res, next) => {
+  try {
+    const { email } = req.body;
+    const result = await this.userService.forgotPassword(email);
+    res.success(result.message, statusCode.OK);
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+  resetPassword = async (req, res, next) => {
+    try {
+      const { token, newPassword } = req.body;
+      const result = await this.userService.resetPassword(token, newPassword);
+      res.success(result.message, statusCode.OK);
+    } catch (err) {
+      next(err);
+    }
+  };
+
   update = async (req, res, next) => {
   try {
-    const user = await this.userService.update(req.params.id, req.body);
+    const {id}= req.params;
+
+    const userData = {
+      ...req.body,
+      photo: req.file?.path || undefined
+    };
+
+    const user = await this.userService.update(id, userData);
     res.success("User updated successfully", user, statusCode.OK);
   } catch (err) {
     next(err);

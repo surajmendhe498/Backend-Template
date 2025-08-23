@@ -6,7 +6,7 @@ export const registerSchema = z.object({
     lastName: z.string().min(1, "Last name is required"),
     email: z.string().email("Invalid email"),
     password: z.string().min(6, "Password must be at least 6 characters"),
-    role: z.enum(["User", "Admin"]).optional(),
+    role: z.enum(["Admin", "Nursing", "Management", "Medical officer", "Consultant", "Billing", "MRD"]).optional(),
   }),
 });
 
@@ -17,6 +17,20 @@ export const loginSchema = z.object({
   }),
 });
 
+export const forgotPasswordSchema = z.object({
+  body: z.object({
+    email: z.string().email("Valid email required"),
+  }),
+});
+
+export const resetPasswordSchema = z.object({
+  body: z.object({
+    token: z.string().min(10, "Reset token required"),
+    newPassword: z.string().min(6, "Password must be at least 6 characters"),
+  }),
+});
+
+
 
 export const updateSchema = z.object({
   body: z.object({
@@ -24,6 +38,6 @@ export const updateSchema = z.object({
     lastName: z.string().optional(),
     email: z.string().email("Invalid email").optional(),
     password: z.string().min(6, "Password must be at least 6 characters").optional(),
-    role: z.enum(["User", "Admin"]).optional(),
+    role: z.enum(["Admin", "Nursing", "Management", "Medical officer", "Consultant", "Billing", "MRD"]).optional(),
   }),
 });

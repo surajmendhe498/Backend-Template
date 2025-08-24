@@ -9,7 +9,7 @@ const files_recordingsController = new Files_recordingsController();
 router.post('/upload', authenticate, uploadFilesAndRecordings, files_recordingsController.upload);
 router.get('/', files_recordingsController.getAll);
 router.get('/:patientId/:admissionId', files_recordingsController.getByPatientId);
-router.put('/update', uploadFilesAndRecordings, files_recordingsController.updateSingleFile);
+router.put('/update', authenticate, uploadFilesAndRecordings, files_recordingsController.updateSingleFile);
 router.delete('/delete', files_recordingsController.deleteSingleFile);
 
 

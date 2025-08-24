@@ -4,6 +4,7 @@ import validate from '../../middlewares/default/validate.js';
 import rateLimiter from '../../middlewares/default/rateLimiter.js';
 import { forgotPasswordSchema, loginSchema, registerSchema, resetPasswordSchema, updateSchema } from './user.validator.js';
 import { uploadUserImage } from '../../helpers/user.upload.js'; 
+import authenticate from '../../middlewares/auth.middleware.js';
 
 const router = Router();
 const userController = new UserController();
@@ -13,7 +14,7 @@ router.post('/register', uploadUserImage.single("photo"), validate(registerSchem
 router.post('/login', validate(loginSchema), userController.login);
 router.get('/:id', userController.getById);
 router.put('/:id', uploadUserImage.single("photo"), validate(updateSchema), userController.update);
-router.delete('/:id', userController.delete);
+router.delete('/:id', authenticate, userController.delete);
 
 router.post('/forgot-password', validate(forgotPasswordSchema), userController.forgotPassword);
 router.post('/reset-password', validate(resetPasswordSchema), userController.resetPassword);

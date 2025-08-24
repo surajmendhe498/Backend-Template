@@ -90,11 +90,28 @@ export default class UserController {
   }
 };
 
+  // delete = async (req, res, next) => {
+  // try {
+  //   const user = await this.userService.delete(req.params.id);
+  //   if(!user){
+  //     return res.status(statusCode.NOT_FOUND).json({message: 'User not found'});
+  //   }
+
+  //   res.success("User deleted successfully", statusCode.OK);
+  // } catch (err) {
+  //   next(err);
+  // }
+
   delete = async (req, res, next) => {
   try {
-    const user = await this.userService.delete(req.params.id);
-    if(!user){
-      return res.status(statusCode.NOT_FOUND).json({message: 'User not found'});
+    const {id}= req.params;
+
+    if(req.user.role !== "Admin" && req.user.id !== id){
+      return res.status(statusCode.FORBIDDEN).json({ message: "You are not allowed to delete this profile" });
+    }
+     const user = await this.userService.delete(id);
+      if(!user){
+      return res.status(statusCode.NOT_FOUND).json({message: 'User not found.'});
     }
 
     res.success("User deleted successfully", statusCode.OK);

@@ -215,6 +215,58 @@ getByPatientId = async (req, res, next) => {
   }
 };
 
+// updateSingleFile = async (req, res, next) => {
+//   try {
+//     const { patientId, admissionId, fileId, fieldType, audioLabel, videoLabel } = req.body;
+
+//     if (!patientId || !admissionId || !fileId || !fieldType) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Missing required fields: patientId, admissionId, fileId, fieldType"
+//       });
+//     }
+
+//     const validFields = ['docs', 'labReports', 'audioRecordings', 'videoRecordings'];
+//     if (!validFields.includes(fieldType)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: `Invalid fieldType. Must be one of: ${validFields.join(', ')}`
+//       });
+//     }
+
+//     const fileArray = req.files?.[fieldType];
+//     const file = fileArray?.[0];
+//     if (!file) {
+//       return res.status(400).json({
+//         success: false,
+//         message: `No file uploaded in ${fieldType} field`
+//       });
+//     }
+
+//     // pick correct label
+//     let label = null;
+//     if (fieldType === "audioRecordings") label = audioLabel;
+//     if (fieldType === "videoRecordings") label = videoLabel;
+
+//     const result = await this.files_recordingsService.updateSingleFile({
+//       patientId,
+//       admissionId,
+//       fileId,
+//       file,
+//       fieldType,
+//       label
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       message: result.message,
+//       data: result.updatedFile
+//     });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+
 updateSingleFile = async (req, res, next) => {
   try {
     const { patientId, admissionId, fileId, fieldType, audioLabel, videoLabel } = req.body;
@@ -235,13 +287,7 @@ updateSingleFile = async (req, res, next) => {
     }
 
     const fileArray = req.files?.[fieldType];
-    const file = fileArray?.[0];
-    if (!file) {
-      return res.status(400).json({
-        success: false,
-        message: `No file uploaded in ${fieldType} field`
-      });
-    }
+    const file = fileArray?.[0] || null;
 
     // pick correct label
     let label = null;
@@ -254,7 +300,8 @@ updateSingleFile = async (req, res, next) => {
       fileId,
       file,
       fieldType,
-      label
+      label,
+      user: req.user  // ✅ pass logged-in user
     });
 
     res.status(200).json({
@@ -266,6 +313,7 @@ updateSingleFile = async (req, res, next) => {
     next(err);
   }
 };
+
 
 deleteSingleFile = async (req, res, next) => {
   try {

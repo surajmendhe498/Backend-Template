@@ -305,9 +305,55 @@ async getByPatientId(patientId, admissionId = null) {
   }));
 }
 
-async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label }) {
-  if (!file) throw new Error(`No file uploaded in ${fieldType} field`);
+// async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label }) {
+//   if (!file) throw new Error(`No file uploaded in ${fieldType} field`);
 
+//   const validFields = ['docs', 'labReports', 'audioRecordings', 'videoRecordings'];
+//   if (!validFields.includes(fieldType)) {
+//     throw new Error(`Invalid fieldType. Must be one of: ${validFields.join(', ')}`);
+//   }
+
+//   const admission = await PATIENT_MODEL.findOne(
+//     { _id: patientId, "admissionDetails._id": admissionId },
+//     { "admissionDetails.$": 1 }
+//   );
+
+//   if (!admission) throw new Error("Admission not found");
+
+//   const fieldArray = admission.admissionDetails[0][fieldType];
+//   const fileExists = fieldArray.some(f => f._id.toString() === fileId);
+
+//   if (!fileExists) {
+//     throw new Error(`No file with id ${fileId} found in ${fieldType}`);
+//   }
+
+//   const updateData = {
+//     [`admissionDetails.$.${fieldType}.$[elem].name`]: file.originalname,
+//     [`admissionDetails.$.${fieldType}.$[elem].path`]: file.path
+//   };
+
+//   // Only update label if it's audio/video and label is passed
+//   if (['audioRecordings', 'videoRecordings'].includes(fieldType) && label !== undefined) {
+//     updateData[`admissionDetails.$.${fieldType}.$[elem].label`] = label;
+//   }
+
+//   await PATIENT_MODEL.updateOne(
+//     { _id: patientId, "admissionDetails._id": admissionId },
+//     { $set: updateData },
+//     { arrayFilters: [{ "elem._id": fileId }] }
+//   );
+
+//   const updatedFile = { name: file.originalname, path: file.path };
+//   if (['audioRecordings', 'videoRecordings'].includes(fieldType) && label !== undefined) {
+//     updatedFile.label = label;
+//   }
+
+//   return {
+//     message: `${fieldType} file updated successfully`,
+//     updatedFile
+//   };
+// }
+async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label, user }) {
   const validFields = ['docs', 'labReports', 'audioRecordings', 'videoRecordings'];
   if (!validFields.includes(fieldType)) {
     throw new Error(`Invalid fieldType. Must be one of: ${validFields.join(', ')}`);
@@ -322,19 +368,29 @@ async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label 
 
   const fieldArray = admission.admissionDetails[0][fieldType];
   const fileExists = fieldArray.some(f => f._id.toString() === fileId);
-
   if (!fileExists) {
     throw new Error(`No file with id ${fileId} found in ${fieldType}`);
   }
 
-  const updateData = {
-    [`admissionDetails.$.${fieldType}.$[elem].name`]: file.originalname,
-    [`admissionDetails.$.${fieldType}.$[elem].path`]: file.path
-  };
+  const updateData = {};
 
-  // Only update label if it's audio/video and label is passed
+  // if file updated, set new name, path, user, and time
+if (file) {
+  updateData[`admissionDetails.$.${fieldType}.$[elem].name`] = file.originalname;
+  updateData[`admissionDetails.$.${fieldType}.$[elem].path`] = file.path;
+  
+  // ✅ har file update ke time set karo
+  updateData[`admissionDetails.$.${fieldType}.$[elem].uploadedBy`] = user?.firstName || user?.username || "Unknown User";
+  updateData[`admissionDetails.$.${fieldType}.$[elem].uploadedAt`] = new Date();
+}
+
+  // update label if audio/video
   if (['audioRecordings', 'videoRecordings'].includes(fieldType) && label !== undefined) {
     updateData[`admissionDetails.$.${fieldType}.$[elem].label`] = label;
+  }
+
+  if (Object.keys(updateData).length === 0) {
+    throw new Error("Nothing to update. Provide file or label.");
   }
 
   await PATIENT_MODEL.updateOne(
@@ -343,7 +399,13 @@ async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label 
     { arrayFilters: [{ "elem._id": fileId }] }
   );
 
-  const updatedFile = { name: file.originalname, path: file.path };
+  const updatedFile = {};
+  if (file) {
+    updatedFile.name = file.originalname;
+    updatedFile.path = file.path;
+    updatedFile.uploadedBy = user?.firstName || user?.username || "Unknown User";
+    updatedFile.uploadedAt = new Date();
+  }
   if (['audioRecordings', 'videoRecordings'].includes(fieldType) && label !== undefined) {
     updatedFile.label = label;
   }
@@ -353,6 +415,8 @@ async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label 
     updatedFile
   };
 }
+
+
 
 async deleteSingleFile({ patientId, admissionId, fileId, fieldType }) {
   const validFields = ['docs', 'labReports', 'audioRecordings', 'videoRecordings'];

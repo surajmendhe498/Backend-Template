@@ -34,7 +34,7 @@ const authenticate = async (req, res, next) => {
 
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    const user = await USER_MODEL.findById(decoded.id).select("firstName lastName email");
+    const user = await USER_MODEL.findById(decoded.id).select("firstName lastName email role");
     if (!user) {
       return res.status(statusCode.UNAUTHORIZED).json({ message: "Invalid user" });
     }

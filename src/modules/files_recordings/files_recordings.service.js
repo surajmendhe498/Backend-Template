@@ -1,9 +1,14 @@
-// import { FILERECORDING_MODEL } from './files_recordings.model.js';
-// import { PATIENT_MODEL } from '../patient/patient.model.js';
+import { FILERECORDING_MODEL } from './files_recordings.model.js';
+import { PATIENT_MODEL } from '../patient/patient.model.js';
+import cloudinary from '../../helpers/cloudinary.js';
+import imagekit from '../../helpers/imagekit.js';
+import ffmpeg from 'fluent-ffmpeg';
+import ffmpegPath from '@ffmpeg-installer/ffmpeg';
+import fs from 'fs';
 
-// class Files_recordingsService {
+class Files_recordingsService {
 
-// async uploadFiles({ patientId, admissionId, files, labels }) {
+// async uploadFiles({ patientId, admissionId, files, labels, user }) {
 //     const patientExists = await PATIENT_MODEL.findById(patientId);
 //     if (!patientExists) {
 //       throw new Error("Invalid Patient ID: Patient not found");
@@ -16,21 +21,26 @@
 //       throw new Error("Invalid Admission ID: Admission not found for the given patient.");
 //     }
 
+//     const uploadedBy = user?.firstName || user?.username || "Unknown User";
+//     const uploadedAt = new Date();
+
 //     // assign same label for all audio/video files
 //     const data = {
 //       patientId,
 //       admissionId,
-//       docs: files.docs?.map(f => ({ name: f.originalname, path: f.path })) || [],
-//       labReports: files.labReports?.map(f => ({ name: f.originalname, path: f.path })) || [],
+//       docs: files.docs?.map(f => ({ name: f.originalname, path: f.path, uploadedBy, uploadedAt })) || [],
+//       labReports: files.labReports?.map(f => ({ name: f.originalname, path: f.path, uploadedBy, uploadedAt })) || [],
 //       audioRecordings: files.audioRecordings?.map(f => ({
 //         name: f.originalname,
 //         path: f.path,
-//         label: labels?.audioLabel || null
+//         label: labels?.audioLabel || null,
+//         uploadedBy, uploadedAt
 //       })) || [],
 //       videoRecordings: files.videoRecordings?.map(f => ({
 //         name: f.originalname,
 //         path: f.path,
-//         label: labels?.videoLabel || null
+//         label: labels?.videoLabel || null,
+//         uploadedBy, uploadedAt
 //       })) || []
 //     };
 
@@ -52,182 +62,274 @@
 //   }
 
 
-//   async getAll() {
-//     return await FILERECORDING_MODEL.find().populate('patientId');
-//   }
+// async uploadFiles({ patientId, admissionId, files, labels, user, notes }) {
+//     const patientExists = await PATIENT_MODEL.findById(patientId);
+//     if (!patientExists) {
+//       throw new Error("Invalid Patient ID: Patient not found");
+//     }
 
-
-// async getByPatientId(patientId, admissionId = null) {
-//   const patient = await PATIENT_MODEL.findById(patientId)
-//     .select(
-//       'identityDetails.patientName admissionDetails._id admissionDetails.docs admissionDetails.labReports admissionDetails.audioRecordings admissionDetails.videoRecordings'
+//     const admissionExists = patientExists.admissionDetails.find(
+//       admission => admission._id.toString() === admissionId
 //     );
+//     if (!admissionExists) {
+//       throw new Error("Invalid Admission ID: Admission not found for the given patient.");
+//     }
 
-//   if (!patient) return [];
+//     const uploadedBy = user?.firstName || user?.username || "Unknown User";
+//     const uploadedAt = new Date();
 
-//   if (admissionId) {
-//     const admission = patient.admissionDetails.find(
-//       a => a._id.toString() === admissionId
-//     );
-//     if (!admission) return [];
-
-//     return {
-//       admissionId: admission._id,
-//       docs: admission.docs,
-//       labReports: admission.labReports,
-//       audioRecordings: admission.audioRecordings,
-//       videoRecordings: admission.videoRecordings,
-//       patientName: patient.identityDetails?.patientName
+//     // assign same label for all audio/video files
+//     const data = {
+//       patientId,
+//       admissionId,
+//       docs: files.docs?.map(f => ({ name: f.originalname, path: f.path, uploadedBy, uploadedAt })) || [],
+//       labReports: files.labReports?.map(f => ({ name: f.originalname, path: f.path, uploadedBy, uploadedAt })) || [],
+//       radiologyReports: files.radiologyReports?.map(f => ({ name: f.originalname, path: f.path, uploadedBy, uploadedAt })) || [],
+//       audioRecordings: files.audioRecordings?.map(f => ({
+//         name: f.originalname,
+//         path: f.path,
+//         label: labels?.audioLabel || null,
+//         uploadedBy, uploadedAt
+//       })) || [],
+//       videoRecordings: files.videoRecordings?.map(f => ({
+//         name: f.originalname,
+//         path: f.path,
+//         label: labels?.videoLabel || null,
+//         uploadedBy, uploadedAt
+//       })) || [],
+//        // new fields
+//     clinicalNotes: notes?.clinicalNotes || null,
+//     nursingNotes: notes?.nursingNotes || null,
+//     surgicalNotes: notes?.surgicalNotes || null,
+//     symptoms: notes?.symptoms || null,
+//     pastHistory: notes?.pastHistory || null,
+//     vitalData: notes?.vitalData || null,
 //     };
+
+//     const newRecord = await FILERECORDING_MODEL.create(data);
+
+//     await PATIENT_MODEL.updateOne(
+//       { _id: patientId, "admissionDetails._id": admissionId },
+//       {
+//         $push: {
+//           "admissionDetails.$.docs": { $each: data.docs },
+//           "admissionDetails.$.labReports": { $each: data.labReports },
+//           "admissionDetails.$.radiologyReports": { $each: data.radiologyReports },
+//           "admissionDetails.$.audioRecordings": { $each: data.audioRecordings },
+//           "admissionDetails.$.videoRecordings": { $each: data.videoRecordings }
+//         },
+//          $set: {
+//         "admissionDetails.$.clinicalNotes": data.clinicalNotes,
+//         "admissionDetails.$.nursingNotes": data.nursingNotes,
+//         "admissionDetails.$.surgicalNotes": data.surgicalNotes,
+//         "admissionDetails.$.symptoms": data.symptoms,
+//         "admissionDetails.$.pastHistory": data.pastHistory,
+//         "admissionDetails.$.vitalData": data.vitalData
+//       }
+//       }
+//     );
+
+//     return newRecord;
 //   }
 
-//   return patient.admissionDetails.map(admission => ({
-//     admissionId: admission._id,
-//     docs: admission.docs,
-//     labReports: admission.labReports,
-//     audioRecordings: admission.audioRecordings,
-//     videoRecordings: admission.videoRecordings,
-//     patientName: patient.identityDetails?.patientName
-//   }));
-// }
+// async uploadFiles({ patientId, admissionId, files, labels, user, notes }) {
+//     const patientExists = await PATIENT_MODEL.findById(patientId);
+//     if (!patientExists) {
+//       throw new Error("Invalid Patient ID: Patient not found");
+//     }
 
-// async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label }) {
-//   if (!file) throw new Error(`No file uploaded in ${fieldType} field`);
+//     const admissionExists = patientExists.admissionDetails.find(
+//       admission => admission._id.toString() === admissionId
+//     );
+//     if (!admissionExists) {
+//       throw new Error("Invalid Admission ID: Admission not found for the given patient.");
+//     }
 
-//   const validFields = ['docs', 'labReports', 'audioRecordings', 'videoRecordings'];
-//   if (!validFields.includes(fieldType)) {
-//     throw new Error(`Invalid fieldType. Must be one of: ${validFields.join(', ')}`);
+//     const uploadedBy = user?.firstName || user?.username || "Unknown User";
+//     const uploadedAt = new Date();
+
+//     // handle docs, labReports, radiologyReports normally (no duration)
+//     const docs = files.docs?.map(f => ({
+//       name: f.originalname,
+//       path: f.path,
+//       uploadedBy,
+//       uploadedAt
+//     })) || [];
+
+//     const labReports = files.labReports?.map(f => ({
+//       name: f.originalname,
+//       path: f.path,
+//       uploadedBy,
+//       uploadedAt
+//     })) || [];
+
+//     const radiologyReports = files.radiologyReports?.map(f => ({
+//       name: f.originalname,
+//       path: f.path,
+//       uploadedBy,
+//       uploadedAt
+//     })) || [];
+
+//     // handle audio recordings with duration
+//     const audioRecordings = await Promise.all(
+//       (files.audioRecordings || []).map(async f => {
+//         const uploadResult = await cloudinary.uploader.upload(f.path, {
+//           resource_type: 'video', // Cloudinary treats audio as video
+//           folder: 'audio-recordings'
+//         });
+//         return {
+//           name: f.originalname,
+//           path: uploadResult.secure_url,
+//           label: labels?.audioLabel || null,
+//           uploadedBy,
+//           uploadedAt,
+//           duration: uploadResult.duration || null
+//         };
+//       })
+//     );
+
+//     // handle video recordings with duration
+//     const videoRecordings = await Promise.all(
+//       (files.videoRecordings || []).map(async f => {
+//         const uploadResult = await cloudinary.uploader.upload(f.path, {
+//           resource_type: 'video',
+//           folder: 'video-recordings'
+//         });
+//         return {
+//           name: f.originalname,
+//           path: uploadResult.secure_url,
+//           label: labels?.videoLabel || null,
+//           uploadedBy,
+//           uploadedAt,
+//           duration: uploadResult.duration || null
+//         };
+//       })
+//     );
+
+//     // prepare final data object
+//     const data = {
+//       patientId,
+//       admissionId,
+//       docs,
+//       labReports,
+//       radiologyReports,
+//       audioRecordings,
+//       videoRecordings,
+//       clinicalNotes: notes?.clinicalNotes || null,
+//       nursingNotes: notes?.nursingNotes || null,
+//       surgicalNotes: notes?.surgicalNotes || null,
+//       symptoms: notes?.symptoms || null,
+//       pastHistory: notes?.pastHistory || null,
+//       vitalData: notes?.vitalData || null,
+//     };
+
+//     // create record in filesRecording collection
+//     const newRecord = await FILERECORDING_MODEL.create(data);
+
+//     // push uploaded files to patient admissionDetails
+//     await PATIENT_MODEL.updateOne(
+//       { _id: patientId, "admissionDetails._id": admissionId },
+//       {
+//         $push: {
+//           "admissionDetails.$.docs": { $each: docs },
+//           "admissionDetails.$.labReports": { $each: labReports },
+//           "admissionDetails.$.radiologyReports": { $each: radiologyReports },
+//           "admissionDetails.$.audioRecordings": { $each: audioRecordings },
+//           "admissionDetails.$.videoRecordings": { $each: videoRecordings }
+//         },
+//         $set: {
+//           "admissionDetails.$.clinicalNotes": data.clinicalNotes,
+//           "admissionDetails.$.nursingNotes": data.nursingNotes,
+//           "admissionDetails.$.surgicalNotes": data.surgicalNotes,
+//           "admissionDetails.$.symptoms": data.symptoms,
+//           "admissionDetails.$.pastHistory": data.pastHistory,
+//           "admissionDetails.$.vitalData": data.vitalData
+//         }
+//       }
+//     );
+
+//     return newRecord;
 //   }
 
-//   const admission = await PATIENT_MODEL.findOne(
-//     { _id: patientId, "admissionDetails._id": admissionId },
-//     { "admissionDetails.$": 1 }
-//   );
-
-//   if (!admission) throw new Error("Admission not found");
-
-//   const fieldArray = admission.admissionDetails[0][fieldType];
-//   const fileExists = fieldArray.some(f => f._id.toString() === fileId);
-
-//   if (!fileExists) {
-//     throw new Error(`No file with id ${fileId} found in ${fieldType}`);
-//   }
-
-//   const updateData = {
-//     [`admissionDetails.$.${fieldType}.$[elem].name`]: file.originalname,
-//     [`admissionDetails.$.${fieldType}.$[elem].path`]: file.path
-//   };
-
-//   // Only update label if it's audio/video and label is passed
-//   if (['audioRecordings', 'videoRecordings'].includes(fieldType) && label !== undefined) {
-//     updateData[`admissionDetails.$.${fieldType}.$[elem].label`] = label;
-//   }
-
-//   await PATIENT_MODEL.updateOne(
-//     { _id: patientId, "admissionDetails._id": admissionId },
-//     { $set: updateData },
-//     { arrayFilters: [{ "elem._id": fileId }] }
-//   );
-
-//   const updatedFile = { name: file.originalname, path: file.path };
-//   if (['audioRecordings', 'videoRecordings'].includes(fieldType) && label !== undefined) {
-//     updatedFile.label = label;
-//   }
-
-//   return {
-//     message: `${fieldType} file updated successfully`,
-//     updatedFile
-//   };
-// }
-
-// async deleteSingleFile({ patientId, admissionId, fileId, fieldType }) {
-//   const validFields = ['docs', 'labReports', 'audioRecordings', 'videoRecordings'];
-//   if (!validFields.includes(fieldType)) {
-//     throw new Error(`Invalid fieldType. Must be one of: ${validFields.join(', ')}`);
-//   }
-
-//   const admission = await PATIENT_MODEL.findOne(
-//     { _id: patientId, "admissionDetails._id": admissionId },
-//     { "admissionDetails.$": 1 }
-//   );
-
-//   if (!admission) throw new Error("Admission not found");
-
-//   const fieldArray = admission.admissionDetails[0][fieldType];
-//   const fileExists = fieldArray.some(f => f._id.toString() === fileId);
-
-//   if (!fileExists) {
-//     throw new Error(`No file with id ${fileId} found in ${fieldType}`);
-//   }
-
-//   await PATIENT_MODEL.updateOne(
-//     { _id: patientId, "admissionDetails._id": admissionId },
-//     { $pull: { [`admissionDetails.$.${fieldType}`]: { _id: fileId } } }
-//   );
-
-//   return { message: `${fieldType} file deleted successfully`, fileId };
-// }
-  
-
-// }
-
-// export default new Files_recordingsService();
-
-
-
-
-import { FILERECORDING_MODEL } from './files_recordings.model.js';
-import { PATIENT_MODEL } from '../patient/patient.model.js';
-
-function formatDate(date) {
-  return new Date(date).toLocaleString("en-IN", {
-    timeZone: "Asia/Kolkata",
-    weekday: "short",
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit"
-  });
-}
-
-class Files_recordingsService {
-
-async uploadFiles({ patientId, admissionId, files, labels, user }) {
+async uploadFiles({ patientId, admissionId, files, labels, user, notes }) {
     const patientExists = await PATIENT_MODEL.findById(patientId);
-    if (!patientExists) {
-      throw new Error("Invalid Patient ID: Patient not found");
-    }
+    if (!patientExists) throw new Error("Invalid Patient ID: Patient not found");
 
-    const admissionExists = patientExists.admissionDetails.find(
-      admission => admission._id.toString() === admissionId
-    );
-    if (!admissionExists) {
-      throw new Error("Invalid Admission ID: Admission not found for the given patient.");
-    }
+    const admissionExists = patientExists.admissionDetails.find(a => a._id.toString() === admissionId);
+    if (!admissionExists) throw new Error("Invalid Admission ID: Admission not found for the given patient.");
 
     const uploadedBy = user?.firstName || user?.username || "Unknown User";
     const uploadedAt = new Date();
 
-    // assign same label for all audio/video files
+    // helper to get duration using ffprobe
+    const getDuration = (filePath) => {
+      return new Promise((resolve, reject) => {
+        ffmpeg.ffprobe(filePath, (err, metadata) => {
+          if (err) return resolve(null);
+          resolve(metadata.format.duration); // in seconds
+        });
+      });
+    };
+
+    // upload a file to ImageKit
+    const uploadToImageKit = async (file) => {
+      const fileBuffer = fs.readFileSync(file.path);
+      const uploadResult = await imagekit.upload({
+        file: fileBuffer,
+        fileName: file.filename,
+        folder: `/${file.fieldname}`
+      });
+      return uploadResult.url;
+    };
+
+    // handle docs/labReports/radiologyReports
+    const mapFiles = async (fileArray) => {
+      return Promise.all((fileArray || []).map(async f => ({
+        name: f.originalname,
+        path: await uploadToImageKit(f),
+        uploadedBy,
+        uploadedAt
+      })));
+    };
+
+    const docs = await mapFiles(files.docs);
+    const labReports = await mapFiles(files.labReports);
+    const radiologyReports = await mapFiles(files.radiologyReports);
+
+    // handle audio/video with duration
+    const mapMediaFiles = async (fileArray, labelKey) => {
+      return Promise.all((fileArray || []).map(async f => {
+        const url = await uploadToImageKit(f);
+        const duration = await getDuration(f.path);
+        return {
+          name: f.originalname,
+          path: url,
+          label: labels?.[labelKey] || null,
+          uploadedBy,
+          uploadedAt,
+          duration // in seconds
+        };
+      }));
+    };
+
+    const audioRecordings = await mapMediaFiles(files.audioRecordings, 'audioLabel');
+    const videoRecordings = await mapMediaFiles(files.videoRecordings, 'videoLabel');
+
+    // prepare final data
     const data = {
       patientId,
       admissionId,
-      docs: files.docs?.map(f => ({ name: f.originalname, path: f.path, uploadedBy, uploadedAt })) || [],
-      labReports: files.labReports?.map(f => ({ name: f.originalname, path: f.path, uploadedBy, uploadedAt })) || [],
-      audioRecordings: files.audioRecordings?.map(f => ({
-        name: f.originalname,
-        path: f.path,
-        label: labels?.audioLabel || null,
-        uploadedBy, uploadedAt
-      })) || [],
-      videoRecordings: files.videoRecordings?.map(f => ({
-        name: f.originalname,
-        path: f.path,
-        label: labels?.videoLabel || null,
-        uploadedBy, uploadedAt
-      })) || []
+      docs,
+      labReports,
+      radiologyReports,
+      audioRecordings,
+      videoRecordings,
+      clinicalNotes: notes?.clinicalNotes || null,
+      nursingNotes: notes?.nursingNotes || null,
+      surgicalNotes: notes?.surgicalNotes || null,
+      symptoms: notes?.symptoms || null,
+      pastHistory: notes?.pastHistory || null,
+      vitalData: notes?.vitalData || null,
     };
 
     const newRecord = await FILERECORDING_MODEL.create(data);
@@ -236,35 +338,28 @@ async uploadFiles({ patientId, admissionId, files, labels, user }) {
       { _id: patientId, "admissionDetails._id": admissionId },
       {
         $push: {
-          "admissionDetails.$.docs": { $each: data.docs },
-          "admissionDetails.$.labReports": { $each: data.labReports },
-          "admissionDetails.$.audioRecordings": { $each: data.audioRecordings },
-          "admissionDetails.$.videoRecordings": { $each: data.videoRecordings }
+          "admissionDetails.$.docs": { $each: docs },
+          "admissionDetails.$.labReports": { $each: labReports },
+          "admissionDetails.$.radiologyReports": { $each: radiologyReports },
+          "admissionDetails.$.audioRecordings": { $each: audioRecordings },
+          "admissionDetails.$.videoRecordings": { $each: videoRecordings }
+        },
+        $set: {
+          "admissionDetails.$.clinicalNotes": data.clinicalNotes,
+          "admissionDetails.$.nursingNotes": data.nursingNotes,
+          "admissionDetails.$.surgicalNotes": data.surgicalNotes,
+          "admissionDetails.$.symptoms": data.symptoms,
+          "admissionDetails.$.pastHistory": data.pastHistory,
+          "admissionDetails.$.vitalData": data.vitalData
         }
       }
     );
-     // 🔥 Format uploadedAt before sending back
-    const formattedRecord = newRecord.toObject();
-    formattedRecord.docs = formattedRecord.docs.map(doc => ({
-      ...doc,
-      uploadedAt: formatDate(doc.uploadedAt)
-    }));
-    formattedRecord.labReports = formattedRecord.labReports.map(report => ({
-      ...report,
-      uploadedAt: formatDate(report.uploadedAt)
-    }));
-    formattedRecord.audioRecordings = formattedRecord.audioRecordings.map(audio => ({
-      ...audio,
-      uploadedAt: formatDate(audio.uploadedAt)
-    }));
-    formattedRecord.videoRecordings = formattedRecord.videoRecordings.map(video => ({
-      ...video,
-      uploadedAt: formatDate(video.uploadedAt)
-    }));
 
-    return formattedRecord;
+    // delete temp files after upload
+    Object.values(files).flat().forEach(f => fs.unlinkSync(f.path));
+
+    return newRecord;
   }
-
 
   async getAll() {
     return await FILERECORDING_MODEL.find().populate('patientId');
@@ -274,7 +369,7 @@ async uploadFiles({ patientId, admissionId, files, labels, user }) {
 async getByPatientId(patientId, admissionId = null) {
   const patient = await PATIENT_MODEL.findById(patientId)
     .select(
-      'identityDetails.patientName admissionDetails._id admissionDetails.docs admissionDetails.labReports admissionDetails.audioRecordings admissionDetails.videoRecordings'
+      'identityDetails.patientName admissionDetails._id admissionDetails.docs admissionDetails.labReports admissionDetails.radiologyReports admissionDetails.audioRecordings admissionDetails.videoRecordings admissionDetails.clinicalNotes admissionDetails.nursingNotes admissionDetails.surgicalNotes admissionDetails.symptoms admissionDetails.pastHistory admissionDetails.vitalData'
     );
 
   if (!patient) return [];
@@ -289,8 +384,15 @@ async getByPatientId(patientId, admissionId = null) {
       admissionId: admission._id,
       docs: admission.docs,
       labReports: admission.labReports,
+      radiologyReports: admission.radiologyReports,
       audioRecordings: admission.audioRecordings,
       videoRecordings: admission.videoRecordings,
+      clinicalNotes: admission.clinicalNotes,
+      nursingNotes: admission.nursingNotes,
+      surgicalNotes: admission.surgicalNotes,
+      symptoms: admission.symptoms,
+      pastHistory: admission.pastHistory,
+      vitalData: admission.vitalData,
       patientName: patient.identityDetails?.patientName
     };
   }
@@ -299,62 +401,22 @@ async getByPatientId(patientId, admissionId = null) {
     admissionId: admission._id,
     docs: admission.docs,
     labReports: admission.labReports,
+    radiologyReports: admission.radiologyReports,
     audioRecordings: admission.audioRecordings,
     videoRecordings: admission.videoRecordings,
+    clinicalNotes: admission.clinicalNotes,
+    nursingNotes: admission.nursingNotes,
+    surgicalNotes: admission.surgicalNotes,
+    symptoms: admission.symptoms,
+    pastHistory: admission.pastHistory,
+    vitalData: admission.vitalData,
     patientName: patient.identityDetails?.patientName
   }));
 }
 
-// async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label }) {
-//   if (!file) throw new Error(`No file uploaded in ${fieldType} field`);
 
-//   const validFields = ['docs', 'labReports', 'audioRecordings', 'videoRecordings'];
-//   if (!validFields.includes(fieldType)) {
-//     throw new Error(`Invalid fieldType. Must be one of: ${validFields.join(', ')}`);
-//   }
-
-//   const admission = await PATIENT_MODEL.findOne(
-//     { _id: patientId, "admissionDetails._id": admissionId },
-//     { "admissionDetails.$": 1 }
-//   );
-
-//   if (!admission) throw new Error("Admission not found");
-
-//   const fieldArray = admission.admissionDetails[0][fieldType];
-//   const fileExists = fieldArray.some(f => f._id.toString() === fileId);
-
-//   if (!fileExists) {
-//     throw new Error(`No file with id ${fileId} found in ${fieldType}`);
-//   }
-
-//   const updateData = {
-//     [`admissionDetails.$.${fieldType}.$[elem].name`]: file.originalname,
-//     [`admissionDetails.$.${fieldType}.$[elem].path`]: file.path
-//   };
-
-//   // Only update label if it's audio/video and label is passed
-//   if (['audioRecordings', 'videoRecordings'].includes(fieldType) && label !== undefined) {
-//     updateData[`admissionDetails.$.${fieldType}.$[elem].label`] = label;
-//   }
-
-//   await PATIENT_MODEL.updateOne(
-//     { _id: patientId, "admissionDetails._id": admissionId },
-//     { $set: updateData },
-//     { arrayFilters: [{ "elem._id": fileId }] }
-//   );
-
-//   const updatedFile = { name: file.originalname, path: file.path };
-//   if (['audioRecordings', 'videoRecordings'].includes(fieldType) && label !== undefined) {
-//     updatedFile.label = label;
-//   }
-
-//   return {
-//     message: `${fieldType} file updated successfully`,
-//     updatedFile
-//   };
-// }
-async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label, user }) {
-  const validFields = ['docs', 'labReports', 'audioRecordings', 'videoRecordings'];
+async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label }) {
+  const validFields = ['docs', 'labReports', 'radiologyReports', 'audioRecordings', 'videoRecordings'];
   if (!validFields.includes(fieldType)) {
     throw new Error(`Invalid fieldType. Must be one of: ${validFields.join(', ')}`);
   }
@@ -372,19 +434,16 @@ async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label,
     throw new Error(`No file with id ${fileId} found in ${fieldType}`);
   }
 
+  // prepare update object dynamically
   const updateData = {};
 
-  // if file updated, set new name, path, user, and time
-if (file) {
-  updateData[`admissionDetails.$.${fieldType}.$[elem].name`] = file.originalname;
-  updateData[`admissionDetails.$.${fieldType}.$[elem].path`] = file.path;
-  
-  // ✅ har file update ke time set karo
-  updateData[`admissionDetails.$.${fieldType}.$[elem].uploadedBy`] = user?.firstName || user?.username || "Unknown User";
-  updateData[`admissionDetails.$.${fieldType}.$[elem].uploadedAt`] = new Date();
-}
+  // only update file if passed
+  if (file) {
+    updateData[`admissionDetails.$.${fieldType}.$[elem].name`] = file.originalname;
+    updateData[`admissionDetails.$.${fieldType}.$[elem].path`] = file.path;
+  }
 
-  // update label if audio/video
+  // only update label if it's audio/video and label is passed
   if (['audioRecordings', 'videoRecordings'].includes(fieldType) && label !== undefined) {
     updateData[`admissionDetails.$.${fieldType}.$[elem].label`] = label;
   }
@@ -403,8 +462,6 @@ if (file) {
   if (file) {
     updatedFile.name = file.originalname;
     updatedFile.path = file.path;
-    updatedFile.uploadedBy = user?.firstName || user?.username || "Unknown User";
-    updatedFile.uploadedAt = new Date();
   }
   if (['audioRecordings', 'videoRecordings'].includes(fieldType) && label !== undefined) {
     updatedFile.label = label;
@@ -415,7 +472,6 @@ if (file) {
     updatedFile
   };
 }
-
 
 
 async deleteSingleFile({ patientId, admissionId, fileId, fieldType }) {
@@ -446,6 +502,132 @@ async deleteSingleFile({ patientId, admissionId, fileId, fieldType }) {
   return { message: `${fieldType} file deleted successfully`, fileId };
 }
   
+
+async getDocs(patientId, admissionId) {
+  const patient = await PATIENT_MODEL.findById(patientId).select(
+    'identityDetails.patientName admissionDetails._id admissionDetails.docs'
+  );
+
+  if (!patient) return [];
+
+  const admission = patient.admissionDetails.find(a => a._id.toString() === admissionId);
+  if (!admission) return [];
+
+  return {
+    patientName: patient.identityDetails?.patientName,
+    admissionId: admission._id,
+    docs: admission.docs
+  };
+}
+
+async getLabReports(patientId, admissionId) {
+  const patient = await PATIENT_MODEL.findById(patientId).select(
+    'identityDetails.patientName admissionDetails._id admissionDetails.labReports'
+  );
+
+  if (!patient) return [];
+
+  const admission = patient.admissionDetails.find(a => a._id.toString() === admissionId);
+  if (!admission) return [];
+
+  return {
+    patientName: patient.identityDetails?.patientName,
+    admissionId: admission._id,
+    labReports: admission.labReports
+  };
+}
+
+async getRadiologyReports(patientId, admissionId) {
+  const patient = await PATIENT_MODEL.findById(patientId).select(
+    'identityDetails.patientName admissionDetails._id admissionDetails.radiologyReports'
+  );
+
+  if (!patient) return [];
+
+  const admission = patient.admissionDetails.find(a => a._id.toString() === admissionId);
+  if (!admission) return [];
+
+  return {
+    patientName: patient.identityDetails?.patientName,
+    admissionId: admission._id,
+    radiologyReports: admission.radiologyReports
+  };
+}
+
+async getAudioRecordings(patientId, admissionId) {
+  const patient = await PATIENT_MODEL.findById(patientId).select(
+    'identityDetails.patientName admissionDetails._id admissionDetails.audioRecordings'
+  );
+
+  if (!patient) return [];
+
+  const admission = patient.admissionDetails.find(a => a._id.toString() === admissionId);
+  if (!admission) return [];
+
+  return {
+    patientName: patient.identityDetails?.patientName,
+    admissionId: admission._id,
+    audioRecordings: admission.audioRecordings
+  };
+}
+
+async getVideoRecordings(patientId, admissionId) {
+  const patient = await PATIENT_MODEL.findById(patientId).select(
+    'identityDetails.patientName admissionDetails._id admissionDetails.videoRecordings'
+  );
+
+  if (!patient) return [];
+
+  const admission = patient.admissionDetails.find(a => a._id.toString() === admissionId);
+  if (!admission) return [];
+
+  return {
+    patientName: patient.identityDetails?.patientName,
+    admissionId: admission._id,
+    videoRecordings: admission.videoRecordings
+  };
+}
+
+async deleteMultipleFiles({ patientId, admissionId, fileIds, fieldType }) {
+  const validFields = ['docs', 'labReports', 'radiologyReports'];
+  if (!validFields.includes(fieldType)) {
+    throw new Error(`Invalid fieldType. Must be one of: ${validFields.join(', ')}`);
+  }
+
+  if (!Array.isArray(fileIds) || fileIds.length === 0) {
+    throw new Error("fileIds must be a non-empty array");
+  }
+
+  const admission = await PATIENT_MODEL.findOne(
+    { _id: patientId, "admissionDetails._id": admissionId },
+    { "admissionDetails.$": 1 }
+  );
+
+  if (!admission) throw new Error("Admission not found");
+
+  const fieldArray = admission.admissionDetails[0][fieldType];
+  const existingIds = fieldArray.map(f => f._id.toString());
+  const notFoundIds = fileIds.filter(id => !existingIds.includes(id));
+
+  if (notFoundIds.length === fileIds.length) {
+    throw new Error(`No matching files found in ${fieldType}`);
+  }
+
+  await PATIENT_MODEL.updateOne(
+  { _id: patientId, "admissionDetails._id": admissionId },
+  { $pull: { [`admissionDetails.$.${fieldType}`]: { _id: { $in: fileIds } } } }
+);
+
+const deletedIds = fileIds.filter(id => !notFoundIds.includes(id));
+
+return { 
+  message: `${fieldType} files deleted successfully`, 
+  deletedIds,
+  notFoundIds 
+};
+
+}
+
 
 }
 

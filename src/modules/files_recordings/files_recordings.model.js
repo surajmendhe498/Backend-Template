@@ -6,8 +6,15 @@ admissionId: { type: mongoose.Schema.Types.ObjectId, required: true },
 
 docs: [{ _id: false, name: String, path: String, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
 labReports: [{ _id: false, name: String, path: String, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
-audioRecordings: [{ _id: false, name: String, path: String, label: String, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
-videoRecordings: [{ _id: false, name: String, path: String, label: String, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+radiologyReports: [{ _id: false, name: String, path: String, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+audioRecordings: [{ _id: false, name: String, path: String, label: String, duration: Number, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+videoRecordings: [{ _id: false, name: String, path: String, label: String, duration: Number, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+clinicalNotes: { type: String },
+nursingNotes: { type: String },
+surgicalNotes: { type: String },
+symptoms: { type: String },
+pastHistory: { type: String },
+vitalData: { type: String },
 
 });
 

@@ -343,12 +343,12 @@ const AdmissionSchema = new mongoose.Schema(
     radiologyReports: [{ name: String, path: String, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
     audioRecordings: [{  name: String, path: String, label: String, duration: Number, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
     videoRecordings: [{  name: String, path: String, label: String, duration: Number, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
-    clinicalNotes: { type: String },
-    nursingNotes: { type: String },
-    surgicalNotes: { type: String },
-    symptoms: { type: String },
-    pastHistory: { type: String },
-    vitalData: { type: String },
+    clinicalNotes: [{ note: String, addedBy: String, addedAt: { type: Date, default: Date.now }}],
+    nursingNotes: [{ note: String, addedBy: String, addedAt: { type: Date, default: Date.now }}],
+    surgicalNotes: [{ note: String, addedBy: String, addedAt: { type: Date, default: Date.now }}],
+    symptoms: [{ note: String, addedBy: String, addedAt: { type: Date, default: Date.now }}],
+    pastHistory: [{ note: String, addedBy: String, addedAt: { type: Date, default: Date.now }}],
+    vitalData: [{ note: String, addedBy: String, addedAt: { type: Date, default: Date.now }}],
   },
 );
 

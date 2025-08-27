@@ -4,7 +4,6 @@ import { statusCode } from '../../utils/constants/statusCode.js';
 export default class Files_recordingsController {
   constructor() {
     this.files_recordingsService = Files_recordingsService;
-    // this.files_recordingsService = new Files_recordingsService(); // ✅ fixed
   }
 
   // upload = async (req, res, next) => {
@@ -68,49 +67,9 @@ export default class Files_recordingsController {
   // };
 
 
-  // upload = async (req, res, next) => {
-  //   try {
-  //     const { patientId, admissionId, audioLabel, videoLabel, clinicalNotes, nursingNotes, surgicalNotes, symptoms, pastHistory, vitalData } = req.body;
-
-  //     if (!patientId || !admissionId) {
-  //       return res.status(statusCode.BAD_REQUEST).json({
-  //         success: false,
-  //         message: 'patientId and admissionId are required'
-  //       });
-  //     }
-
-  //     const result = await this.files_recordingsService.uploadFiles({
-  //       patientId,
-  //       admissionId,
-  //       files: req.files,
-  //       labels: { audioLabel, videoLabel },
-  //       notes: { clinicalNotes, nursingNotes, surgicalNotes, symptoms, pastHistory, vitalData },
-  //       user: req.user  
-  //     });
-
-  //     res.status(statusCode.OK).json({
-  //       success: true,
-  //       message: 'Files uploaded successfully',
-  //       data: result
-  //     });
-  //   } catch (err) {
-  //     next(err);
-  //   }
-  // };
   upload = async (req, res, next) => {
     try {
-      const {
-        patientId,
-        admissionId,
-        audioLabel,
-        videoLabel,
-        clinicalNotes,
-        nursingNotes,
-        surgicalNotes,
-        symptoms,
-        pastHistory,
-        vitalData
-      } = req.body;
+      const { patientId, admissionId, audioLabel, videoLabel, clinicalNotes, nursingNotes, surgicalNotes, symptoms, pastHistory, vitalData } = req.body;
 
       if (!patientId || !admissionId) {
         return res.status(statusCode.BAD_REQUEST).json({
@@ -168,104 +127,87 @@ getByPatientId = async (req, res, next) => {
   }
 };
 
-// updateSingleFile = async (req, res, next) => {
-//   try {
-//     const { patientId, admissionId, fileId, fieldType, audioLabel, videoLabel } = req.body;
-
-//     if (!patientId || !admissionId || !fileId || !fieldType) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Missing required fields: patientId, admissionId, fileId, fieldType"
-//       });
-//     }
-
-//     const validFields = ['docs', 'labReports', 'audioRecordings', 'videoRecordings'];
-//     if (!validFields.includes(fieldType)) {
-//       return res.status(400).json({
-//         success: false,
-//         message: `Invalid fieldType. Must be one of: ${validFields.join(', ')}`
-//       });
-//     }
-
-//     const fileArray = req.files?.[fieldType];
-//     const file = fileArray?.[0];
-//     if (!file) {
-//       return res.status(400).json({
-//         success: false,
-//         message: `No file uploaded in ${fieldType} field`
-//       });
-//     }
-
-//     // pick correct label
-//     let label = null;
-//     if (fieldType === "audioRecordings") label = audioLabel;
-//     if (fieldType === "videoRecordings") label = videoLabel;
-
-//     const result = await this.files_recordingsService.updateSingleFile({
-//       patientId,
-//       admissionId,
-//       fileId,
-//       file,
-//       fieldType,
-//       label
-//     });
-
-//     res.status(200).json({
-//       success: true,
-//       message: result.message,
-//       data: result.updatedFile
-//     });
-//   } catch (err) {
-//     next(err);
-//   }
-// };
-
 updateSingleFile = async (req, res, next) => {
   try {
-    const { patientId, admissionId, fileId, fieldType, audioLabel, videoLabel } = req.body;
+    const { patientId, admissionId, fileId, fieldType, audioLabel, videoLabel,
+            clinicalNotes, nursingNotes, surgicalNotes, symptoms, pastHistory, vitalData } = req.body;
 
-    if (!patientId || !admissionId || !fileId || !fieldType) {
+    if (!patientId || !admissionId) {
       return res.status(400).json({
         success: false,
-        message: "Missing required fields: patientId, admissionId, fileId, fieldType"
+        message: "patientId and admissionId are required"
       });
     }
 
-    const validFields = ['docs', 'labReports', 'radiologyReports', 'audioRecordings', 'videoRecordings'];
-    if (!validFields.includes(fieldType)) {
-      return res.status(400).json({
-        success: false,
-        message: `Invalid fieldType. Must be one of: ${validFields.join(', ')}`
+    const fileFields = ['docs', 'labReports', 'radiologyReports', 'audioRecordings', 'videoRecordings'];
+    let updates = {};
+
+    // 🔹 1. File update
+    if (fieldType && fileFields.includes(fieldType)) {
+      if (!fileId) {
+        return res.status(400).json({
+          success: false,
+          message: "fileId is required for file-based updates"
+        });
+      }
+
+      const fileArray = req.files?.[fieldType];
+      const file = fileArray?.[0] || null;
+
+      let label = null;
+      if (fieldType === "audioRecordings") label = audioLabel;
+      if (fieldType === "videoRecordings") label = videoLabel;
+
+      const fileResult = await this.files_recordingsService.updateSingleFile({
+        patientId,
+        admissionId,
+        fileId,
+        file,
+        fieldType,
+        label
       });
+
+      updates.fileUpdate = fileResult.updatedFile;
     }
 
-    const fileArray = req.files?.[fieldType];
-    const file = fileArray?.[0] || null; // <-- optional now
+    // 🔹 2. Notes update
+    const notesToUpdate = {};
+    if (clinicalNotes !== undefined) notesToUpdate.clinicalNotes = clinicalNotes;
+    if (nursingNotes !== undefined) notesToUpdate.nursingNotes = nursingNotes;
+    if (surgicalNotes !== undefined) notesToUpdate.surgicalNotes = surgicalNotes;
+    if (symptoms !== undefined) notesToUpdate.symptoms = symptoms;
+    if (pastHistory !== undefined) notesToUpdate.pastHistory = pastHistory;
+    if (vitalData !== undefined) notesToUpdate.vitalData = vitalData;
 
-    // pick correct label
-    let label = null;
-    if (fieldType === "audioRecordings") label = audioLabel;
-    if (fieldType === "videoRecordings") label = videoLabel;
+    if (Object.keys(notesToUpdate).length > 0) {
+      for (const [field, value] of Object.entries(notesToUpdate)) {
+        await this.files_recordingsService.updateSingleFile({
+          patientId,
+          admissionId,
+          fieldType: field,
+          noteValue: value
+        });
+      }
+      updates.notesUpdate = notesToUpdate;
+    }
 
-    const result = await this.files_recordingsService.updateSingleFile({
-      patientId,
-      admissionId,
-      fileId,
-      file,      // may be null
-      fieldType,
-      label
-    });
+    if (!updates.fileUpdate && !updates.notesUpdate) {
+      return res.status(400).json({
+        success: false,
+        message: "Nothing to update. Provide file/label or notes field."
+      });
+    }
 
     res.status(200).json({
       success: true,
-      message: result.message,
-      data: result.updatedFile
+      message: "Update successful",
+      data: updates
     });
+
   } catch (err) {
     next(err);
   }
 };
-
 
 deleteSingleFile = async (req, res, next) => {
   try {

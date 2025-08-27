@@ -6,67 +6,6 @@ export default class Files_recordingsController {
     this.files_recordingsService = Files_recordingsService;
   }
 
-  // upload = async (req, res, next) => {
-  //   try {
-  //     const { patientId, admissionId, audioLabel, videoLabel } = req.body;
-
-  //     if (!patientId || !admissionId) {
-  //       return res.status(statusCode.BAD_REQUEST).json({
-  //         success: false,
-  //         message: 'patientId and admissionId are required'
-  //       });
-  //     }
-
-  //     const result = await this.files_recordingsService.uploadFiles({
-  //       patientId,
-  //       admissionId,
-  //       files: req.files,
-  //       labels: { audioLabel, videoLabel },
-  //       user: req.user  
-  //     });
-
-  //     res.status(statusCode.OK).json({
-  //       success: true,
-  //       message: 'Files uploaded successfully',
-  //       data: result
-  //     });
-  //   } catch (err) {
-  //     next(err);
-  //   }
-  // };
-
-  
-  // upload = async (req, res, next) => {
-  //   try {
-  //     const { patientId, admissionId, audioLabel, videoLabel, clinicalNotes, nursingNotes, surgicalNotes, symptoms, pastHistory, vitalData } = req.body;
-
-  //     if (!patientId || !admissionId) {
-  //       return res.status(statusCode.BAD_REQUEST).json({
-  //         success: false,
-  //         message: 'patientId and admissionId are required'
-  //       });
-  //     }
-
-  //     const result = await this.files_recordingsService.uploadFiles({
-  //       patientId,
-  //       admissionId,
-  //       files: req.files,
-  //       labels: { audioLabel, videoLabel },
-  //       notes: { clinicalNotes, nursingNotes, surgicalNotes, symptoms, pastHistory, vitalData },
-  //       user: req.user  
-  //     });
-
-  //     res.status(statusCode.OK).json({
-  //       success: true,
-  //       message: 'Files uploaded successfully',
-  //       data: result
-  //     });
-  //   } catch (err) {
-  //     next(err);
-  //   }
-  // };
-
-
   upload = async (req, res, next) => {
     try {
       const { patientId, admissionId, audioLabel, videoLabel, clinicalNotes, nursingNotes, surgicalNotes, symptoms, pastHistory, vitalData } = req.body;

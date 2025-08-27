@@ -3,8 +3,14 @@ import { PATIENT_MODEL } from '../patient/patient.model.js';
 import cloudinary from '../../helpers/cloudinary.js';
 import imagekit from '../../helpers/imagekit.js';
 import ffmpeg from 'fluent-ffmpeg';
-import ffmpegPath from '@ffmpeg-installer/ffmpeg';
+import ffmpegInstaller from '@ffmpeg-installer/ffmpeg';
+import ffprobeInstaller from 'ffprobe-static';
 import fs from 'fs';
+import path from 'path';
+
+// Set ffmpeg & ffprobe paths
+ffmpeg.setFfmpegPath(ffmpegInstaller.path);
+ffmpeg.setFfprobePath(ffprobeInstaller.path);
 
 class Files_recordingsService {
 
@@ -252,37 +258,49 @@ class Files_recordingsService {
 //   }
 
 async uploadFiles({ patientId, admissionId, files, labels, user, notes }) {
+    // Validate patient
     const patientExists = await PATIENT_MODEL.findById(patientId);
     if (!patientExists) throw new Error("Invalid Patient ID: Patient not found");
 
-    const admissionExists = patientExists.admissionDetails.find(a => a._id.toString() === admissionId);
+    const admissionExists = patientExists.admissionDetails.find(
+      a => a._id.toString() === admissionId
+    );
     if (!admissionExists) throw new Error("Invalid Admission ID: Admission not found for the given patient.");
 
     const uploadedBy = user?.firstName || user?.username || "Unknown User";
     const uploadedAt = new Date();
 
-    // helper to get duration using ffprobe
+    // Function to get duration in seconds
     const getDuration = (filePath) => {
-      return new Promise((resolve, reject) => {
-        ffmpeg.ffprobe(filePath, (err, metadata) => {
-          if (err) return resolve(null);
-          resolve(metadata.format.duration); // in seconds
+      return new Promise((resolve) => {
+        const fullPath = path.resolve(filePath);
+        if (!fs.existsSync(fullPath)) return resolve(null);
+
+        ffmpeg.ffprobe(fullPath, (err, metadata) => {
+          if (err) {
+            console.log("ffprobe error:", err.message, "for file:", fullPath);
+            return resolve(null);
+          }
+          const durationInSeconds = metadata?.format?.duration
+            ? Math.round(metadata.format.duration)
+            : null;
+          resolve(durationInSeconds);
         });
       });
     };
 
-    // upload a file to ImageKit
+    // Upload file to ImageKit
     const uploadToImageKit = async (file) => {
       const fileBuffer = fs.readFileSync(file.path);
       const uploadResult = await imagekit.upload({
         file: fileBuffer,
-        fileName: file.filename,
+        fileName: file.originalname,
         folder: `/${file.fieldname}`
       });
       return uploadResult.url;
     };
 
-    // handle docs/labReports/radiologyReports
+    // Map generic files (docs, labReports, radiologyReports)
     const mapFiles = async (fileArray) => {
       return Promise.all((fileArray || []).map(async f => ({
         name: f.originalname,
@@ -296,18 +314,19 @@ async uploadFiles({ patientId, admissionId, files, labels, user, notes }) {
     const labReports = await mapFiles(files.labReports);
     const radiologyReports = await mapFiles(files.radiologyReports);
 
-    // handle audio/video with duration
+    // Map audio/video files with duration
     const mapMediaFiles = async (fileArray, labelKey) => {
       return Promise.all((fileArray || []).map(async f => {
-        const url = await uploadToImageKit(f);
         const duration = await getDuration(f.path);
+        const url = await uploadToImageKit(f);
+
         return {
           name: f.originalname,
           path: url,
           label: labels?.[labelKey] || null,
           uploadedBy,
           uploadedAt,
-          duration // in seconds
+          duration
         };
       }));
     };
@@ -315,7 +334,7 @@ async uploadFiles({ patientId, admissionId, files, labels, user, notes }) {
     const audioRecordings = await mapMediaFiles(files.audioRecordings, 'audioLabel');
     const videoRecordings = await mapMediaFiles(files.videoRecordings, 'videoLabel');
 
-    // prepare final data
+    // Prepare final data
     const data = {
       patientId,
       admissionId,
@@ -332,8 +351,10 @@ async uploadFiles({ patientId, admissionId, files, labels, user, notes }) {
       vitalData: notes?.vitalData || null,
     };
 
+    // Save to FileRecording model
     const newRecord = await FILERECORDING_MODEL.create(data);
 
+    // Update patient admission details
     await PATIENT_MODEL.updateOne(
       { _id: patientId, "admissionDetails._id": admissionId },
       {
@@ -355,12 +376,13 @@ async uploadFiles({ patientId, admissionId, files, labels, user, notes }) {
       }
     );
 
-    // delete temp files after upload
-    Object.values(files).flat().forEach(f => fs.unlinkSync(f.path));
+    // Clean up temp files
+    Object.values(files).flat().forEach(f => {
+      if (f.path && fs.existsSync(f.path)) fs.unlinkSync(f.path);
+    });
 
     return newRecord;
   }
-
   async getAll() {
     return await FILERECORDING_MODEL.find().populate('patientId');
   }

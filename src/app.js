@@ -42,6 +42,7 @@ import TransferPatient from './modules/patient/transfer_patient/transfer_patient
 import ChangeConsultant from './modules/patient/change_consultant/change_consultant.routes.js';
 import filesRecordings from './modules/files_recordings/files_recordings.routes.js';
 import userRoute from './modules/user/user.routes.js';
+import notesRoute from './modules/notes/notes.routes.js';
 
 app.use(helmet());
 app.use(morgan('dev'));
@@ -82,6 +83,7 @@ app.use('/api/v1/patient/transfer', TransferPatient);
 app.use('/api/v1/patient/change_consultant', ChangeConsultant);
 app.use('/api/v1/files-recordings', filesRecordings);
 app.use('/api/v1/user', userRoute);
+app.use('/api/v1/notes', notesRoute);
      
 app.use(notFound);
 app.use(errorHandler);

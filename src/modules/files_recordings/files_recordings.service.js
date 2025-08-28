@@ -304,7 +304,164 @@ async getByPatientId(patientId, admissionId = null) {
     }));
   }
 
-async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label, user }) {
+// async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label, user }) {
+//   const fileFields = ['docs', 'labReports', 'radiologyReports', 'audioRecordings', 'videoRecordings'];
+//   if (!fileFields.includes(fieldType)) throw new Error(`Invalid fieldType`);
+
+//   const admission = await PATIENT_MODEL.findOne(
+//     { _id: patientId, "admissionDetails._id": admissionId }
+//   );
+
+//   if (!admission) throw new Error("Admission not found");
+
+//   const admissionDetail = admission.admissionDetails.id(admissionId);
+//   const fileArray = admissionDetail[fieldType];
+//   const fileObj = fileArray.id(fileId);
+
+//   if (!fileObj) throw new Error(`No file with id ${fileId} found in ${fieldType}`);
+
+//   const currentUser = user?.firstName || user?.username || "Unknown User";
+//   const now = new Date();
+
+//   // 🔹 Upload file if provided
+//   if (file) {
+//     const fileBuffer = fs.readFileSync(file.path);
+//     const uploadResult = await imagekit.upload({
+//       file: fileBuffer,
+//       fileName: file.originalname,
+//       folder: `/${fieldType}`
+//     });
+
+//     fileObj.name = file.originalname;
+//     fileObj.path = uploadResult.url;
+
+//     if (['audioRecordings', 'videoRecordings'].includes(fieldType)) {
+//       const duration = await new Promise(resolve => {
+//         ffmpeg.ffprobe(file.path, (err, metadata) => {
+//           if (err) return resolve(null);
+//           resolve(metadata?.format?.duration ? Math.round(metadata.format.duration) : null);
+//         });
+//       });
+//       fileObj.duration = duration;
+//     }
+
+//     // Update uploadedBy only when a new file is uploaded
+//     fileObj.uploadedBy = currentUser;
+
+//     if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+//   }
+
+//   // 🔹 Update label only for audio/video
+//   if (['audioRecordings', 'videoRecordings'].includes(fieldType) && label !== undefined) {
+//     fileObj.label = label;
+//   }
+
+//   // 🔹 Always update updatedAt
+//   fileObj.updatedAt = now;
+
+//   // 🔹 Save the document
+//   await admission.save();
+
+//   // 🔹 Prepare response
+//   const response = {
+//     name: fileObj.name,
+//     path: fileObj.path,
+//     uploadedBy: fileObj.uploadedBy,
+//     updatedAt: fileObj.updatedAt
+//   };
+
+//   // Include label and duration only for audio/video
+//   if (['audioRecordings', 'videoRecordings'].includes(fieldType)) {
+//     response.label = fileObj.label;
+//     response.duration = fileObj.duration;
+//   }
+
+//   return {
+//     message: `${fieldType} updated successfully`,
+//     updatedFile: response
+//   };
+// }
+
+// async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label, fileName, user }) { 
+//   const fileFields = ['docs', 'labReports', 'radiologyReports', 'audioRecordings', 'videoRecordings'];
+//   if (!fileFields.includes(fieldType)) throw new Error(`Invalid fieldType`);
+
+//   const admission = await PATIENT_MODEL.findOne(
+//     { _id: patientId, "admissionDetails._id": admissionId }
+//   );
+
+//   if (!admission) throw new Error("Admission not found");
+
+//   const admissionDetail = admission.admissionDetails.id(admissionId);
+//   const fileArray = admissionDetail[fieldType];
+//   const fileObj = fileArray.id(fileId);
+
+//   if (!fileObj) throw new Error(`No file with id ${fileId} found in ${fieldType}`);
+
+//   const currentUser = user?.firstName || user?.username || "Unknown User";
+//   const now = new Date();
+
+//   // 1️⃣ Upload new file if provided
+//   if (file) {
+//     const fileBuffer = fs.readFileSync(file.path);
+//     const uploadResult = await imagekit.upload({
+//       file: fileBuffer,
+//       fileName: file.originalname,
+//       folder: `/${fieldType}`
+//     });
+
+//     fileObj.name = file.originalname;
+//     fileObj.path = uploadResult.url;
+
+//     if (['audioRecordings', 'videoRecordings'].includes(fieldType)) {
+//       const duration = await new Promise(resolve => {
+//         ffmpeg.ffprobe(file.path, (err, metadata) => {
+//           if (err) return resolve(null);
+//           resolve(metadata?.format?.duration ? Math.round(metadata.format.duration) : null);
+//         });
+//       });
+//       fileObj.duration = duration;
+//     }
+
+//     fileObj.uploadedBy = currentUser;
+
+//     if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+//   }
+
+//   // 2️⃣ Update label (only for audio/video)
+//   if (['audioRecordings', 'videoRecordings'].includes(fieldType) && label !== undefined) {
+//     fileObj.label = label;
+//   }
+
+//   // 3️⃣ Update file name (for all types)
+//   if (fileName && !file) {
+//     fileObj.name = fileName;
+//   }
+
+//   // Always update updatedAt
+//   fileObj.updatedAt = now;
+
+//   await admission.save();
+
+//   const response = {
+//     name: fileObj.name,
+//     path: fileObj.path,
+//     uploadedBy: fileObj.uploadedBy,
+//     updatedAt: fileObj.updatedAt
+//   };
+
+//   if (['audioRecordings', 'videoRecordings'].includes(fieldType)) {
+//     response.label = fileObj.label;
+//     response.duration = fileObj.duration;
+//   }
+
+//   return {
+//     message: `${fieldType} updated successfully`,
+//     updatedFile: response
+//   };
+// }
+
+async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label, fileName, user }) {
   const fileFields = ['docs', 'labReports', 'radiologyReports', 'audioRecordings', 'videoRecordings'];
   if (!fileFields.includes(fieldType)) throw new Error(`Invalid fieldType`);
 
@@ -323,7 +480,7 @@ async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label,
   const currentUser = user?.firstName || user?.username || "Unknown User";
   const now = new Date();
 
-  // 🔹 Upload file if provided
+  // 1️⃣ Upload new file if provided
   if (file) {
     const fileBuffer = fs.readFileSync(file.path);
     const uploadResult = await imagekit.upload({
@@ -332,8 +489,10 @@ async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label,
       folder: `/${fieldType}`
     });
 
-    fileObj.name = file.originalname;
     fileObj.path = uploadResult.url;
+
+    // File name priority: passed fileName > uploaded file originalname
+    fileObj.name = fileName || file.originalname;
 
     if (['audioRecordings', 'videoRecordings'].includes(fieldType)) {
       const duration = await new Promise(resolve => {
@@ -345,24 +504,26 @@ async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label,
       fileObj.duration = duration;
     }
 
-    // Update uploadedBy only when a new file is uploaded
     fileObj.uploadedBy = currentUser;
 
     if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
   }
 
-  // 🔹 Update label only for audio/video
+  // 2️⃣ Update label (only for audio/video)
   if (['audioRecordings', 'videoRecordings'].includes(fieldType) && label !== undefined) {
     fileObj.label = label;
   }
 
-  // 🔹 Always update updatedAt
+  // 3️⃣ Update file name (when only fileName passed, no file)
+  if (!file && fileName) {
+    fileObj.name = fileName;
+  }
+
+  // Always update updatedAt
   fileObj.updatedAt = now;
 
-  // 🔹 Save the document
   await admission.save();
 
-  // 🔹 Prepare response
   const response = {
     name: fileObj.name,
     path: fileObj.path,
@@ -370,7 +531,6 @@ async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label,
     updatedAt: fileObj.updatedAt
   };
 
-  // Include label and duration only for audio/video
   if (['audioRecordings', 'videoRecordings'].includes(fieldType)) {
     response.label = fileObj.label;
     response.duration = fileObj.duration;
@@ -381,6 +541,8 @@ async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label,
     updatedFile: response
   };
 }
+
+
 
 async deleteSingleFile({ patientId, admissionId, fileId, fieldType }) {
   const validFields = ['docs', 'labReports', 'audioRecordings', 'videoRecordings'];

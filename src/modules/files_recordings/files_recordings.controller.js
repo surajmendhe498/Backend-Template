@@ -96,9 +96,65 @@ getByPatientId = async (req, res, next) => {
     }
   };
 
+// updateSingleFile = async (req, res, next) => {
+//   try {
+//     const { patientId, admissionId, fileId, fieldType, audioLabel, videoLabel } = req.body;
+//     const user = req.user;
+
+//     if (!patientId || !admissionId) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "patientId and admissionId are required"
+//       });
+//     }
+
+//     const fileFields = ['docs', 'labReports', 'radiologyReports', 'audioRecordings', 'videoRecordings'];
+
+//     if (!fieldType || !fileFields.includes(fieldType)) {
+//       return res.status(400).json({
+//         success: false,
+//         message: `fieldType is required and must be one of: ${fileFields.join(', ')}`
+//       });
+//     }
+
+//     if (!fileId) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "fileId is required for file-based updates"
+//       });
+//     }
+
+//     const fileArray = req.files?.[fieldType];
+//     const file = fileArray?.[0] || null;
+
+//     let label = null;
+//     if (fieldType === "audioRecordings") label = audioLabel;
+//     if (fieldType === "videoRecordings") label = videoLabel;
+
+//     const fileResult = await this.files_recordingsService.updateSingleFile({
+//       patientId,
+//       admissionId,
+//       fileId,
+//       file,
+//       fieldType,
+//       label,
+//       user
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       message: fileResult.message,
+//       data: fileResult.updatedFile
+//     });
+
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+
 updateSingleFile = async (req, res, next) => {
   try {
-    const { patientId, admissionId, fileId, fieldType, audioLabel, videoLabel } = req.body;
+    const { patientId, admissionId, fileId, fieldType, audioLabel, videoLabel, fileName } = req.body;
     const user = req.user;
 
     if (!patientId || !admissionId) {
@@ -109,7 +165,6 @@ updateSingleFile = async (req, res, next) => {
     }
 
     const fileFields = ['docs', 'labReports', 'radiologyReports', 'audioRecordings', 'videoRecordings'];
-
     if (!fieldType || !fileFields.includes(fieldType)) {
       return res.status(400).json({
         success: false,
@@ -138,6 +193,7 @@ updateSingleFile = async (req, res, next) => {
       file,
       fieldType,
       label,
+      fileName,
       user
     });
 
@@ -151,6 +207,7 @@ updateSingleFile = async (req, res, next) => {
     next(err);
   }
 };
+
 
 deleteSingleFile = async (req, res, next) => {
   try {

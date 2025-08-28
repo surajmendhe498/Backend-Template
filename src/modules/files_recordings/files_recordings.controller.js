@@ -68,8 +68,8 @@ getByPatientId = async (req, res, next) => {
 
 updateSingleFile = async (req, res, next) => {
   try {
-    const { patientId, admissionId, fileId, fieldType, audioLabel, videoLabel,
-            clinicalNotes, nursingNotes, surgicalNotes, symptoms, pastHistory, vitalData } = req.body;
+    const { patientId, admissionId, fileId, fieldType, audioLabel, videoLabel } = req.body;
+    const user = req.user;
 
     if (!patientId || !admissionId) {
       return res.status(400).json({
@@ -79,68 +79,42 @@ updateSingleFile = async (req, res, next) => {
     }
 
     const fileFields = ['docs', 'labReports', 'radiologyReports', 'audioRecordings', 'videoRecordings'];
-    let updates = {};
 
-    // 🔹 1. File update
-    if (fieldType && fileFields.includes(fieldType)) {
-      if (!fileId) {
-        return res.status(400).json({
-          success: false,
-          message: "fileId is required for file-based updates"
-        });
-      }
-
-      const fileArray = req.files?.[fieldType];
-      const file = fileArray?.[0] || null;
-
-      let label = null;
-      if (fieldType === "audioRecordings") label = audioLabel;
-      if (fieldType === "videoRecordings") label = videoLabel;
-
-      const fileResult = await this.files_recordingsService.updateSingleFile({
-        patientId,
-        admissionId,
-        fileId,
-        file,
-        fieldType,
-        label
-      });
-
-      updates.fileUpdate = fileResult.updatedFile;
-    }
-
-    // 🔹 2. Notes update
-    const notesToUpdate = {};
-    if (clinicalNotes !== undefined) notesToUpdate.clinicalNotes = clinicalNotes;
-    if (nursingNotes !== undefined) notesToUpdate.nursingNotes = nursingNotes;
-    if (surgicalNotes !== undefined) notesToUpdate.surgicalNotes = surgicalNotes;
-    if (symptoms !== undefined) notesToUpdate.symptoms = symptoms;
-    if (pastHistory !== undefined) notesToUpdate.pastHistory = pastHistory;
-    if (vitalData !== undefined) notesToUpdate.vitalData = vitalData;
-
-    if (Object.keys(notesToUpdate).length > 0) {
-      for (const [field, value] of Object.entries(notesToUpdate)) {
-        await this.files_recordingsService.updateSingleFile({
-          patientId,
-          admissionId,
-          fieldType: field,
-          noteValue: value
-        });
-      }
-      updates.notesUpdate = notesToUpdate;
-    }
-
-    if (!updates.fileUpdate && !updates.notesUpdate) {
+    if (!fieldType || !fileFields.includes(fieldType)) {
       return res.status(400).json({
         success: false,
-        message: "Nothing to update. Provide file/label or notes field."
+        message: `fieldType is required and must be one of: ${fileFields.join(', ')}`
       });
     }
+
+    if (!fileId) {
+      return res.status(400).json({
+        success: false,
+        message: "fileId is required for file-based updates"
+      });
+    }
+
+    const fileArray = req.files?.[fieldType];
+    const file = fileArray?.[0] || null;
+
+    let label = null;
+    if (fieldType === "audioRecordings") label = audioLabel;
+    if (fieldType === "videoRecordings") label = videoLabel;
+
+    const fileResult = await this.files_recordingsService.updateSingleFile({
+      patientId,
+      admissionId,
+      fileId,
+      file,
+      fieldType,
+      label,
+      user
+    });
 
     res.status(200).json({
       success: true,
-      message: "Update successful",
-      data: updates
+      message: fileResult.message,
+      data: fileResult.updatedFile
     });
 
   } catch (err) {

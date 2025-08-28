@@ -206,104 +206,83 @@ async getByPatientId(patientId, admissionId = null) {
   }));
 }
 
-
-async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label, noteValue }) {
+async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label, user }) {
   const fileFields = ['docs', 'labReports', 'radiologyReports', 'audioRecordings', 'videoRecordings'];
-  const noteFields = ['clinicalNotes', 'nursingNotes', 'surgicalNotes', 'symptoms', 'pastHistory', 'vitalData'];
+  if (!fileFields.includes(fieldType)) throw new Error(`Invalid fieldType`);
 
-  if (![...fileFields, ...noteFields].includes(fieldType)) {
-    throw new Error(`Invalid fieldType. Must be one of: ${[...fileFields, ...noteFields].join(', ')}`);
-  }
+  const admission = await PATIENT_MODEL.findOne(
+    { _id: patientId, "admissionDetails._id": admissionId }
+  );
 
-  // 🔹 Case 1: File-based fields
-  if (fileFields.includes(fieldType)) {
-    const admission = await PATIENT_MODEL.findOne(
-      { _id: patientId, "admissionDetails._id": admissionId },
-      { "admissionDetails.$": 1 }
-    );
+  if (!admission) throw new Error("Admission not found");
 
-    if (!admission) throw new Error("Admission not found");
+  const admissionDetail = admission.admissionDetails.id(admissionId);
+  const fileArray = admissionDetail[fieldType];
+  const fileObj = fileArray.id(fileId);
 
-    const fieldArray = admission.admissionDetails[0][fieldType];
-    const fileExists = fieldArray.some(f => f._id.toString() === fileId);
-    if (!fileExists) {
-      throw new Error(`No file with id ${fileId} found in ${fieldType}`);
-    }
+  if (!fileObj) throw new Error(`No file with id ${fileId} found in ${fieldType}`);
 
-    const updateData = {};
-    const updatedFile = {};
+  const currentUser = user?.firstName || user?.username || "Unknown User";
+  const now = new Date();
 
-    // ⬆️ Upload to ImageKit if new file provided
-    if (file) {
-      const fileBuffer = fs.readFileSync(file.path);
-      const uploadResult = await imagekit.upload({
-        file: fileBuffer,
-        fileName: file.originalname,
-        folder: `/${fieldType}`
-      });
+  // 🔹 Upload file if provided
+  if (file) {
+    const fileBuffer = fs.readFileSync(file.path);
+    const uploadResult = await imagekit.upload({
+      file: fileBuffer,
+      fileName: file.originalname,
+      folder: `/${fieldType}`
+    });
 
-      updateData[`admissionDetails.$.${fieldType}.$[elem].name`] = file.originalname;
-      updateData[`admissionDetails.$.${fieldType}.$[elem].path`] = uploadResult.url;
+    fileObj.name = file.originalname;
+    fileObj.path = uploadResult.url;
 
-      updatedFile.name = file.originalname;
-      updatedFile.path = uploadResult.url;
-
-      // If audio/video, recalc duration
-      if (['audioRecordings', 'videoRecordings'].includes(fieldType)) {
-        const duration = await new Promise(resolve => {
-          ffmpeg.ffprobe(file.path, (err, metadata) => {
-            if (err) return resolve(null);
-            resolve(metadata?.format?.duration ? Math.round(metadata.format.duration) : null);
-          });
+    if (['audioRecordings', 'videoRecordings'].includes(fieldType)) {
+      const duration = await new Promise(resolve => {
+        ffmpeg.ffprobe(file.path, (err, metadata) => {
+          if (err) return resolve(null);
+          resolve(metadata?.format?.duration ? Math.round(metadata.format.duration) : null);
         });
-        updateData[`admissionDetails.$.${fieldType}.$[elem].duration`] = duration;
-        updatedFile.duration = duration;
-      }
-
-      // delete local temp file
-      if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
+      });
+      fileObj.duration = duration;
     }
 
-    // ⬆️ Update label if passed
-    if (['audioRecordings', 'videoRecordings'].includes(fieldType) && label !== undefined) {
-      updateData[`admissionDetails.$.${fieldType}.$[elem].label`] = label;
-      updatedFile.label = label;
-    }
+    // Update uploadedBy only when a new file is uploaded
+    fileObj.uploadedBy = currentUser;
 
-    if (Object.keys(updateData).length === 0) {
-      throw new Error("Nothing to update. Provide file or label.");
-    }
-
-    await PATIENT_MODEL.updateOne(
-      { _id: patientId, "admissionDetails._id": admissionId },
-      { $set: updateData },
-      { arrayFilters: [{ "elem._id": fileId }] }
-    );
-
-    return {
-      message: `${fieldType} updated successfully`,
-      updatedFile
-    };
+    if (fs.existsSync(file.path)) fs.unlinkSync(file.path);
   }
 
-  // 🔹 Case 2: Notes fields (no fileId required)
-  if (noteFields.includes(fieldType)) {
-    if (noteValue === undefined || noteValue === null) {
-      throw new Error(`noteValue is required for ${fieldType}`);
-    }
-
-    await PATIENT_MODEL.updateOne(
-      { _id: patientId, "admissionDetails._id": admissionId },
-      { $set: { [`admissionDetails.$.${fieldType}`]: noteValue } }
-    );
-
-    return {
-      message: `${fieldType} updated successfully`,
-      updatedNote: { [fieldType]: noteValue }
-    };
+  // 🔹 Update label only for audio/video
+  if (['audioRecordings', 'videoRecordings'].includes(fieldType) && label !== undefined) {
+    fileObj.label = label;
   }
+
+  // 🔹 Always update updatedAt
+  fileObj.updatedAt = now;
+
+  // 🔹 Save the document
+  await admission.save();
+
+  // 🔹 Prepare response
+  const response = {
+    name: fileObj.name,
+    path: fileObj.path,
+    uploadedBy: fileObj.uploadedBy,
+    updatedAt: fileObj.updatedAt
+  };
+
+  // Include label and duration only for audio/video
+  if (['audioRecordings', 'videoRecordings'].includes(fieldType)) {
+    response.label = fileObj.label;
+    response.duration = fileObj.duration;
+  }
+
+  return {
+    message: `${fieldType} updated successfully`,
+    updatedFile: response
+  };
 }
-
 
 async deleteSingleFile({ patientId, admissionId, fileId, fieldType }) {
   const validFields = ['docs', 'labReports', 'audioRecordings', 'videoRecordings'];
@@ -331,8 +310,7 @@ async deleteSingleFile({ patientId, admissionId, fileId, fieldType }) {
   );
 
   return { message: `${fieldType} file deleted successfully`, fileId };
-}
-  
+} 
 
 async getDocs(patientId, admissionId) {
   const patient = await PATIENT_MODEL.findById(patientId).select(
@@ -500,7 +478,6 @@ async updateSpecificNote({ patientId, admissionId, field, noteId, newNote, user 
 
   return { message: `Note updated successfully in ${field}`, updatedNote };
 }
-
 
 }
 

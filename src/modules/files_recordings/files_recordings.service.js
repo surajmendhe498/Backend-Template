@@ -13,8 +13,146 @@ ffmpeg.setFfprobePath(ffprobeInstaller.path);
 
 class Files_recordingsService {
 
-async uploadFiles({ patientId, admissionId, files, labels, user, notes }) {
+// async uploadFiles({ patientId, admissionId, files, labels, user, notes }) {
 
+//   const patientExists = await PATIENT_MODEL.findById(patientId);
+//   if (!patientExists) throw new Error("Invalid Patient ID: Patient not found");
+
+//   const admissionExists = patientExists.admissionDetails.find(
+//     a => a._id.toString() === admissionId
+//   );
+//   if (!admissionExists) throw new Error("Invalid Admission ID: Admission not found for the given patient.");
+
+//   const uploadedBy = user?.firstName || user?.username || "Unknown User";
+//   const uploadedAt = new Date();
+
+//   // Function to get duration in seconds
+//   const getDuration = (filePath) => {
+//     return new Promise((resolve) => {
+//       const fullPath = path.resolve(filePath);
+//       if (!fs.existsSync(fullPath)) return resolve(null);
+
+//       ffmpeg.ffprobe(fullPath, (err, metadata) => {
+//         if (err) {
+//           console.log("ffprobe error:", err.message, "for file:", fullPath);
+//           return resolve(null);
+//         }
+//         const durationInSeconds = metadata?.format?.duration
+//           ? Math.round(metadata.format.duration)
+//           : null;
+//         resolve(durationInSeconds);
+//       });
+//     });
+//   };
+
+//   // Upload file to ImageKit
+//   const uploadToImageKit = async (file) => {
+//     const fileBuffer = fs.readFileSync(file.path);
+//     const uploadResult = await imagekit.upload({
+//       file: fileBuffer,
+//       fileName: file.originalname,
+//       folder: `/${file.fieldname}`
+//     });
+//     return uploadResult.url;
+//   };
+
+//   // Map generic files (docs, labReports, radiologyReports)
+//   const mapFiles = async (fileArray) => {
+//     return Promise.all((fileArray || []).map(async f => ({
+//       name: f.originalname,
+//       path: await uploadToImageKit(f),
+//       uploadedBy,
+//       uploadedAt
+//     })));
+//   };
+
+//   const docs = await mapFiles((files && files.docs) || []);
+//   const labReports = await mapFiles((files && files.labReports) || []);
+//   const radiologyReports = await mapFiles((files && files.radiologyReports) || []);
+
+//   // Map audio/video files with duration
+//   const mapMediaFiles = async (fileArray, labelKey) => {
+//     return Promise.all((fileArray || []).map(async f => {
+//       const duration = await getDuration(f.path);
+//       const url = await uploadToImageKit(f);
+
+//       return {
+//         name: f.originalname,
+//         path: url,
+//         label: labels?.[labelKey] || null,
+//         uploadedBy,
+//         uploadedAt,
+//         duration
+//       };
+//     }));
+//   };
+
+//   const audioRecordings = await mapMediaFiles((files && files.audioRecordings) || [], 'audioLabel');
+//   const videoRecordings = await mapMediaFiles((files && files.videoRecordings) || [], 'videoLabel');
+
+//   // Prepare notes
+//   const data = {
+//     patientId,
+//     admissionId,
+//     docs,
+//     labReports,
+//     radiologyReports,
+//     audioRecordings,
+//     videoRecordings,
+//     clinicalNotes: notes?.clinicalNotes
+//       ? [{ note: notes.clinicalNotes, addedBy: uploadedBy, addedAt: uploadedAt }]
+//       : [],
+//     nursingNotes: notes?.nursingNotes
+//       ? [{ note: notes.nursingNotes, addedBy: uploadedBy, addedAt: uploadedAt }]
+//       : [],
+//     surgicalNotes: notes?.surgicalNotes
+//       ? [{ note: notes.surgicalNotes, addedBy: uploadedBy, addedAt: uploadedAt }]
+//       : [],
+//     symptoms: notes?.symptoms
+//       ? [{ note: notes.symptoms, addedBy: uploadedBy, addedAt: uploadedAt }]
+//       : [],
+//     pastHistory: notes?.pastHistory
+//       ? [{ note: notes.pastHistory, addedBy: uploadedBy, addedAt: uploadedAt }]
+//       : [],
+//     vitalData: notes?.vitalData
+//       ? [{ note: notes.vitalData, addedBy: uploadedBy, addedAt: uploadedAt }]
+//       : []
+//   };
+
+//   // Create record in filesRecording collection
+//   const newRecord = await FILERECORDING_MODEL.create(data);
+
+//   // Update patient admissionDetails
+//   await PATIENT_MODEL.updateOne(
+//     { _id: patientId, "admissionDetails._id": admissionId },
+//     {
+//       $push: {
+//         "admissionDetails.$.docs": { $each: docs },
+//         "admissionDetails.$.labReports": { $each: labReports },
+//         "admissionDetails.$.radiologyReports": { $each: radiologyReports },
+//         "admissionDetails.$.audioRecordings": { $each: audioRecordings },
+//         "admissionDetails.$.videoRecordings": { $each: videoRecordings },
+//         "admissionDetails.$.clinicalNotes": { $each: data.clinicalNotes },
+//         "admissionDetails.$.nursingNotes": { $each: data.nursingNotes },
+//         "admissionDetails.$.surgicalNotes": { $each: data.surgicalNotes },
+//         "admissionDetails.$.symptoms": { $each: data.symptoms },
+//         "admissionDetails.$.pastHistory": { $each: data.pastHistory },
+//         "admissionDetails.$.vitalData": { $each: data.vitalData }
+//       }
+//     }
+//   );
+
+//   // Cleanup temporary local files
+//   if (files) {
+//     Object.values(files).flat().forEach(f => {
+//       if (f.path && fs.existsSync(f.path)) fs.unlinkSync(f.path);
+//     });
+//   }
+
+//   return newRecord;
+// }
+
+async uploadFiles({ patientId, admissionId, files, labels, user }) {
   const patientExists = await PATIENT_MODEL.findById(patientId);
   if (!patientExists) throw new Error("Invalid Patient ID: Patient not found");
 
@@ -90,7 +228,7 @@ async uploadFiles({ patientId, admissionId, files, labels, user, notes }) {
   const audioRecordings = await mapMediaFiles((files && files.audioRecordings) || [], 'audioLabel');
   const videoRecordings = await mapMediaFiles((files && files.videoRecordings) || [], 'videoLabel');
 
-  // Prepare notes
+  // Prepare only file-related data
   const data = {
     patientId,
     admissionId,
@@ -98,31 +236,13 @@ async uploadFiles({ patientId, admissionId, files, labels, user, notes }) {
     labReports,
     radiologyReports,
     audioRecordings,
-    videoRecordings,
-    clinicalNotes: notes?.clinicalNotes
-      ? [{ note: notes.clinicalNotes, addedBy: uploadedBy, addedAt: uploadedAt }]
-      : [],
-    nursingNotes: notes?.nursingNotes
-      ? [{ note: notes.nursingNotes, addedBy: uploadedBy, addedAt: uploadedAt }]
-      : [],
-    surgicalNotes: notes?.surgicalNotes
-      ? [{ note: notes.surgicalNotes, addedBy: uploadedBy, addedAt: uploadedAt }]
-      : [],
-    symptoms: notes?.symptoms
-      ? [{ note: notes.symptoms, addedBy: uploadedBy, addedAt: uploadedAt }]
-      : [],
-    pastHistory: notes?.pastHistory
-      ? [{ note: notes.pastHistory, addedBy: uploadedBy, addedAt: uploadedAt }]
-      : [],
-    vitalData: notes?.vitalData
-      ? [{ note: notes.vitalData, addedBy: uploadedBy, addedAt: uploadedAt }]
-      : []
+    videoRecordings
   };
 
   // Create record in filesRecording collection
   const newRecord = await FILERECORDING_MODEL.create(data);
 
-  // Update patient admissionDetails
+  // Update patient admissionDetails (only file-related fields)
   await PATIENT_MODEL.updateOne(
     { _id: patientId, "admissionDetails._id": admissionId },
     {
@@ -131,13 +251,7 @@ async uploadFiles({ patientId, admissionId, files, labels, user, notes }) {
         "admissionDetails.$.labReports": { $each: labReports },
         "admissionDetails.$.radiologyReports": { $each: radiologyReports },
         "admissionDetails.$.audioRecordings": { $each: audioRecordings },
-        "admissionDetails.$.videoRecordings": { $each: videoRecordings },
-        "admissionDetails.$.clinicalNotes": { $each: data.clinicalNotes },
-        "admissionDetails.$.nursingNotes": { $each: data.nursingNotes },
-        "admissionDetails.$.surgicalNotes": { $each: data.surgicalNotes },
-        "admissionDetails.$.symptoms": { $each: data.symptoms },
-        "admissionDetails.$.pastHistory": { $each: data.pastHistory },
-        "admissionDetails.$.vitalData": { $each: data.vitalData }
+        "admissionDetails.$.videoRecordings": { $each: videoRecordings }
       }
     }
   );
@@ -159,52 +273,36 @@ async uploadFiles({ patientId, admissionId, files, labels, user, notes }) {
 
 
 async getByPatientId(patientId, admissionId = null) {
-  const patient = await PATIENT_MODEL.findById(patientId)
-    .select(
-      'identityDetails.patientName admissionDetails._id admissionDetails.docs admissionDetails.labReports admissionDetails.radiologyReports admissionDetails.audioRecordings admissionDetails.videoRecordings admissionDetails.clinicalNotes admissionDetails.nursingNotes admissionDetails.surgicalNotes admissionDetails.symptoms admissionDetails.pastHistory admissionDetails.vitalData'
-    );
+    const patient = await PATIENT_MODEL.findById(patientId)
+      .select('identityDetails.patientName admissionDetails._id admissionDetails.docs admissionDetails.labReports admissionDetails.radiologyReports admissionDetails.audioRecordings admissionDetails.videoRecordings');
 
-  if (!patient) return [];
+    if (!patient) return [];
 
-  if (admissionId) {
-    const admission = patient.admissionDetails.find(
-      a => a._id.toString() === admissionId
-    );
-    if (!admission) return [];
+    if (admissionId) {
+      const admission = patient.admissionDetails.find(a => a._id.toString() === admissionId);
+      if (!admission) return [];
 
-    return {
+      return {
+        admissionId: admission._id,
+        docs: admission.docs,
+        labReports: admission.labReports,
+        radiologyReports: admission.radiologyReports,
+        audioRecordings: admission.audioRecordings,
+        videoRecordings: admission.videoRecordings,
+        patientName: patient.identityDetails?.patientName
+      };
+    }
+
+    return patient.admissionDetails.map(admission => ({
       admissionId: admission._id,
       docs: admission.docs,
       labReports: admission.labReports,
       radiologyReports: admission.radiologyReports,
       audioRecordings: admission.audioRecordings,
       videoRecordings: admission.videoRecordings,
-      clinicalNotes: admission.clinicalNotes,
-      nursingNotes: admission.nursingNotes,
-      surgicalNotes: admission.surgicalNotes,
-      symptoms: admission.symptoms,
-      pastHistory: admission.pastHistory,
-      vitalData: admission.vitalData,
       patientName: patient.identityDetails?.patientName
-    };
+    }));
   }
-
-  return patient.admissionDetails.map(admission => ({
-    admissionId: admission._id,
-    docs: admission.docs,
-    labReports: admission.labReports,
-    radiologyReports: admission.radiologyReports,
-    audioRecordings: admission.audioRecordings,
-    videoRecordings: admission.videoRecordings,
-    clinicalNotes: admission.clinicalNotes,
-    nursingNotes: admission.nursingNotes,
-    surgicalNotes: admission.surgicalNotes,
-    symptoms: admission.symptoms,
-    pastHistory: admission.pastHistory,
-    vitalData: admission.vitalData,
-    patientName: patient.identityDetails?.patientName
-  }));
-}
 
 async updateSingleFile({ patientId, admissionId, fileId, file, fieldType, label, user }) {
   const fileFields = ['docs', 'labReports', 'radiologyReports', 'audioRecordings', 'videoRecordings'];

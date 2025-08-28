@@ -280,5 +280,36 @@ deleteMultipleFiles = async (req, res, next) => {
   }
 };
 
+updateSpecificNote = async (req, res, next) => {
+  try {
+    const { patientId, admissionId, field, noteId, newNote } = req.body;
+
+    if (!patientId || !admissionId || !field || !noteId || !newNote) {
+      return res.status(400).json({
+        success: false,
+        message: "patientId, admissionId, field, noteId, and newNote are required"
+      });
+    }
+
+    const result = await this.files_recordingsService.updateSpecificNote({
+      patientId,
+      admissionId,
+      field,
+      noteId,
+      newNote,
+      user: req.user
+    });
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+      data: result.updatedNote
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 }

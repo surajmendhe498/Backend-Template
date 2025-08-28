@@ -12,6 +12,7 @@ router.get('/:patientId/:admissionId', files_recordingsController.getByPatientId
 router.put('/update', uploadFilesAndRecordings, files_recordingsController.updateSingleFile);
 router.delete('/delete', files_recordingsController.deleteSingleFile);
 router.delete('/delete-multiple', files_recordingsController.deleteMultipleFiles);
+router.put('/update-note', authenticate, files_recordingsController.updateSpecificNote);
 
 
 router.get('/:patientId/:admissionId/docs', files_recordingsController.getDocs);

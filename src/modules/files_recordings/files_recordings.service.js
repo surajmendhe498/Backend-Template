@@ -14,7 +14,7 @@ ffmpeg.setFfprobePath(ffprobeInstaller.path);
 class Files_recordingsService {
 
 async uploadFiles({ patientId, admissionId, files, labels, user, notes }) {
-  
+
   const patientExists = await PATIENT_MODEL.findById(patientId);
   if (!patientExists) throw new Error("Invalid Patient ID: Patient not found");
 
@@ -457,6 +457,48 @@ return {
   notFoundIds 
 };
 
+}
+
+async updateSpecificNote({ patientId, admissionId, field, noteId, newNote, user }) {
+  const allowedFields = ['clinicalNotes','nursingNotes','surgicalNotes','symptoms','pastHistory','vitalData'];
+  if (!allowedFields.includes(field)) throw new Error("Invalid note field");
+
+  if (!noteId) throw new Error("noteId is required to update a specific note");
+
+  const updatedBy = user?.firstName || user?.username || "Unknown User";
+
+  const admission = await PATIENT_MODEL.findOne(
+    { _id: patientId, "admissionDetails._id": admissionId },
+    { "admissionDetails.$": 1 }
+  );
+
+  if (!admission) throw new Error("Admission not found");
+
+  const noteArray = admission.admissionDetails[0][field];
+  const noteIndex = noteArray.findIndex(n => n._id.toString() === noteId);
+
+  if (noteIndex === -1) {
+    throw new Error(`No note with _id ${noteId} found in field ${field}`);
+  }
+
+  const updateObj = {};
+  updateObj[`admissionDetails.$.${field}.${noteIndex}.note`] = newNote;
+  updateObj[`admissionDetails.$.${field}.${noteIndex}.addedBy`] = updatedBy;
+  updateObj[`admissionDetails.$.${field}.${noteIndex}.addedAt`] = new Date();
+
+  await PATIENT_MODEL.updateOne(
+    { _id: patientId, "admissionDetails._id": admissionId },
+    { $set: updateObj }
+  );
+
+  const updatedNote = {
+    _id: noteId,
+    note: newNote,
+    addedBy: updatedBy,
+    addedAt: new Date()
+  };
+
+  return { message: `Note updated successfully in ${field}`, updatedNote };
 }
 
 

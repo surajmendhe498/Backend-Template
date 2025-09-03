@@ -6,39 +6,9 @@ export default class Files_recordingsController {
     this.files_recordingsService = Files_recordingsService;
   }
 
-  // upload = async (req, res, next) => {
-  //   try {
-  //     const { patientId, admissionId, audioLabel, videoLabel, clinicalNotes, nursingNotes, surgicalNotes, symptoms, pastHistory, vitalData } = req.body;
-
-  //     if (!patientId || !admissionId) {
-  //       return res.status(statusCode.BAD_REQUEST).json({
-  //         success: false,
-  //         message: 'patientId and admissionId are required'
-  //       });
-  //     }
-
-  //     const result = await this.files_recordingsService.uploadFiles({
-  //       patientId,
-  //       admissionId,
-  //       files: req.files,
-  //       labels: { audioLabel, videoLabel },
-  //       notes: { clinicalNotes, nursingNotes, surgicalNotes, symptoms, pastHistory, vitalData },
-  //       user: req.user  
-  //     });
-
-  //     res.status(statusCode.OK).json({
-  //       success: true,
-  //       message: 'Files uploaded successfully',
-  //       data: result
-  //     });
-  //   } catch (err) {
-  //     next(err);
-  //   }
-  // };
-
   upload = async (req, res, next) => {
     try {
-      const { patientId, admissionId, audioLabel, videoLabel } = req.body;
+      const { patientId, admissionId } = req.body;
 
       if (!patientId || !admissionId) {
         return res.status(statusCode.BAD_REQUEST).json({
@@ -51,7 +21,6 @@ export default class Files_recordingsController {
         patientId,
         admissionId,
         files: req.files,
-        labels: { audioLabel, videoLabel },
         user: req.user
       });
 
@@ -64,7 +33,6 @@ export default class Files_recordingsController {
       next(err);
     }
   };
-
 
   getAll = async (req, res, next) => {
     try {
@@ -79,7 +47,7 @@ export default class Files_recordingsController {
     }
   };
 
-getByPatientId = async (req, res, next) => {
+  getByPatientId = async (req, res, next) => {
     try {
       const { patientId, admissionId } = req.params;
       const data = await this.files_recordingsService.getByPatientId(patientId, admissionId);
@@ -96,65 +64,9 @@ getByPatientId = async (req, res, next) => {
     }
   };
 
-// updateSingleFile = async (req, res, next) => {
-//   try {
-//     const { patientId, admissionId, fileId, fieldType, audioLabel, videoLabel } = req.body;
-//     const user = req.user;
-
-//     if (!patientId || !admissionId) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "patientId and admissionId are required"
-//       });
-//     }
-
-//     const fileFields = ['docs', 'labReports', 'radiologyReports', 'audioRecordings', 'videoRecordings'];
-
-//     if (!fieldType || !fileFields.includes(fieldType)) {
-//       return res.status(400).json({
-//         success: false,
-//         message: `fieldType is required and must be one of: ${fileFields.join(', ')}`
-//       });
-//     }
-
-//     if (!fileId) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "fileId is required for file-based updates"
-//       });
-//     }
-
-//     const fileArray = req.files?.[fieldType];
-//     const file = fileArray?.[0] || null;
-
-//     let label = null;
-//     if (fieldType === "audioRecordings") label = audioLabel;
-//     if (fieldType === "videoRecordings") label = videoLabel;
-
-//     const fileResult = await this.files_recordingsService.updateSingleFile({
-//       patientId,
-//       admissionId,
-//       fileId,
-//       file,
-//       fieldType,
-//       label,
-//       user
-//     });
-
-//     res.status(200).json({
-//       success: true,
-//       message: fileResult.message,
-//       data: fileResult.updatedFile
-//     });
-
-//   } catch (err) {
-//     next(err);
-//   }
-// };
-
 updateSingleFile = async (req, res, next) => {
   try {
-    const { patientId, admissionId, fileId, fieldType, audioLabel, videoLabel, fileName } = req.body;
+    const { patientId, admissionId, fileId, fieldType, fileName } = req.body;
     const user = req.user;
 
     if (!patientId || !admissionId) {
@@ -164,7 +76,7 @@ updateSingleFile = async (req, res, next) => {
       });
     }
 
-    const fileFields = ['docs', 'labReports', 'radiologyReports', 'audioRecordings', 'videoRecordings'];
+    const fileFields = ['docs', 'labReports', 'radiologyReports'];
     if (!fieldType || !fileFields.includes(fieldType)) {
       return res.status(400).json({
         success: false,
@@ -182,17 +94,12 @@ updateSingleFile = async (req, res, next) => {
     const fileArray = req.files?.[fieldType];
     const file = fileArray?.[0] || null;
 
-    let label = null;
-    if (fieldType === "audioRecordings") label = audioLabel;
-    if (fieldType === "videoRecordings") label = videoLabel;
-
     const fileResult = await this.files_recordingsService.updateSingleFile({
       patientId,
       admissionId,
       fileId,
       file,
       fieldType,
-      label,
       fileName,
       user
     });
@@ -207,7 +114,6 @@ updateSingleFile = async (req, res, next) => {
     next(err);
   }
 };
-
 
 deleteSingleFile = async (req, res, next) => {
   try {
@@ -236,7 +142,6 @@ deleteSingleFile = async (req, res, next) => {
     next(err);
   }
 };
-
 
 getDocs = async (req, res, next) => {
   try {
@@ -283,36 +188,6 @@ getRadiologyReports = async (req, res, next) => {
   }
 };
 
-getAudioRecordings = async (req, res, next) => {
-  try {
-    const { patientId, admissionId } = req.params;
-    const data = await this.files_recordingsService.getAudioRecordings(patientId, admissionId);
-
-    res.status(statusCode.OK).json({
-      success: true,
-      message: `Audio recordings for patient ${patientId}, admission ${admissionId} fetched`,
-      data
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
-getVideoRecordings = async (req, res, next) => {
-  try {
-    const { patientId, admissionId } = req.params;
-    const data = await this.files_recordingsService.getVideoRecordings(patientId, admissionId);
-
-    res.status(statusCode.OK).json({
-      success: true,
-      message: `Video recordings for patient ${patientId}, admission ${admissionId} fetched`,
-      data
-    });
-  } catch (err) {
-    next(err);
-  }
-};
-
 deleteMultipleFiles = async (req, res, next) => {
   try {
     const { patientId, admissionId, fileIds, fieldType } = req.body;
@@ -341,32 +216,30 @@ deleteMultipleFiles = async (req, res, next) => {
   }
 };
 
-updateSpecificNote = async (req, res, next) => {
+moveFileToFolder = async (req, res, next) => {
   try {
-    const { patientId, admissionId, field, noteId, newNote } = req.body;
+    const { patientId, admissionId, fileId, folderId, fileType } = req.body;
 
-    if (!patientId || !admissionId || !field || !noteId || !newNote) {
-      return res.status(400).json({
+    if (!patientId || !admissionId || !fileId || !folderId || !fileType) {
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
-        message: "patientId, admissionId, field, noteId, and newNote are required"
+        message: "patientId, admissionId, fileId, folderId, and fileType are required",
       });
     }
 
-    const result = await this.files_recordingsService.updateSpecificNote({
+    const result = await this.files_recordingsService.moveFileToFolder({
       patientId,
       admissionId,
-      field,
-      noteId,
-      newNote,
-      user: req.user
+      fileId,
+      folderId,
+      fileType,
     });
 
-    res.status(200).json({
+    res.status(statusCode.OK).json({
       success: true,
-      message: result.message,
-      data: result.updatedNote
+      message: "File moved to folder successfully",
+      data: result,
     });
-
   } catch (err) {
     next(err);
   }

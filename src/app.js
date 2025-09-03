@@ -43,6 +43,9 @@ import ChangeConsultant from './modules/patient/change_consultant/change_consult
 import filesRecordings from './modules/files_recordings/files_recordings.routes.js';
 import userRoute from './modules/user/user.routes.js';
 import notesRoute from './modules/notes/notes.routes.js';
+import clinicalDischargeRoute from './modules/discharge/clinical_discharge/clinical_discharge.routes.js';
+import pharmacyDischargeRoute from './modules/discharge/pharmacy_discharge/pharmacy_discharge.routes.js';
+import billingDischargeRoute from './modules/discharge/billing_discharge/billing_discharge.routes.js';
 
 app.use(helmet());
 app.use(morgan('dev'));
@@ -84,6 +87,9 @@ app.use('/api/v1/patient/change_consultant', ChangeConsultant);
 app.use('/api/v1/files-recordings', filesRecordings);
 app.use('/api/v1/user', userRoute);
 app.use('/api/v1/notes', notesRoute);
+app.use('/api/v1/discharge/clinical', clinicalDischargeRoute);
+app.use('/api/v1/discharge/pharmacy', pharmacyDischargeRoute);
+app.use('/api/v1/discharge/billing', billingDischargeRoute);
      
 app.use(notFound);
 app.use(errorHandler);

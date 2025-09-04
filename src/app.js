@@ -48,6 +48,8 @@ import folderRoute from './modules/folders/folders.routes.js';
 import clinicalDischargeRoute from './modules/discharge/clinical_discharge/clinical_discharge.routes.js';
 import pharmacyDischargeRoute from './modules/discharge/pharmacy_discharge/pharmacy_discharge.routes.js';
 import billingDischargeRoute from './modules/discharge/billing_discharge/billing_discharge.routes.js';
+import labDischargeRoute from './modules/discharge/lab_discharge/lab_discharge.routes.js';
+import finalDischargeRoute from './modules/discharge/final_discharge/final_discharge.routes.js';
 
 
 app.use(helmet());
@@ -95,6 +97,8 @@ app.use('/api/v1/folder', folderRoute);
 app.use('/api/v1/discharge/clinical', clinicalDischargeRoute);
 app.use('/api/v1/discharge/pharmacy', pharmacyDischargeRoute);
 app.use('/api/v1/discharge/billing', billingDischargeRoute);
+app.use('/api/v1/discharge/lab', labDischargeRoute);
+app.use('/api/v1/discharge/final', finalDischargeRoute);
      
 app.use(notFound);
 app.use(errorHandler);

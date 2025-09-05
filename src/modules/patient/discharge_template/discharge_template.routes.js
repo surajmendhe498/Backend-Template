@@ -7,6 +7,6 @@ const router = Router();
 const discharge_templateController = new Discharge_templateController();
 
 router.post("/:patientId/:admissionId", discharge_templateController.add);
-router.get('/', discharge_templateController.getAll);
+router.get("/:patientId/:admissionId", discharge_templateController.getAll);   // fetch all discharge-templates
 
 export default router;

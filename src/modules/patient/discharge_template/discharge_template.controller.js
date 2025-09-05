@@ -6,15 +6,6 @@ export default class Discharge_templateController {
     this.discharge_templateService =  Discharge_templateService;
   }
 
-  getAll = async (req, res, next) => {
-    try {
-       res.success("Get All Todos",todos, statusCode.OK);
-      
-    } catch (err) {
-      next(err);
-    }
-  };
-
   add = async (req, res, next) => {
     try {
       const { patientId, admissionId } = req.params;   
@@ -37,5 +28,21 @@ export default class Discharge_templateController {
     }
   };
 
+  getAll = async (req, res, next) => {
+    try {
+      const { patientId, admissionId } = req.params;
+
+      const dischargeTemplates =
+        await this.discharge_templateService.getAllTemplates(patientId, admissionId);
+
+      res.success(
+        "Fetched discharge templates successfully",
+        dischargeTemplates,
+        statusCode.OK
+      );
+    } catch (err) {
+      next(err);
+    }
+  };
   
 }

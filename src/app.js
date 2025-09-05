@@ -51,6 +51,7 @@ import billingDischargeRoute from './modules/discharge/billing_discharge/billing
 import labDischargeRoute from './modules/discharge/lab_discharge/lab_discharge.routes.js';
 import finalDischargeRoute from './modules/discharge/final_discharge/final_discharge.routes.js';
 import PatientDischargeTemplateRoute from './modules/patient/discharge_template/discharge_template.routes.js';
+import PatientOtNotesTemplateRoute from './modules/patient/ot_notes_template/ot_notes_template.routes.js';
 
 
 app.use(helmet());
@@ -101,6 +102,7 @@ app.use('/api/v1/discharge/billing', billingDischargeRoute);
 app.use('/api/v1/discharge/lab', labDischargeRoute);
 app.use('/api/v1/discharge/final', finalDischargeRoute);
 app.use('/api/v1/patient/discharge-template', PatientDischargeTemplateRoute);
+app.use('/api/v1/patient/ot-notes-template', PatientOtNotesTemplateRoute);
      
 app.use(notFound);
 app.use(errorHandler);

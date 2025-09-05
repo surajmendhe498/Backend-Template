@@ -162,34 +162,23 @@ import { FINAL_DISCHARGE_MODEL } from "../discharge/final_discharge/final_discha
 
 class Reports_masterService {
   
-  async getMonthlyReports(filters) {
+async getMonthlyReports(filters) {
   try {
-    let dateFilter = null;
+    let startDate = null;
+    let endDate = null;
 
-    if (filters?.month) {
-      const startDate = new Date(
-        `${filters.year || new Date().getFullYear()}-${filters.month}-01`
-      );
-      const endDate = new Date(startDate);
+    // Set date range based on filters
+    if (filters?.year && filters?.month) {
+      startDate = new Date(`${filters.year}-${filters.month}-01`);
+      endDate = new Date(startDate);
       endDate.setMonth(endDate.getMonth() + 1);
-      dateFilter = { $gte: startDate, $lt: endDate };
     } else if (filters?.year) {
-      const startDate = new Date(`${filters.year}-01-01`);
-      const endDate = new Date(`${filters.year}-12-31`);
-      dateFilter = { $gte: startDate, $lt: endDate };
+      startDate = new Date(`${filters.year}-01-01`);
+      endDate = new Date(`${filters.year}-12-31`);
     }
 
+    // Fetch all patients (we will filter admissions in JS)
     const query = {};
-    if (dateFilter) {
-      query["admissionDetails"] = { $elemMatch: { admissionDate: dateFilter } };
-    }
-
-    if (filters?.patientStatus) {
-      query["admissionDetails"] = {
-        $elemMatch: { patientStatus: filters.patientStatus },
-      };
-    }
-
     if (filters?.gender) {
       query["identityDetails.gender"] = filters.gender;
     }
@@ -199,23 +188,31 @@ class Reports_masterService {
       .populate("admissionDetails.consultingDoctorId", "doctorName")
       .lean();
 
-    // fetch discharges
     const finalDischarges = await FINAL_DISCHARGE_MODEL.find().lean();
     const dischargeMap = new Map();
-    finalDischarges.forEach((d) => {
-      dischargeMap.set(d.admissionId.toString(), d);
-    });
+    finalDischarges.forEach((d) => dischargeMap.set(d.admissionId.toString(), d));
 
-    // filter admissions inside patient
+    // Filter admissions based on date and patientStatus
     const filteredResults = patients.flatMap((patient) => {
       const admissions = patient.admissionDetails.filter((admission) => {
-        if (!dateFilter) return true;
-        return (
-          admission.admissionDate >= dateFilter.$gte &&
-          admission.admissionDate < dateFilter.$lt
-        );
+        const adDate = new Date(admission.admissionDate);
+
+        // Filter by date range
+        let dateMatch = true;
+        if (startDate && endDate) {
+          dateMatch = adDate >= startDate && adDate < endDate;
+        }
+
+        // Filter by patientStatus
+        let statusMatch = true;
+        if (filters?.patientStatus) {
+          statusMatch = admission.patientStatus === filters.patientStatus;
+        }
+
+        return dateMatch && statusMatch;
       });
 
+      // Format filtered admissions
       return admissions.map((admission) =>
         this.formatPatient({ ...patient, admissionDetails: [admission] }, dischargeMap)[0]
       );
@@ -227,6 +224,8 @@ class Reports_masterService {
     throw new Error("Failed to fetch monthly reports.");
   }
 }
+
+
 
   async getReportsByDateRange({ fromDate, toDate, fromTime, toTime }) {
   try {
@@ -289,50 +288,42 @@ class Reports_masterService {
 
 async getConsultantReports({ admissionDate, dischargeDate, mlcType, patientStatus }) {
   try {
-    let patients = [];
-    let dischargeMap = new Map();
-
-    // Always preload discharges
+    // Preload all discharges
     const finalDischarges = await FINAL_DISCHARGE_MODEL.find().lean();
+    const dischargeMap = new Map();
     finalDischarges.forEach((d) => dischargeMap.set(d.admissionId.toString(), d));
 
-    // Case 1: Admission-based filters (admissionDate, mlcType, patientStatus)
-    if (admissionDate || mlcType || patientStatus) {
-      const match = {};
-      if (admissionDate) match.admissionDate = new Date(admissionDate);
-      if (mlcType) match.mlcType = mlcType === "MLC";
-      if (patientStatus) match.patientStatus = patientStatus;
+    // Build initial admission-based query
+    const match = {};
+    if (admissionDate) match.admissionDate = new Date(admissionDate);
 
-      const query = { admissionDetails: { $elemMatch: match } };
+    const query = {};
+    if (Object.keys(match).length) query["admissionDetails"] = { $elemMatch: match };
 
-      patients = await PATIENT_MODEL.find(query)
-        .populate("admissionDetails.bedId", "bedName")
-        .populate("admissionDetails.consultingDoctorId", "doctorName")
-        .lean();
-    }
+    // Fetch patients with admissionDetails matching admissionDate (if provided)
+    let patients = await PATIENT_MODEL.find(query)
+      .populate("admissionDetails.bedId", "bedName")
+      .populate("admissionDetails.consultingDoctorId", "doctorName")
+      .lean();
 
-    // Case 2: DischargeDate filter
+    // If dischargeDate filter is provided
     if (dischargeDate) {
       const discharges = await FINAL_DISCHARGE_MODEL.find({
         dateOfDischarge: new Date(dischargeDate),
       }).lean();
 
-      const patientIds = discharges.map((d) => d.patientId);
-
-      const dischargePatients = await PATIENT_MODEL.find({
-        _id: { $in: patientIds },
-      })
+      const patientIds = discharges.map((d) => d.patientId.toString());
+      const dischargePatients = await PATIENT_MODEL.find({ _id: { $in: patientIds } })
         .populate("admissionDetails.bedId", "bedName")
         .populate("admissionDetails.consultingDoctorId", "doctorName")
         .lean();
 
-      // Only keep admissionDetails linked to the discharge admissionId
+      // Keep only admissionDetails linked to the discharge
       const dischargePatientFiltered = dischargePatients.map((p) => {
         const matchingDischarges = discharges.filter(
           (d) => d.patientId.toString() === p._id.toString()
         );
         const admissionIds = matchingDischarges.map((d) => d.admissionId.toString());
-
         return {
           ...p,
           admissionDetails: p.admissionDetails.filter((a) =>
@@ -344,14 +335,25 @@ async getConsultantReports({ admissionDate, dischargeDate, mlcType, patientStatu
       patients = [...patients, ...dischargePatientFiltered];
     }
 
-    return patients.flatMap((patient) => this.formatPatient(patient, dischargeMap));
+    // Filter each patient's admissionDetails for patientStatus and mlcType
+    const filteredPatients = patients.map((p) => ({
+      ...p,
+      admissionDetails: p.admissionDetails.filter((a) =>
+        (patientStatus ? a.patientStatus === patientStatus : true) &&
+        (mlcType !== undefined ? a.mlcType === (mlcType === "true" || mlcType === true) : true)
+      ),
+    }));
+
+    // Remove patients with no admissionDetails after filtering
+    const finalPatients = filteredPatients.filter((p) => p.admissionDetails.length > 0);
+
+    // Flatten and format
+    return finalPatients.flatMap((patient) => this.formatPatient(patient, dischargeMap));
   } catch (error) {
     console.error("Error fetching consultant reports:", error);
     throw new Error("Failed to fetch consultant reports.");
   }
 }
-
-
 
   formatPatient(patient, dischargeMap) {
     return patient.admissionDetails.map((admission) => {

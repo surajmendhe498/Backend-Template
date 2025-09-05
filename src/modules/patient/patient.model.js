@@ -349,6 +349,8 @@ const AdmissionSchema = new mongoose.Schema(
     symptoms: [{ note: String, addedBy: String, addedAt: { type: Date, default: Date.now }}],
     pastHistory: [{ note: String, addedBy: String, addedAt: { type: Date, default: Date.now }}],
     vitalData: [{ note: String, addedBy: String, addedAt: { type: Date, default: Date.now }}],
+    dischargeTemplates: [{template: { type: mongoose.Schema.Types.Mixed }}],
+    otNotesTemplates: [{ template: { type: mongoose.Schema.Types.Mixed }}],
   },
 );
 

@@ -161,26 +161,24 @@ import { PATIENT_MODEL } from "../patient/patient.model.js";
 import { FINAL_DISCHARGE_MODEL } from "../discharge/final_discharge/final_discharge.model.js";
 
 class Reports_masterService {
-  
+
 async getMonthlyReports(filters) {
   try {
+    const year = parseInt(filters.year, 10) || new Date().getFullYear();
+    const month = filters.month ? parseInt(filters.month, 10) - 1 : null;
+
+    // Start and end of month (if month is provided)
     let startDate = null;
     let endDate = null;
-
-    // Set date range based on filters
-    if (filters?.year && filters?.month) {
-      startDate = new Date(`${filters.year}-${filters.month}-01`);
-      endDate = new Date(startDate);
-      endDate.setMonth(endDate.getMonth() + 1);
-    } else if (filters?.year) {
-      startDate = new Date(`${filters.year}-01-01`);
-      endDate = new Date(`${filters.year}-12-31`);
+    if (month !== null) {
+      startDate = new Date(year, month, 1, 0, 0, 0);
+      endDate = new Date(year, month + 1, 1, 0, 0, 0);
     }
 
-    // Fetch all patients (we will filter admissions in JS)
+    // Build patient-level query (only gender filter at MongoDB level)
     const query = {};
-    if (filters?.gender) {
-      query["identityDetails.gender"] = filters.gender;
+    if (filters.gender) {
+      query["identityDetails.gender"] = filters.gender; // match enum exactly
     }
 
     const patients = await PATIENT_MODEL.find(query)
@@ -192,38 +190,38 @@ async getMonthlyReports(filters) {
     const dischargeMap = new Map();
     finalDischarges.forEach((d) => dischargeMap.set(d.admissionId.toString(), d));
 
-    // Filter admissions based on date and patientStatus
-    const filteredResults = patients.flatMap((patient) => {
-      const admissions = patient.admissionDetails.filter((admission) => {
+    // Filter admissions by month & patientStatus
+    const results = patients.flatMap((patient) => {
+      const matchedAdmissions = patient.admissionDetails.filter((admission) => {
         const adDate = new Date(admission.admissionDate);
 
-        // Filter by date range
+        // Filter by month (if provided)
         let dateMatch = true;
         if (startDate && endDate) {
           dateMatch = adDate >= startDate && adDate < endDate;
         }
 
-        // Filter by patientStatus
+        // Filter by patientStatus (optional)
         let statusMatch = true;
-        if (filters?.patientStatus) {
+        if (filters.patientStatus) {
           statusMatch = admission.patientStatus === filters.patientStatus;
         }
 
         return dateMatch && statusMatch;
       });
 
-      // Format filtered admissions
-      return admissions.map((admission) =>
+      return matchedAdmissions.map((admission) =>
         this.formatPatient({ ...patient, admissionDetails: [admission] }, dischargeMap)[0]
       );
     });
 
-    return filteredResults;
+    return results;
   } catch (error) {
     console.error("Error fetching monthly reports:", error);
     throw new Error("Failed to fetch monthly reports.");
   }
 }
+
 
 
 

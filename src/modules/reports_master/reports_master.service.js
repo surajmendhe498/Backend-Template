@@ -167,12 +167,18 @@ async getMonthlyReports(filters) {
     const year = parseInt(filters.year, 10) || new Date().getFullYear();
     const month = filters.month ? parseInt(filters.month, 10) - 1 : null;
 
-    // Start and end of month (if month is provided)
+    // Start and end dates (year or year+month)
     let startDate = null;
     let endDate = null;
+
     if (month !== null) {
+      // Filter by specific month of year
       startDate = new Date(year, month, 1, 0, 0, 0);
       endDate = new Date(year, month + 1, 1, 0, 0, 0);
+    } else if (filters.year) {
+      // Filter by full year
+      startDate = new Date(year, 0, 1, 0, 0, 0);  // Jan 1 of that year
+      endDate = new Date(year + 1, 0, 1, 0, 0, 0); // Jan 1 of next year
     }
 
     // Build patient-level query (only gender filter at MongoDB level)
@@ -190,12 +196,12 @@ async getMonthlyReports(filters) {
     const dischargeMap = new Map();
     finalDischarges.forEach((d) => dischargeMap.set(d.admissionId.toString(), d));
 
-    // Filter admissions by month & patientStatus
+    // Filter admissions by date & patientStatus
     const results = patients.flatMap((patient) => {
       const matchedAdmissions = patient.admissionDetails.filter((admission) => {
         const adDate = new Date(admission.admissionDate);
 
-        // Filter by month (if provided)
+        // Filter by year/month if provided
         let dateMatch = true;
         if (startDate && endDate) {
           dateMatch = adDate >= startDate && adDate < endDate;
@@ -221,8 +227,6 @@ async getMonthlyReports(filters) {
     throw new Error("Failed to fetch monthly reports.");
   }
 }
-
-
 
 
   async getReportsByDateRange({ fromDate, toDate, fromTime, toTime }) {

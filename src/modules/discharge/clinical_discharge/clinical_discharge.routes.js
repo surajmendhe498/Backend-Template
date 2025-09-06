@@ -9,7 +9,5 @@ const clinical_dischargeController = new Clinical_dischargeController();
 router.post('/', clinical_dischargeController.create);
 router.get('/', clinical_dischargeController.getAll);
 router.get('/:id', clinical_dischargeController.getById);
-router.put('/:id', clinical_dischargeController.update);
-router.delete('/:id', clinical_dischargeController.delete);
 
 export default router;

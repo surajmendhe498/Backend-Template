@@ -8,62 +8,57 @@ class Clinical_dischargeService {
       .populate('patientId', 'identityDetails.patientName')
   }
 
+  // async create(data) {
+  //   const { patientId, admissionId } = data;
+
+  //   const patient = await PATIENT_MODEL.findById(patientId);
+  //   if (!patient) {
+  //     throw new Error("Patient not found");
+  //   }
+
+  //   const admissionExists = patient.admissionDetails.some(
+  //     (admission) => admission._id.toString() === admissionId
+  //   );
+
+  //   if (!admissionExists) {
+  //     throw new Error("Admission ID does not match this patient");
+  //   }
+
+  //   return await CLINICAL_DISCHARGE_MODEL.create(data);
+  //   // const discharge = await CLINICAL_DISCHARGE_MODEL.create(data);
+  //   // const populatedDischarge = await CLINICAL_DISCHARGE_MODEL.findById(discharge._id)
+  //   //   .populate('patientId', 'identityDetails.patientName');
+
+  //   // return populatedDischarge;
+  // }
+
   async create(data) {
-    const { patientId, admissionId } = data;
+  const { patientId, admissionId } = data;
 
-    const patient = await PATIENT_MODEL.findById(patientId);
-    if (!patient) {
-      throw new Error("Patient not found");
-    }
-
-    const admissionExists = patient.admissionDetails.some(
-      (admission) => admission._id.toString() === admissionId
-    );
-
-    if (!admissionExists) {
-      throw new Error("Admission ID does not match this patient");
-    }
-
-    return await CLINICAL_DISCHARGE_MODEL.create(data);
-    // const discharge = await CLINICAL_DISCHARGE_MODEL.create(data);
-    // const populatedDischarge = await CLINICAL_DISCHARGE_MODEL.findById(discharge._id)
-    //   .populate('patientId', 'identityDetails.patientName');
-
-    // return populatedDischarge;
+  const patient = await PATIENT_MODEL.findById(patientId);
+  if (!patient) {
+    throw new Error("Patient not found");
   }
 
+  const admissionIndex = patient.admissionDetails.findIndex(
+    (admission) => admission._id.toString() === admissionId
+  );
+
+  if (admissionIndex === -1) {
+    throw new Error("Admission ID does not match this patient");
+  }
+
+  patient.admissionDetails[admissionIndex].clinicalDischarge = true;
+  await patient.save();
+
+  return await CLINICAL_DISCHARGE_MODEL.create(data);
+}
 
   async getById(id) {
     return await CLINICAL_DISCHARGE_MODEL.findById(id)
       .populate('patientId', 'identityDetails.patientName');
   }
 
-  async update(id, data) {
-  const { patientId, admissionId } = data;
-
-  if (patientId) {
-    const patient = await PATIENT_MODEL.findById(patientId);
-    if (!patient) {
-      throw new Error("Patient not found");
-    }
-
-    if (admissionId) {
-      const admissionExists = patient.admissionDetails.some(
-        (admission) => admission._id.toString() === admissionId
-      );
-      if (!admissionExists) {
-        throw new Error("Admission ID does not match this patient");
-      }
-    }
-  }
-
-  return await CLINICAL_DISCHARGE_MODEL.findByIdAndUpdate(id, data, { new: true });
-}
-
-
-  async delete(id){
-    return await CLINICAL_DISCHARGE_MODEL.findByIdAndDelete(id);
-  }
 }
 
 export default new Clinical_dischargeService();

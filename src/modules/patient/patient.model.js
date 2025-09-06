@@ -2,115 +2,6 @@
 
 // const AdmissionSchema = new mongoose.Schema(
 //   {
-//     existingPatient: { type: Boolean, default: false },
-//     reasonForAdmission: {type: mongoose.Schema.Types.ObjectId,ref: 'admission-reason'},
-//     uhidNo: { type: String, required: true, unique: true },
-//     IPD: { type: String, required: true },
-//     emergencyNo: { type: String },
-//     salutation: { type: String },
-//     patientName: { type: String, required: true },
-//     patientPhoto: { type: String },
-//     gender: { type: String, enum: ['Male', 'Female', 'Other'], required: true },
-//     contactNo: { type: String },
-//     whatsappNo: { type: String },
-//     email: { type: String },
-//     floorDetails: {type: mongoose.Schema.Types.ObjectId, ref: 'floormaster'},
-//     bedName: {type: mongoose.Schema.Types.ObjectId, ref: 'bedmaster'},
-//     applicableClass: {type: String},
-//     bedDepartment: { type: String },
-//     admissionDate: { type: Date, required: true },
-//     timeOfAdmission: { type: String, required: true},
-//     dischargeDate: { type: Date },
-//     timeOfDischarge: { type: String },
-//     consultingDoctor: { type: mongoose.Schema.Types.ObjectId, ref: 'doctor', required:true },
-//     referredByDoctor: { type: mongoose.Schema.Types.ObjectId, ref: 'referred-doctor' }, 
-//     otherConsultant: { type: String },
-//     patientStatus: { type: String, enum: ['Admitted', 'Discharged'], default: 'Admitted' },
-//     mlc: { type: Boolean, default: false },
-//     mlcNo: { type: String },
-//     dateOfBirth: { type: Date },
-//     age: {
-//       years: { type: Number },
-//       months: { type: Number },
-//     },
-//     patientReligion: { type: String },
-//     paymentMode: { 
-//       type: String, 
-//       enum: ['Cash', 'Card', 'Insurance', 'Scheme', 'Corporate', 'Package'] 
-//     },
-//     paymentDetails: { type: String },
-//     cashType: { type: String },
-//     freeText: { type: String },
-//     remarks: { type: String },
-//     provisionalDiagnosis: { type: String },
-//     finalDiagnosis: { type: String },
-//     finalDiagnosisICDCode: { type: String },
-//     dischargeSummaryStatus: { type: String },
-//     tpaName: { type: String },
-//     policyNo: { type: String },
-//     ccnNo: { type: String },
-//     insurance: { type: String },
-//     scheme: { type: String },
-//     corporate: { type: String },
-//     companyName: { type: String },
-//     claimStatus: { type: String },
-//     patientDetail: {
-//       type: String,
-//       enum: ['Birth', 'Expired'],
-//     },
-//   },
-//   { _id: false } 
-// );
-
-// const IdentityDetailsSchema = new mongoose.Schema(
-//   {
-//     address: { type: String },
-//     city: { type: String },
-//     pinCode: { type: String },
-//     corporation: { 
-//       type: String, 
-//       enum: ['In-Corporation', 'Out-Corporation'], 
-//       required: true 
-//     },
-//     responsiblePerson: { type: String },
-//     relationship: { 
-//       type: String, 
-//       enum: ['Parent', 'Spouse', 'Sibling', 'Other'] 
-//     },
-//     relativeContactNo: { type: String },
-//     aadharNo: { type: String },
-//     aadharCardFrontImage: { type: String },
-//     aadharCardBackImage: { type: String },
-//     panCardId: { type: String },
-//     panCardImage: { type: String },
-//     healthCardId: { type: String },
-//     healthCardImage: { type: String },
-//   },
-//   { _id: false }
-// );
-
-// const PatientRegistrationSchema = new mongoose.Schema(
-//   {
-//     registrationType: {
-//       type: String,
-//       enum: ['IPD', 'OPD', 'Registration', 'Day Care', 'Dialysis'],
-//     },
-//     admissionDetails: { type: AdmissionSchema },
-//     identityDetails: { type: IdentityDetailsSchema },
-//   },
-//   { timestamps: true }
-// );
-
-// export const PATIENT_MODEL = mongoose.model('patients', PatientRegistrationSchema);
-
-
-
-
-
-// import mongoose from 'mongoose';
-
-// const AdmissionSchema = new mongoose.Schema(
-//   {
 //     weight: { type: Number },
 //     registrationType: {
 //       type: String,
@@ -128,6 +19,7 @@
 //     consultingDoctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'doctor' },
 //     referredByDoctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'referred-doctor' },
 //     laboratorySelectionId: { type: mongoose.Schema.Types.ObjectId, ref: 'labmaster' },
+//     admissionReasonId: { type: mongoose.Schema.Types.ObjectId, ref: 'admission-reason' },
 //     referredByDoctorSelectBox: { type: String },
 //     provisionalDiagnosis: { type: String },
 //     finalDiagnosis: { type: String },
@@ -162,7 +54,7 @@
 //     pharmacyDischarge: { type: Boolean, default: false },
 //     paymentMode: {
 //       type: String,
-//       enum: ['Cash', 'Card', 'Insurance', 'Scheme', 'Corporate', 'Package']
+//       enum: ['Cash', 'TPA', 'Insurance', 'Scheme', 'Corporate', 'Package', 'Reimbursement']
 //     },
 //     maintainMRDFileStatus: { type: Boolean, default: false },
 //     patientGuardianDetails: { type: String },
@@ -195,7 +87,21 @@
 //     finalDiagnosisICDCode: { type: String },
 //     admissionDate: { type: Date},
 //     admissionTime: { type: String},
-
+//     ipdNo: {type: String},
+//     patientStatus: { type: String, enum: ['Admitted', 'Discharged'], default: 'Admitted' },
+//     docs: [{  name: String, path: String, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+//     labReports: [{ name: String, path: String, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+//     radiologyReports: [{ name: String, path: String, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+//     audioRecordings: [{  name: String, path: String, label: String, duration: Number, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+//     videoRecordings: [{  name: String, path: String, label: String, duration: Number, uploadedBy: { type: String }, uploadedAt: { type: Date, default: Date.now } }],
+//     clinicalNotes: [{ note: String, addedBy: String, addedAt: { type: Date, default: Date.now }}],
+//     nursingNotes: [{ note: String, addedBy: String, addedAt: { type: Date, default: Date.now }}],
+//     surgicalNotes: [{ note: String, addedBy: String, addedAt: { type: Date, default: Date.now }}],
+//     symptoms: [{ note: String, addedBy: String, addedAt: { type: Date, default: Date.now }}],
+//     pastHistory: [{ note: String, addedBy: String, addedAt: { type: Date, default: Date.now }}],
+//     vitalData: [{ note: String, addedBy: String, addedAt: { type: Date, default: Date.now }}],
+//     dischargeTemplates: [{template: { type: mongoose.Schema.Types.Mixed }}],
+//     otNotesTemplates: [{ template: { type: mongoose.Schema.Types.Mixed }}],
 //   },
 // );
 
@@ -243,8 +149,6 @@
 // );
 
 // export const PATIENT_MODEL = mongoose.model('patients', PatientRegistrationSchema);
-
-
 
 
 import mongoose from 'mongoose';
@@ -295,6 +199,10 @@ const AdmissionSchema = new mongoose.Schema(
     patientAllergicOrUnderPrecaution: { type: String },
     clinicalDischarge: { type: Boolean, default: false },
     billingDischarge: { type: Boolean, default: false },
+    billingDischargeDate: { type: Date },
+    billingDischargeTime: { type: String },
+    finalDischargeDate: { type: Date },
+    finalDischargeTime: { type: String },
     applicableClass: { type: String },
     paymentRemark: { type: String },
     mlcNo: { type: String },

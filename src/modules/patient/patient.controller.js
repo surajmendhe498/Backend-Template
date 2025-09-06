@@ -187,6 +187,14 @@
 //           return res.status(statusCode.NOT_FOUND).json({ message: 'Consulting Doctor with the given ID does not exist' });
 //         }
 //       }
+
+//       // Check Admission Reason Exists
+//       if (admissionDetails.admissionReasonId) {
+//         const admissionReasonExists = await this.patientService.checkAdmissionReasonExists(admissionDetails.admissionReasonId);
+//         if (!admissionReasonExists) {
+//           return res.status(statusCode.NOT_FOUND).json({ message: 'Admission Reason with the given ID does not exist' });
+//         }
+//       }
 //     }
 
 //     // --- Utility Function: Deep Merge ---
@@ -274,12 +282,50 @@
 // };
 
 
+// assignBed = async (req, res, next) => {
+//   try {
+//     const { patientId, admissionId, bedId } = req.body;
+
+//     if (!patientId || !admissionId || !bedId) {
+//       return res.status(statusCode.BAD_REQUEST).json({
+//         message: 'patientId, admissionId, and bedId are required'
+//       });
+//     }
+
+//     const result = await this.patientService.assignBed(
+//       patientId,
+//       admissionId,
+//       bedId
+//     );
+
+//     res.success(result.message, result, statusCode.OK);
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+
+// exchangePatients = async (req, res, next) => {
+//   try {
+//     const { patientAId, admissionAId, patientBId, admissionBId } = req.body;
+
+//     const result = await this.patientService.exchangePatients(
+//       patientAId,
+//       admissionAId,
+//       patientBId,
+//       admissionBId
+//     );
+
+//     res.success('Patients exchanged successfully', result);
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+
 // }
-
-
 
 import PatientService from './patient.service.js';
 import { statusCode } from '../../utils/constants/statusCode.js';
+import { BEDMASTER_MODEL } from '../hospital_master/bed_master/bed_master.model.js';
 
 export default class PatientController {
   constructor() {
@@ -361,8 +407,14 @@ create = async (req, res, next) => {
       }
 
       existingPatient.identityDetails = deepMerge(existingIdentityDetails, identityDetails);
-      existingPatient.admissionDetails.push(admissionDetails);
 
+      if (admissionDetails.bedId) {
+      const bed = await BEDMASTER_MODEL.findById(admissionDetails.bedId);
+      if (bed && bed.bedStatus === 'Vacant') {
+        await BEDMASTER_MODEL.findByIdAndUpdate(admissionDetails.bedId, { bedStatus: 'Occupied' });
+      }
+    }
+      existingPatient.admissionDetails.push(admissionDetails);
       responsePatient = await existingPatient.save();
     } else {
       const data = {
@@ -586,13 +638,15 @@ assignBed = async (req, res, next) => {
 
 exchangePatients = async (req, res, next) => {
   try {
-    const { patientAId, admissionAId, patientBId, admissionBId } = req.body;
+    const { patientAId, admissionAId, patientBId, admissionBId, exchangeDate, exchangeTime } = req.body;
 
     const result = await this.patientService.exchangePatients(
       patientAId,
       admissionAId,
       patientBId,
-      admissionBId
+      admissionBId,
+      exchangeDate,
+      exchangeTime
     );
 
     res.success('Patients exchanged successfully', result);

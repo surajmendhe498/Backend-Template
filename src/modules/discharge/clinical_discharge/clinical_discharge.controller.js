@@ -62,36 +62,4 @@ export default class Clinical_dischargeController {
     }
   };
 
-  update = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-
-    const updateClinical = await this.clinical_dischargeService.update(id, req.body);
-    if (!updateClinical) {
-      return res.status(statusCode.NOT_FOUND).json({message: 'Clinical discharge not found'});
-    }
-
-    res.success('Clinical discharge updated successfully', updateClinical, statusCode.OK);
-
-  } catch (error) {
-    next(error);
-  }
-};
-
-delete = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-
-    const deleteClinical = await this.clinical_dischargeService.delete(id);
-    if (!deleteClinical) {
-      return res.status(statusCode.NOT_FOUND).json({message: 'Clinical discharge not found'});
-    }
-
-    res.success('Clinical discharge deleted successfully', statusCode.OK);
-
-  } catch (error) {
-    next(error);
-  }
-};
-
 }

@@ -228,60 +228,66 @@ async getMonthlyReports(filters) {
   }
 }
 
-
-  async getReportsByDateRange({ fromDate, toDate, fromTime, toTime }) {
+async getReportsByDateRange({ fromDate, toDate, fromTime, toTime }) {
   try {
-    const dateQuery = {};
+    let start = null;
+    let end = null;
 
-    // Admission date filter
-    if (fromDate && toDate) {
-      dateQuery.admissionDate = {
-        $gte: new Date(fromDate),
-        $lte: new Date(toDate),
-      };
-    } else if (fromDate) {
-      dateQuery.admissionDate = { $gte: new Date(fromDate) };
-    } else if (toDate) {
-      dateQuery.admissionDate = { $lte: new Date(toDate) };
+    if (fromDate) {
+      start = new Date(fromDate);
+      start.setHours(0, 0, 0, 0);
+    }
+    if (toDate) {
+      end = new Date(toDate);
+      end.setHours(23, 59, 59, 999);
     }
 
-    // Admission time filter (optional)
+    const admissionMatch = {};
+    if (start && end) {
+      admissionMatch.admissionDate = { $gte: start, $lte: end };
+    } else if (start) {
+      admissionMatch.admissionDate = { $gte: start };
+    } else if (end) {
+      admissionMatch.admissionDate = { $lte: end };
+    }
+
     if (fromTime && toTime) {
-      dateQuery.admissionTime = { $gte: fromTime, $lte: toTime };
+      admissionMatch.admissionTime = { $gte: fromTime, $lte: toTime };
     }
 
-    // Find patients by admission details
-    const query = { admissionDetails: { $elemMatch: dateQuery } };
-
-    const patients = await PATIENT_MODEL.find(query)
+    const patients = await PATIENT_MODEL.find({
+      admissionDetails: { $elemMatch: admissionMatch },
+    })
       .populate("admissionDetails.bedId", "bedName")
       .populate("admissionDetails.consultingDoctorId", "doctorName")
       .lean();
 
-    // Fetch final discharges
+    
     const finalDischarges = await FINAL_DISCHARGE_MODEL.find().lean();
     const dischargeMap = new Map();
     finalDischarges.forEach((d) => {
       dischargeMap.set(d.admissionId.toString(), d);
     });
 
-    // Format and filter results
-    const results = patients.flatMap((patient) =>
+    const filteredPatients = patients.map((p) => {
+      const filteredAdmissions = p.admissionDetails.filter((a) => {
+        const adDate = new Date(a.admissionDate);
+        if (start && adDate < start) return false;
+        if (end && adDate > end) return false;
+        return true;
+      });
+      return { ...p, admissionDetails: filteredAdmissions };
+    });
+
+    const validPatients = filteredPatients.filter(
+      (p) => p.admissionDetails.length > 0
+    );
+
+    const results = validPatients.flatMap((patient) =>
       this.formatPatient(patient, dischargeMap)
     );
 
-    // Apply dischargeDate range filtering
-    const filteredResults = results.filter((r) => {
-      if (!r.dischargeDate) return false; // exclude if no discharge
-      const discharge = new Date(r.dischargeDate);
-
-      if (fromDate && discharge < new Date(fromDate)) return false;
-      if (toDate && discharge > new Date(toDate)) return false;
-
-      return true;
-    });
-
-    return filteredResults;
+    return results;
   } catch (error) {
     console.error("Error fetching date range reports:", error);
     throw new Error("Failed to fetch date range reports.");

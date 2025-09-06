@@ -288,74 +288,86 @@ async getMonthlyReports(filters) {
   }
 }
 
-async getConsultantReports({ admissionDate, dischargeDate, mlcType, patientStatus }) {
+async getConsultantReports({ admissionDate, dischargeDate, mlcType, patientStatus, gender }) {
   try {
     // Preload all discharges
     const finalDischarges = await FINAL_DISCHARGE_MODEL.find().lean();
     const dischargeMap = new Map();
     finalDischarges.forEach((d) => dischargeMap.set(d.admissionId.toString(), d));
 
-    // Build initial admission-based query
-    const match = {};
-    if (admissionDate) match.admissionDate = new Date(admissionDate);
-
+    // Build patient-level query (only gender filter goes to DB)
     const query = {};
-    if (Object.keys(match).length) query["admissionDetails"] = { $elemMatch: match };
+    if (gender) {
+      query["identityDetails.gender"] = gender;
+    }
 
-    // Fetch patients with admissionDetails matching admissionDate (if provided)
+    // Fetch patients
     let patients = await PATIENT_MODEL.find(query)
       .populate("admissionDetails.bedId", "bedName")
       .populate("admissionDetails.consultingDoctorId", "doctorName")
       .lean();
 
-    // If dischargeDate filter is provided
-    if (dischargeDate) {
-      const discharges = await FINAL_DISCHARGE_MODEL.find({
-        dateOfDischarge: new Date(dischargeDate),
-      }).lean();
+    // Now filter admissionDetails manually
+    const filteredPatients = patients.map((p) => {
+      const admissions = p.admissionDetails.filter((a) => {
+        let matches = true;
 
-      const patientIds = discharges.map((d) => d.patientId.toString());
-      const dischargePatients = await PATIENT_MODEL.find({ _id: { $in: patientIds } })
-        .populate("admissionDetails.bedId", "bedName")
-        .populate("admissionDetails.consultingDoctorId", "doctorName")
-        .lean();
+        // Admission Date filter (EXACT match to the provided date)
+        if (admissionDate) {
+          const filterDate = new Date(admissionDate);
+          const admissionOnlyDate = new Date(a.admissionDate);
+          matches =
+            matches &&
+            admissionOnlyDate.toISOString().split("T")[0] ===
+              filterDate.toISOString().split("T")[0];
+        }
 
-      // Keep only admissionDetails linked to the discharge
-      const dischargePatientFiltered = dischargePatients.map((p) => {
-        const matchingDischarges = discharges.filter(
-          (d) => d.patientId.toString() === p._id.toString()
-        );
-        const admissionIds = matchingDischarges.map((d) => d.admissionId.toString());
-        return {
-          ...p,
-          admissionDetails: p.admissionDetails.filter((a) =>
-            admissionIds.includes(a._id.toString())
-          ),
-        };
+        // Discharge Date filter (EXACT match)
+        if (dischargeDate) {
+          const discharge = dischargeMap.get(a._id.toString());
+          if (discharge) {
+            const filterDate = new Date(dischargeDate);
+            matches =
+              matches &&
+              discharge.dateOfDischarge.toISOString().split("T")[0] ===
+                filterDate.toISOString().split("T")[0];
+          } else {
+            matches = false;
+          }
+        }
+
+        // Patient status filter
+        if (patientStatus) {
+          matches = matches && a.patientStatus === patientStatus;
+        }
+
+        // MLC type filter
+        if (mlcType !== undefined) {
+          matches =
+            matches && a.mlcType === (mlcType === "true" || mlcType === true);
+        }
+
+        return matches;
       });
 
-      patients = [...patients, ...dischargePatientFiltered];
-    }
+      return { ...p, admissionDetails: admissions };
+    });
 
-    // Filter each patient's admissionDetails for patientStatus and mlcType
-    const filteredPatients = patients.map((p) => ({
-      ...p,
-      admissionDetails: p.admissionDetails.filter((a) =>
-        (patientStatus ? a.patientStatus === patientStatus : true) &&
-        (mlcType !== undefined ? a.mlcType === (mlcType === "true" || mlcType === true) : true)
-      ),
-    }));
-
-    // Remove patients with no admissionDetails after filtering
-    const finalPatients = filteredPatients.filter((p) => p.admissionDetails.length > 0);
+    // Keep only patients who still have admissions
+    const finalPatients = filteredPatients.filter(
+      (p) => p.admissionDetails.length > 0
+    );
 
     // Flatten and format
-    return finalPatients.flatMap((patient) => this.formatPatient(patient, dischargeMap));
+    return finalPatients.flatMap((patient) =>
+      this.formatPatient(patient, dischargeMap)
+    );
   } catch (error) {
     console.error("Error fetching consultant reports:", error);
     throw new Error("Failed to fetch consultant reports.");
   }
 }
+
 
   formatPatient(patient, dischargeMap) {
     return patient.admissionDetails.map((admission) => {

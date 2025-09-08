@@ -332,9 +332,13 @@ async getMonthlyReports(filters) {
     }
 
     // Religion
-    if (filters?.religion) {
-      query["identityDetails.religion"] = filters.religion;
-    }
+    // if (filters?.religion) {
+    //   query["identityDetails.religion"] = filters.religion;
+    // }
+    if (filters?.patientReligion) {
+  query["identityDetails.patientReligion"] = { $regex: `^${filters.patientReligion}$`, $options: "i" };
+}
+
 
     // Consultant
     if (filters?.consultant) {
@@ -356,10 +360,14 @@ async getMonthlyReports(filters) {
       query["dischargeDetails.summaryType"] = filters.dischargeSummaryType;
     }
 
-    // Discharge Reason
+    // // Discharge Reason
+    // if (filters?.dischargeReason) {
+    //   query["dischargeDetails.reason"] = { $regex: filters.dischargeReason, $options: "i" };
+    // }
     if (filters?.dischargeReason) {
-      query["dischargeDetails.reason"] = { $regex: filters.dischargeReason, $options: "i" };
-    }
+  query["admissionDetails.reasonForDischarge"] = { $regex: filters.dischargeReason, $options: "i" };
+}
+
 
     // Birth/Death
     if (filters?.birthDeath) {

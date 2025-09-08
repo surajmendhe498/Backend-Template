@@ -21,25 +21,7 @@ export default class Reports_masterController {
     }
   };
 
-  // getReportsByDateRange = async (req, res, next) => {
-  //   try {
-  //     const { fromDate, toDate, fromTime, toTime } = req.query; 
-  //     const reports = await this.reports_masterService.getReportsByDateRange({
-  //       fromDate,
-  //       toDate,
-  //       fromTime,
-  //       toTime,
-  //     });
-
-  //     res.status(statusCode.OK).json({
-  //       success: true,
-  //       message: 'Date range reports fetched successfully',
-  //       data: reports,
-  //     });
-  //   } catch (err) {
-  //     next(err);
-  //   }
-  // };
+  
   getReportsByDateRange = async (req, res, next) => {
     try {
       const filters = req.query; // Accept all query parameters from frontend
@@ -56,23 +38,18 @@ export default class Reports_masterController {
   };
 
   getConsultantReports = async (req, res, next) => {
-    try {
-      const { admissionDate, dischargeDate, mlcType, patientStatus } = req.query; // Extract query parameters
+  try {
+    const filters = req.query; // Accept all query parameters from frontend
+    const reports = await this.reports_masterService.getConsultantReports(filters);
 
-      const reports = await this.reports_masterService.getConsultantReports({
-        admissionDate,
-        dischargeDate,
-        mlcType,
-        patientStatus,
-      });
+    res.status(statusCode.OK).json({
+      success: true,
+      message: 'Consultant reports fetched successfully',
+      data: reports,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
-      res.status(statusCode.OK).json({
-        success: true,
-        message: 'Consultant reports fetched successfully',
-        data: reports,
-      });
-    } catch (err) {
-      next(err);
-    }
-  };
 }

@@ -203,6 +203,7 @@ const AdmissionSchema = new mongoose.Schema(
     billingDischargeTime: { type: String },
     finalDischargeDate: { type: Date },
     finalDischargeTime: { type: String },
+    reasonForDischarge: { type: String },
     applicableClass: { type: String },
     paymentRemark: { type: String },
     mlcNo: { type: String },

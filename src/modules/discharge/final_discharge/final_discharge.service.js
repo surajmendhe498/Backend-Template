@@ -30,7 +30,7 @@ class Final_dischargeService {
   // }
 
   async create(data) {
-    const { patientId, admissionId, dateOfDischarge, timeOfDischarge } = data;
+    const { patientId, admissionId, dateOfDischarge, timeOfDischarge, reasonForDischarge } = data;
 
     const patient = await PATIENT_MODEL.findById(patientId);
     if (!patient) {
@@ -46,6 +46,7 @@ class Final_dischargeService {
     admission.patientStatus = "Discharged";
     admission.finalDischargeDate = dateOfDischarge;
     admission.finalDischargeTime = timeOfDischarge;
+    admission.reasonForDischarge = reasonForDischarge;
     await patient.save();
 
     // make bed vacant again

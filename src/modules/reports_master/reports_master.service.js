@@ -589,80 +589,83 @@ async getReportsByDateRange(filters) {
     }
   }
 
-async getConsultantReports({ admissionDate, dischargeDate, mlcType, patientStatus, gender }) {
+async getConsultantReports(filters) {
   try {
-    // Preload all discharges
-    const finalDischarges = await FINAL_DISCHARGE_MODEL.find().lean();
-    const dischargeMap = new Map();
-    finalDischarges.forEach((d) => dischargeMap.set(d.admissionId.toString(), d));
+    const {
+      admissionDate,
+      dischargeDate,   // exact date
+      mlcType,
+      patientStatus,
+      gender,
+      age,
+      reasonForAdmission,
+      paymentMode,
+      paymentDetails,
+      corporation,
+      vaccination,
+      vaccineType,
+      doses,
+      consultant,
+      otherConsultant,
+      dischargeSummaryType,
+      dischargeReason,
+      floorId,
+      birthDeath
+    } = filters;
 
-    // Build patient-level query (only gender filter goes to DB)
     const query = {};
-    if (gender) {
-      query["identityDetails.gender"] = gender;
+    if (gender) query["identityDetails.gender"] = gender;
+    if (age) query["identityDetails.age.years"] = Number(age);
+
+    const admissionMatch = {};
+
+    // Admission Date Filter
+    if (admissionDate) {
+      const start = new Date(admissionDate + "T00:00:00.000Z");
+      const end = new Date(admissionDate + "T23:59:59.999Z");
+      admissionMatch.admissionDate = { $gte: start, $lte: end };
     }
 
+    if (mlcType !== undefined) admissionMatch.mlcType = mlcType === "true" || mlcType === true;
+    if (patientStatus) admissionMatch.patientStatus = patientStatus;
+    if (reasonForAdmission) admissionMatch.admissionReasonId = reasonForAdmission;
+    if (paymentMode) admissionMatch.paymentMode = paymentMode;
+    if (paymentDetails) admissionMatch.paymentDetails = { $regex: paymentDetails, $options: "i" };
+    if (corporation) admissionMatch.corporation = { $regex: corporation, $options: "i" };
+    if (vaccination) admissionMatch.vaccinationDetails = { $regex: vaccination, $options: "i" };
+    if (vaccineType) admissionMatch.vaccineType = { $regex: vaccineType, $options: "i" };
+    if (doses) admissionMatch.doses = Number(doses);
+    if (consultant) admissionMatch.consultantUnit = { $regex: consultant, $options: "i" };
+    if (otherConsultant) admissionMatch.otherConsultant = { $regex: otherConsultant, $options: "i" };
+    if (dischargeSummaryType) admissionMatch.dischargeDetails = { summaryType: dischargeSummaryType };
+    if (dischargeReason) admissionMatch.reasonForDischarge = dischargeReason;
+    if (floorId) admissionMatch.floorId = floorId;
+    if (birthDeath) admissionMatch.patientDetail = birthDeath;
+
+    // Filter admissionDetails directly in query
+    if (dischargeDate) {
+      const start = new Date(dischargeDate + "T00:00:00.000Z");
+      const end = new Date(dischargeDate + "T23:59:59.999Z");
+      admissionMatch.finalDischargeDate = { $gte: start, $lte: end };
+    }
+
+    query.admissionDetails = { $elemMatch: admissionMatch };
+
     // Fetch patients
-    let patients = await PATIENT_MODEL.find(query)
-      .populate("admissionDetails.bedId", "bedName")
+    const patients = await PATIENT_MODEL.find(query)
       .populate("admissionDetails.consultingDoctorId", "doctorName")
+      .populate("admissionDetails.referredByDoctorId", "doctorName")
+      .populate("admissionDetails.bedId", "bedName")
+      .populate("admissionDetails.admissionReasonId", "admissionReason")
+      .populate("admissionDetails.floorId", "floorName")
       .lean();
 
-    // Now filter admissionDetails manually
-    const filteredPatients = patients.map((p) => {
-      const admissions = p.admissionDetails.filter((a) => {
-        let matches = true;
+    return {
+      success: true,
+      message: "Consultant reports fetched successfully",
+      data: patients
+    };
 
-        // Admission Date filter (EXACT match to the provided date)
-        if (admissionDate) {
-          const filterDate = new Date(admissionDate);
-          const admissionOnlyDate = new Date(a.admissionDate);
-          matches =
-            matches &&
-            admissionOnlyDate.toISOString().split("T")[0] ===
-              filterDate.toISOString().split("T")[0];
-        }
-
-        // Discharge Date filter (EXACT match)
-        if (dischargeDate) {
-          const discharge = dischargeMap.get(a._id.toString());
-          if (discharge) {
-            const filterDate = new Date(dischargeDate);
-            matches =
-              matches &&
-              discharge.dateOfDischarge.toISOString().split("T")[0] ===
-                filterDate.toISOString().split("T")[0];
-          } else {
-            matches = false;
-          }
-        }
-
-        // Patient status filter
-        if (patientStatus) {
-          matches = matches && a.patientStatus === patientStatus;
-        }
-
-        // MLC type filter
-        if (mlcType !== undefined) {
-          matches =
-            matches && a.mlcType === (mlcType === "true" || mlcType === true);
-        }
-
-        return matches;
-      });
-
-      return { ...p, admissionDetails: admissions };
-    });
-
-    // Keep only patients who still have admissions
-    const finalPatients = filteredPatients.filter(
-      (p) => p.admissionDetails.length > 0
-    );
-
-    // Flatten and format
-    return finalPatients.flatMap((patient) =>
-      this.formatPatient(patient, dischargeMap)
-    );
   } catch (error) {
     console.error("Error fetching consultant reports:", error);
     throw new Error("Failed to fetch consultant reports.");

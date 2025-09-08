@@ -458,71 +458,136 @@ async getMonthlyReports(filters) {
 }
 
 
-async getReportsByDateRange({ fromDate, toDate, fromTime, toTime }) {
-  try {
-    let start = null;
-    let end = null;
+// async getReportsByDateRange({ fromDate, toDate, fromTime, toTime }) {
+//   try {
+//     let start = null;
+//     let end = null;
 
-    if (fromDate) {
-      start = new Date(fromDate);
-      start.setHours(0, 0, 0, 0);
-    }
-    if (toDate) {
-      end = new Date(toDate);
-      end.setHours(23, 59, 59, 999);
-    }
+//     if (fromDate) {
+//       start = new Date(fromDate);
+//       start.setHours(0, 0, 0, 0);
+//     }
+//     if (toDate) {
+//       end = new Date(toDate);
+//       end.setHours(23, 59, 59, 999);
+//     }
 
-    const admissionMatch = {};
-    if (start && end) {
-      admissionMatch.admissionDate = { $gte: start, $lte: end };
-    } else if (start) {
-      admissionMatch.admissionDate = { $gte: start };
-    } else if (end) {
-      admissionMatch.admissionDate = { $lte: end };
-    }
+//     const admissionMatch = {};
+//     if (start && end) {
+//       admissionMatch.admissionDate = { $gte: start, $lte: end };
+//     } else if (start) {
+//       admissionMatch.admissionDate = { $gte: start };
+//     } else if (end) {
+//       admissionMatch.admissionDate = { $lte: end };
+//     }
 
-    if (fromTime && toTime) {
-      admissionMatch.admissionTime = { $gte: fromTime, $lte: toTime };
-    }
+//     if (fromTime && toTime) {
+//       admissionMatch.admissionTime = { $gte: fromTime, $lte: toTime };
+//     }
 
-    const patients = await PATIENT_MODEL.find({
-      admissionDetails: { $elemMatch: admissionMatch },
-    })
-      .populate("admissionDetails.bedId", "bedName")
-      .populate("admissionDetails.consultingDoctorId", "doctorName")
-      .lean();
+//     const patients = await PATIENT_MODEL.find({
+//       admissionDetails: { $elemMatch: admissionMatch },
+//     })
+//       .populate("admissionDetails.bedId", "bedName")
+//       .populate("admissionDetails.consultingDoctorId", "doctorName")
+//       .lean();
 
     
-    const finalDischarges = await FINAL_DISCHARGE_MODEL.find().lean();
-    const dischargeMap = new Map();
-    finalDischarges.forEach((d) => {
-      dischargeMap.set(d.admissionId.toString(), d);
-    });
+//     const finalDischarges = await FINAL_DISCHARGE_MODEL.find().lean();
+//     const dischargeMap = new Map();
+//     finalDischarges.forEach((d) => {
+//       dischargeMap.set(d.admissionId.toString(), d);
+//     });
 
-    const filteredPatients = patients.map((p) => {
-      const filteredAdmissions = p.admissionDetails.filter((a) => {
-        const adDate = new Date(a.admissionDate);
-        if (start && adDate < start) return false;
-        if (end && adDate > end) return false;
-        return true;
-      });
-      return { ...p, admissionDetails: filteredAdmissions };
-    });
+//     const filteredPatients = patients.map((p) => {
+//       const filteredAdmissions = p.admissionDetails.filter((a) => {
+//         const adDate = new Date(a.admissionDate);
+//         if (start && adDate < start) return false;
+//         if (end && adDate > end) return false;
+//         return true;
+//       });
+//       return { ...p, admissionDetails: filteredAdmissions };
+//     });
 
-    const validPatients = filteredPatients.filter(
-      (p) => p.admissionDetails.length > 0
-    );
+//     const validPatients = filteredPatients.filter(
+//       (p) => p.admissionDetails.length > 0
+//     );
 
-    const results = validPatients.flatMap((patient) =>
-      this.formatPatient(patient, dischargeMap)
-    );
+//     const results = validPatients.flatMap((patient) =>
+//       this.formatPatient(patient, dischargeMap)
+//     );
 
-    return results;
-  } catch (error) {
-    console.error("Error fetching date range reports:", error);
-    throw new Error("Failed to fetch date range reports.");
-  }
+//     return results;
+//   } catch (error) {
+//     console.error("Error fetching date range reports:", error);
+//     throw new Error("Failed to fetch date range reports.");
+//   }
+// }
+
+async getReportsByDateRange(filters) {
+    try {
+      const {
+        fromDate, toDate, fromTime, toTime,
+        mlcType, patientStatus, gender, age,
+        reasonForAdmission, paymentMode, paymentDetails,
+        corporation, vaccination, vaccineType, doses, consultant, birthDeath
+      } = filters;
+
+      let query = {};
+
+      // Filter by identityDetails
+      if (gender) query["identityDetails.gender"] = gender;
+      if (age) query["identityDetails.age.years"] = Number(age);
+
+      // Filter by admissionDetails using $elemMatch
+      const admissionMatch = {};
+
+  if (fromDate && toDate) {
+  const start = new Date(fromDate);
+  start.setHours(0, 0, 0, 0);
+
+  const end = new Date(toDate);
+  end.setHours(23, 59, 59, 999);
+
+  admissionMatch.admissionDate = { $gte: start, $lte: end };
 }
+    if (fromTime && toTime) {
+      const startTime = fromTime.toString().padStart(5, "0"); 
+      const endTime = toTime.toString().padStart(5, "0");
+
+      admissionMatch.admissionTime = { $gte: startTime, $lte: endTime };
+    }
+
+      if (mlcType !== undefined) admissionMatch.mlcType = mlcType === 'true' || mlcType === true;
+      if (patientStatus) admissionMatch.patientStatus = patientStatus;
+      if (reasonForAdmission) 
+  admissionMatch.admissionReasonId = reasonForAdmission; // must be an ObjectId string
+
+      if (paymentMode) admissionMatch.paymentMode = paymentMode;
+      if (paymentDetails) admissionMatch.paymentDetails = { $regex: paymentDetails, $options: 'i' };
+      if (corporation) admissionMatch.corporation = { $regex: corporation, $options: 'i' };
+      if (vaccination) admissionMatch.vaccinationDetails = { $regex: vaccination, $options: 'i' };
+      if (vaccineType) admissionMatch.vaccineType = { $regex: vaccineType, $options: 'i' };
+      if (doses) admissionMatch.doses = Number(doses);
+      if (consultant) admissionMatch.consultantUnit = { $regex: consultant, $options: 'i' };
+      if (birthDeath) admissionMatch.patientDetail = birthDeath;
+
+      query.admissionDetails = { $elemMatch: admissionMatch };
+
+      const patients = await PATIENT_MODEL.find(query)
+        .populate("admissionDetails.consultingDoctorId", "doctorName")
+        .populate("admissionDetails.referredByDoctorId", "doctorName")
+        .populate("admissionDetails.bedId", "bedName")
+        .populate("admissionDetails.admissionReasonId", "admissionReason")
+        .populate("admissionDetails.floorId", "floorName")
+        .lean();
+
+      return patients;
+    } catch (error) {
+      console.error("Error fetching date range reports:", error);
+      throw new Error("Failed to fetch date range reports.");
+    }
+  }
 
 async getConsultantReports({ admissionDate, dischargeDate, mlcType, patientStatus, gender }) {
   try {

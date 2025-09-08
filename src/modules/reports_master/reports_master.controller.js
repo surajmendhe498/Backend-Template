@@ -21,15 +21,29 @@ export default class Reports_masterController {
     }
   };
 
+  // getReportsByDateRange = async (req, res, next) => {
+  //   try {
+  //     const { fromDate, toDate, fromTime, toTime } = req.query; 
+  //     const reports = await this.reports_masterService.getReportsByDateRange({
+  //       fromDate,
+  //       toDate,
+  //       fromTime,
+  //       toTime,
+  //     });
+
+  //     res.status(statusCode.OK).json({
+  //       success: true,
+  //       message: 'Date range reports fetched successfully',
+  //       data: reports,
+  //     });
+  //   } catch (err) {
+  //     next(err);
+  //   }
+  // };
   getReportsByDateRange = async (req, res, next) => {
     try {
-      const { fromDate, toDate, fromTime, toTime } = req.query; 
-      const reports = await this.reports_masterService.getReportsByDateRange({
-        fromDate,
-        toDate,
-        fromTime,
-        toTime,
-      });
+      const filters = req.query; // Accept all query parameters from frontend
+      const reports = await this.reports_masterService.getReportsByDateRange(filters);
 
       res.status(statusCode.OK).json({
         success: true,

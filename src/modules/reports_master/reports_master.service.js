@@ -384,15 +384,29 @@ async getMonthlyReports(filters) {
       .lean();
 
     // Month filter applied manually
-    if (filters?.month) {
-      const monthNum = Number(filters.month);
-      reports = reports.filter((p) =>
-        p.admissionDetails.some((admission) => {
-          const adDate = new Date(admission.admissionDate);
-          return adDate.getMonth() + 1 === monthNum;
-        })
-      );
-    }
+    // if (filters?.month) {
+    //   const monthNum = Number(filters.month);
+    //   reports = reports.filter((p) =>
+    //     p.admissionDetails.some((admission) => {
+    //       const adDate = new Date(admission.admissionDate);
+    //       return adDate.getMonth() + 1 === monthNum;
+    //     })
+    //   );
+    // }
+    // Month filter applied manually
+// if (filters?.month) {
+//   const monthNum = Number(filters.month);
+//   reports = reports
+//     .map((patient) => {
+//       const filteredAdmissions = patient.admissionDetails.filter((admission) => {
+//         const adDate = new Date(admission.admissionDate);
+//         return adDate.getMonth() + 1 === monthNum; // Only keep admissions of this month
+//       });
+//       return { ...patient, admissionDetails: filteredAdmissions };
+//     })
+//     .filter((patient) => patient.admissionDetails.length > 0); // Remove patients with no admissions in this month
+// }
+
 
     // Year filter applied manually
     if (filters?.year) {
@@ -465,137 +479,234 @@ async getMonthlyReports(filters) {
   }
 }
 
+// async getReportsByDateRange(filters) {
+//     try {
+//       const {
+//         fromDate, toDate, fromTime, toTime,
+//         mlcType, patientStatus, gender, age,
+//         reasonForAdmission, paymentMode, paymentDetails,
+//         corporation, vaccination, vaccineType, doses, consultant, birthDeath
+//       } = filters;
 
-// async getReportsByDateRange({ fromDate, toDate, fromTime, toTime }) {
-//   try {
-//     let start = null;
-//     let end = null;
+//       let query = {};
 
-//     if (fromDate) {
-//       start = new Date(fromDate);
-//       start.setHours(0, 0, 0, 0);
-//     }
-//     if (toDate) {
-//       end = new Date(toDate);
-//       end.setHours(23, 59, 59, 999);
-//     }
+//       // Filter by identityDetails
+//       if (gender) query["identityDetails.gender"] = gender;
+//       if (age) query["identityDetails.age.years"] = Number(age);
 
-//     const admissionMatch = {};
-//     if (start && end) {
-//       admissionMatch.admissionDate = { $gte: start, $lte: end };
-//     } else if (start) {
-//       admissionMatch.admissionDate = { $gte: start };
-//     } else if (end) {
-//       admissionMatch.admissionDate = { $lte: end };
-//     }
+//       // Filter by admissionDetails using $elemMatch
+//       const admissionMatch = {};
 
-//     if (fromTime && toTime) {
-//       admissionMatch.admissionTime = { $gte: fromTime, $lte: toTime };
-//     }
+//   if (fromDate && toDate) {
+//   const start = new Date(fromDate);
+//   start.setHours(0, 0, 0, 0);
 
-//     const patients = await PATIENT_MODEL.find({
-//       admissionDetails: { $elemMatch: admissionMatch },
-//     })
-//       .populate("admissionDetails.bedId", "bedName")
-//       .populate("admissionDetails.consultingDoctorId", "doctorName")
-//       .lean();
+//   const end = new Date(toDate);
+//   end.setHours(23, 59, 59, 999);
 
-    
-//     const finalDischarges = await FINAL_DISCHARGE_MODEL.find().lean();
-//     const dischargeMap = new Map();
-//     finalDischarges.forEach((d) => {
-//       dischargeMap.set(d.admissionId.toString(), d);
-//     });
-
-//     const filteredPatients = patients.map((p) => {
-//       const filteredAdmissions = p.admissionDetails.filter((a) => {
-//         const adDate = new Date(a.admissionDate);
-//         if (start && adDate < start) return false;
-//         if (end && adDate > end) return false;
-//         return true;
-//       });
-//       return { ...p, admissionDetails: filteredAdmissions };
-//     });
-
-//     const validPatients = filteredPatients.filter(
-//       (p) => p.admissionDetails.length > 0
-//     );
-
-//     const results = validPatients.flatMap((patient) =>
-//       this.formatPatient(patient, dischargeMap)
-//     );
-
-//     return results;
-//   } catch (error) {
-//     console.error("Error fetching date range reports:", error);
-//     throw new Error("Failed to fetch date range reports.");
-//   }
+//   admissionMatch.admissionDate = { $gte: start, $lte: end };
 // }
+//     if (fromTime && toTime) {
+//       const startTime = fromTime.toString().padStart(5, "0"); 
+//       const endTime = toTime.toString().padStart(5, "0");
 
+//       admissionMatch.admissionTime = { $gte: startTime, $lte: endTime };
+//     }
+
+//       if (mlcType !== undefined) admissionMatch.mlcType = mlcType === 'true' || mlcType === true;
+//       if (patientStatus) admissionMatch.patientStatus = patientStatus;
+//       if (reasonForAdmission) 
+//   admissionMatch.admissionReasonId = reasonForAdmission; // must be an ObjectId string
+
+//       if (paymentMode) admissionMatch.paymentMode = paymentMode;
+//       if (paymentDetails) admissionMatch.paymentDetails = { $regex: paymentDetails, $options: 'i' };
+//       if (corporation) admissionMatch.corporation = { $regex: corporation, $options: 'i' };
+//       if (vaccination) admissionMatch.vaccinationDetails = { $regex: vaccination, $options: 'i' };
+//       if (vaccineType) admissionMatch.vaccineType = { $regex: vaccineType, $options: 'i' };
+//       if (doses) admissionMatch.doses = Number(doses);
+//       if (consultant) admissionMatch.consultantUnit = { $regex: consultant, $options: 'i' };
+//       if (birthDeath) admissionMatch.patientDetail = birthDeath;
+
+//       query.admissionDetails = { $elemMatch: admissionMatch };
+
+//       const patients = await PATIENT_MODEL.find(query)
+//         .populate("admissionDetails.consultingDoctorId", "doctorName")
+//         .populate("admissionDetails.referredByDoctorId", "doctorName")
+//         .populate("admissionDetails.bedId", "bedName")
+//         .populate("admissionDetails.admissionReasonId", "admissionReason")
+//         .populate("admissionDetails.floorId", "floorName")
+//         .lean();
+
+//       return patients;
+//     } catch (error) {
+//       console.error("Error fetching date range reports:", error);
+//       throw new Error("Failed to fetch date range reports.");
+//     }
+//   }
 async getReportsByDateRange(filters) {
-    try {
-      const {
-        fromDate, toDate, fromTime, toTime,
-        mlcType, patientStatus, gender, age,
-        reasonForAdmission, paymentMode, paymentDetails,
-        corporation, vaccination, vaccineType, doses, consultant, birthDeath
-      } = filters;
+  try {
+    const {
+      fromDate, toDate, fromTime, toTime,
+      mlcType, patientStatus, gender, age,
+      reasonForAdmission, paymentMode, paymentDetails,
+      corporation, vaccination, vaccineType, doses, consultant, birthDeath
+    } = filters;
 
-      let query = {};
+    let query = {};
 
-      // Filter by identityDetails
-      if (gender) query["identityDetails.gender"] = gender;
-      if (age) query["identityDetails.age.years"] = Number(age);
+    if (gender) query["identityDetails.gender"] = gender;
+    if (age) query["identityDetails.age.years"] = Number(age);
 
-      // Filter by admissionDetails using $elemMatch
-      const admissionMatch = {};
+    const admissionMatch = {};
 
-  if (fromDate && toDate) {
-  const start = new Date(fromDate);
-  start.setHours(0, 0, 0, 0);
+    // Date range
+    if (fromDate && toDate) {
+      const start = new Date(fromDate);
+      start.setHours(0, 0, 0, 0);
 
-  const end = new Date(toDate);
-  end.setHours(23, 59, 59, 999);
+      const end = new Date(toDate);
+      end.setHours(23, 59, 59, 999);
 
-  admissionMatch.admissionDate = { $gte: start, $lte: end };
-}
+      admissionMatch.admissionDate = { $gte: start, $lte: end };
+    }
+
+    // Time range
     if (fromTime && toTime) {
-      const startTime = fromTime.toString().padStart(5, "0"); 
+      const startTime = fromTime.toString().padStart(5, "0");
       const endTime = toTime.toString().padStart(5, "0");
 
       admissionMatch.admissionTime = { $gte: startTime, $lte: endTime };
     }
 
-      if (mlcType !== undefined) admissionMatch.mlcType = mlcType === 'true' || mlcType === true;
-      if (patientStatus) admissionMatch.patientStatus = patientStatus;
-      if (reasonForAdmission) 
-  admissionMatch.admissionReasonId = reasonForAdmission; // must be an ObjectId string
+    if (mlcType !== undefined) admissionMatch.mlcType = mlcType === 'true' || mlcType === true;
+    if (patientStatus) admissionMatch.patientStatus = patientStatus;
+    if (paymentMode) admissionMatch.paymentMode = paymentMode;
+    if (paymentDetails) admissionMatch.paymentDetails = { $regex: paymentDetails, $options: 'i' };
+    if (corporation) admissionMatch.corporation = { $regex: corporation, $options: 'i' };
+    if (vaccination) admissionMatch.vaccinationDetails = { $regex: vaccination, $options: 'i' };
+    if (vaccineType) admissionMatch.vaccineType = { $regex: vaccineType, $options: 'i' };
+    if (doses) admissionMatch.doses = Number(doses);
+    if (consultant) admissionMatch.consultantUnit = { $regex: consultant, $options: 'i' };
+    if (birthDeath) admissionMatch.patientDetail = birthDeath;
 
-      if (paymentMode) admissionMatch.paymentMode = paymentMode;
-      if (paymentDetails) admissionMatch.paymentDetails = { $regex: paymentDetails, $options: 'i' };
-      if (corporation) admissionMatch.corporation = { $regex: corporation, $options: 'i' };
-      if (vaccination) admissionMatch.vaccinationDetails = { $regex: vaccination, $options: 'i' };
-      if (vaccineType) admissionMatch.vaccineType = { $regex: vaccineType, $options: 'i' };
-      if (doses) admissionMatch.doses = Number(doses);
-      if (consultant) admissionMatch.consultantUnit = { $regex: consultant, $options: 'i' };
-      if (birthDeath) admissionMatch.patientDetail = birthDeath;
+    // Admission details match
+    query.admissionDetails = { $elemMatch: admissionMatch };
 
-      query.admissionDetails = { $elemMatch: admissionMatch };
+    // Fetch patients
+    let patients = await PATIENT_MODEL.find(query)
+      .populate("admissionDetails.consultingDoctorId", "doctorName")
+      .populate("admissionDetails.referredByDoctorId", "doctorName")
+      .populate("admissionDetails.bedId", "bedName")
+      .populate("admissionDetails.admissionReasonId", "admissionReason")
+      .populate("admissionDetails.floorId", "floorName")
+      .lean();
 
-      const patients = await PATIENT_MODEL.find(query)
-        .populate("admissionDetails.consultingDoctorId", "doctorName")
-        .populate("admissionDetails.referredByDoctorId", "doctorName")
-        .populate("admissionDetails.bedId", "bedName")
-        .populate("admissionDetails.admissionReasonId", "admissionReason")
-        .populate("admissionDetails.floorId", "floorName")
-        .lean();
-
-      return patients;
-    } catch (error) {
-      console.error("Error fetching date range reports:", error);
-      throw new Error("Failed to fetch date range reports.");
+    // Post-population filter for reasonForAdmission by name
+    if (reasonForAdmission) {
+      const searchText = reasonForAdmission.toLowerCase();
+      patients = patients
+        .map((p) => {
+          const filteredAdmissions = p.admissionDetails.filter(
+            (admission) =>
+              admission.admissionReasonId &&
+              admission.admissionReasonId.admissionReason &&
+              admission.admissionReasonId.admissionReason.toLowerCase().includes(searchText)
+          );
+          return { ...p, admissionDetails: filteredAdmissions };
+        })
+        .filter((p) => p.admissionDetails.length > 0);
     }
+
+    return patients;
+  } catch (error) {
+    console.error("Error fetching date range reports:", error);
+    throw new Error("Failed to fetch date range reports.");
   }
+}
+
+
+// async getConsultantReports(filters) {
+//   try {
+//     const {
+//       admissionDate,
+//       dischargeDate,   // exact date
+//       mlcType,
+//       patientStatus,
+//       gender,
+//       age,
+//       reasonForAdmission,
+//       paymentMode,
+//       paymentDetails,
+//       corporation,
+//       vaccination,
+//       vaccineType,
+//       doses,
+//       consultant,
+//       otherConsultant,
+//       dischargeSummaryType,
+//       dischargeReason,
+//       floorId,
+//       birthDeath
+//     } = filters;
+
+//     const query = {};
+//     if (gender) query["identityDetails.gender"] = gender;
+//     if (age) query["identityDetails.age.years"] = Number(age);
+
+//     const admissionMatch = {};
+
+//     // Admission Date Filter
+//     if (admissionDate) {
+//       const start = new Date(admissionDate + "T00:00:00.000Z");
+//       const end = new Date(admissionDate + "T23:59:59.999Z");
+//       admissionMatch.admissionDate = { $gte: start, $lte: end };
+//     }
+
+//     if (mlcType !== undefined) admissionMatch.mlcType = mlcType === "true" || mlcType === true;
+//     if (patientStatus) admissionMatch.patientStatus = patientStatus;
+//     if (reasonForAdmission) admissionMatch.admissionReasonId = reasonForAdmission;
+//     if (paymentMode) admissionMatch.paymentMode = paymentMode;
+//     if (paymentDetails) admissionMatch.paymentDetails = { $regex: paymentDetails, $options: "i" };
+//     if (corporation) admissionMatch.corporation = { $regex: corporation, $options: "i" };
+//     if (vaccination) admissionMatch.vaccinationDetails = { $regex: vaccination, $options: "i" };
+//     if (vaccineType) admissionMatch.vaccineType = { $regex: vaccineType, $options: "i" };
+//     if (doses) admissionMatch.doses = Number(doses);
+//     if (consultant) admissionMatch.consultantUnit = { $regex: consultant, $options: "i" };
+//     if (otherConsultant) admissionMatch.otherConsultant = { $regex: otherConsultant, $options: "i" };
+//     if (dischargeSummaryType) admissionMatch.dischargeDetails = { summaryType: dischargeSummaryType };
+//     if (dischargeReason) admissionMatch.reasonForDischarge = dischargeReason;
+//     if (floorId) admissionMatch.floorId = floorId;
+//     if (birthDeath) admissionMatch.patientDetail = birthDeath;
+
+//     // Filter admissionDetails directly in query
+//     if (dischargeDate) {
+//       const start = new Date(dischargeDate + "T00:00:00.000Z");
+//       const end = new Date(dischargeDate + "T23:59:59.999Z");
+//       admissionMatch.finalDischargeDate = { $gte: start, $lte: end };
+//     }
+
+//     query.admissionDetails = { $elemMatch: admissionMatch };
+
+//     // Fetch patients
+//     const patients = await PATIENT_MODEL.find(query)
+//       .populate("admissionDetails.consultingDoctorId", "doctorName")
+//       .populate("admissionDetails.referredByDoctorId", "doctorName")
+//       .populate("admissionDetails.bedId", "bedName")
+//       .populate("admissionDetails.admissionReasonId", "admissionReason")
+//       .populate("admissionDetails.floorId", "floorName")
+//       .lean();
+
+//     return {
+//       success: true,
+//       message: "Consultant reports fetched successfully",
+//       data: patients
+//     };
+
+//   } catch (error) {
+//     console.error("Error fetching consultant reports:", error);
+//     throw new Error("Failed to fetch consultant reports.");
+//   }
+// }
 
 async getConsultantReports(filters) {
   try {
@@ -606,7 +717,7 @@ async getConsultantReports(filters) {
       patientStatus,
       gender,
       age,
-      reasonForAdmission,
+      reasonForAdmission, // 🔹 name-based filter
       paymentMode,
       paymentDetails,
       corporation,
@@ -617,7 +728,7 @@ async getConsultantReports(filters) {
       otherConsultant,
       dischargeSummaryType,
       dischargeReason,
-      floorId,
+      floorId, // 🔹 now matches by name too
       birthDeath
     } = filters;
 
@@ -636,7 +747,6 @@ async getConsultantReports(filters) {
 
     if (mlcType !== undefined) admissionMatch.mlcType = mlcType === "true" || mlcType === true;
     if (patientStatus) admissionMatch.patientStatus = patientStatus;
-    if (reasonForAdmission) admissionMatch.admissionReasonId = reasonForAdmission;
     if (paymentMode) admissionMatch.paymentMode = paymentMode;
     if (paymentDetails) admissionMatch.paymentDetails = { $regex: paymentDetails, $options: "i" };
     if (corporation) admissionMatch.corporation = { $regex: corporation, $options: "i" };
@@ -647,10 +757,9 @@ async getConsultantReports(filters) {
     if (otherConsultant) admissionMatch.otherConsultant = { $regex: otherConsultant, $options: "i" };
     if (dischargeSummaryType) admissionMatch.dischargeDetails = { summaryType: dischargeSummaryType };
     if (dischargeReason) admissionMatch.reasonForDischarge = dischargeReason;
-    if (floorId) admissionMatch.floorId = floorId;
     if (birthDeath) admissionMatch.patientDetail = birthDeath;
 
-    // Filter admissionDetails directly in query
+    // Discharge Date Filter
     if (dischargeDate) {
       const start = new Date(dischargeDate + "T00:00:00.000Z");
       const end = new Date(dischargeDate + "T23:59:59.999Z");
@@ -659,14 +768,34 @@ async getConsultantReports(filters) {
 
     query.admissionDetails = { $elemMatch: admissionMatch };
 
-    // Fetch patients
-    const patients = await PATIENT_MODEL.find(query)
+    // Fetch patients with populate
+    let patients = await PATIENT_MODEL.find(query)
       .populate("admissionDetails.consultingDoctorId", "doctorName")
       .populate("admissionDetails.referredByDoctorId", "doctorName")
       .populate("admissionDetails.bedId", "bedName")
-      .populate("admissionDetails.admissionReasonId", "admissionReason")
-      .populate("admissionDetails.floorId", "floorName")
+      .populate("admissionDetails.admissionReasonId", "admissionReason") // 👈 admission reason name
+      .populate("admissionDetails.floorId", "floorName") // 👈 floor name
       .lean();
+
+    // 🔹 Post-filter: admissionReason by name (case-insensitive)
+    if (reasonForAdmission) {
+      const searchTerm = reasonForAdmission.toLowerCase();
+      patients = patients.filter(p =>
+        p.admissionDetails.some(ad =>
+          ad.admissionReasonId?.admissionReason?.toLowerCase().includes(searchTerm)
+        )
+      );
+    }
+
+    // 🔹 Post-filter: floor by name (case-insensitive)
+    if (floorId) {
+      const searchFloor = floorId.toLowerCase();
+      patients = patients.filter(p =>
+        p.admissionDetails.some(ad =>
+          ad.floorId?.floorName?.toLowerCase().includes(searchFloor)
+        )
+      );
+    }
 
     return {
       success: true,
@@ -679,6 +808,7 @@ async getConsultantReports(filters) {
     throw new Error("Failed to fetch consultant reports.");
   }
 }
+
 
 
   formatPatient(patient, dischargeMap) {

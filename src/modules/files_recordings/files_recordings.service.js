@@ -4,6 +4,8 @@ import imagekit from '../../helpers/imagekit.js';
 import fs from 'fs';
 import path from 'path';
 import { FOLDER_MODEL } from '../folders/folders.model.js';
+import axios from 'axios';
+import twilio from "twilio";
 
 class Files_recordingsService {
   async uploadFiles({ patientId, admissionId, files, user }) {
@@ -332,6 +334,270 @@ async moveFileToFolder({ patientId, admissionId, fileId, folderId, fileType }) {
 }
 
 
+// async sendReportOnWhatsApp({ patientId, admissionId, reportType, target }) {
+//     const patient = await PATIENT_MODEL.findById(patientId)
+//       .populate("admissionDetails.consultingDoctorId", "doctorName contactNo")
+//       .select("identityDetails patientName admissionDetails");
+
+//     if (!patient) throw new Error("Patient not found");
+
+//     const admission = patient.admissionDetails.find(
+//       (a) => a._id.toString() === admissionId
+//     );
+//     if (!admission) throw new Error("Admission not found for patient");
+
+//     // Report select (docs, labReports, radiologyReports)
+//     let reports = [];
+//     if (reportType === "docs") reports = admission.docs;
+//     else if (reportType === "labReports") reports = admission.labReports;
+//     else if (reportType === "radiologyReports") reports = admission.radiologyReports;
+
+//     if (!reports || reports.length === 0) {
+//       throw new Error(`No ${reportType} found for this admission`);
+//     }
+
+//     // Decide recipient
+//     let recipientNumber;
+//     if (target === "doctor") {
+//       recipientNumber = admission.consultingDoctorId?.contactNo;
+//     } else if (target === "patient") {
+//       recipientNumber = patient.identityDetails.whatsappNo || patient.identityDetails.contactNo;
+//     }
+
+//     if (!recipientNumber) throw new Error("Recipient number not available");
+
+//     // WhatsApp Cloud API call
+//     const url = `https://graph.facebook.com/v20.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
+//     const token = process.env.WHATSAPP_ACCESS_TOKEN;
+
+//     for (const report of reports) {
+//       await axios.post(
+//         url,
+//         {
+//           messaging_product: "whatsapp",
+//           to: recipientNumber,
+//           type: "document",
+//           document: {
+//             link: report.path, // report ka URL (ImageKit ka URL already hai)
+//             filename: report.name,
+//           },
+//         },
+//         {
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//             "Content-Type": "application/json",
+//           },
+//         }
+//       );
+//     }
+
+//     return { success: true, message: `Reports sent to ${target} successfully` };
+//   }
+  
+// twilio
+//   async sendReportOnWhatsApp({ patientId, admissionId, reportType, target }) {
+//     const client = twilio(
+//     process.env.TWILIO_ACCOUNT_SID,
+//     process.env.TWILIO_AUTH_TOKEN
+//   );
+
+//   // Fetch patient & admission
+//   const patient = await PATIENT_MODEL.findById(patientId)
+//     .populate("admissionDetails.consultingDoctorId", "doctorName contactNo")
+//     .select("identityDetails patientName admissionDetails");
+
+//   if (!patient) throw new Error("Patient not found");
+
+//   const admission = patient.admissionDetails.find(
+//     (a) => a._id.toString() === admissionId
+//   );
+//   if (!admission) throw new Error("Admission not found for patient");
+
+//   // Pick reports
+//   let reports = [];
+//   if (reportType === "docs") reports = admission.docs;
+//   else if (reportType === "labReports") reports = admission.labReports;
+//   else if (reportType === "radiologyReports") reports = admission.radiologyReports;
+
+//   if (!reports || reports.length === 0) {
+//     throw new Error(`No ${reportType} found for this admission`);
+//   }
+
+//   // Recipient number
+//   let recipientNumber;
+//   if (target === "doctor") {
+//     recipientNumber = admission.consultingDoctorId?.contactNo;
+//   } else if (target === "patient") {
+//     recipientNumber =
+//       patient.identityDetails.whatsappNo || patient.identityDetails.contactNo;
+//   }
+
+//   if (!recipientNumber) throw new Error("Recipient number not available");
+
+//   // Format recipient in Twilio WhatsApp format
+//   recipientNumber = `whatsapp:+${recipientNumber.toString().replace(/\D/g, "")}`;
+
+//   // Send each report
+//   for (const report of reports) {
+//     if (!report.path.startsWith("https://")) {
+//       console.warn(`⚠️ Report URL must be public HTTPS: ${report.path}`);
+//       continue; // skip invalid URL
+//     }
+
+//     try {
+//       const message = await client.messages.create({
+//         from: process.env.TWILIO_WHATSAPP_NUMBER, // e.g., whatsapp:+14155238886
+//         to: 'whatsapp:+919834747298',
+//         body: `Hello, here is your ${reportType} report for patient ${patient.identityDetails.patientName}.`,
+//         mediaUrl: [report.path], // PDF/image must be public HTTPS
+//       });
+
+//       console.log(`✅ Twilio WhatsApp sent (SID: ${message.sid}) to ${recipientNumber}`);
+//     } catch (err) {
+//       console.error("❌ Twilio API error:", err.message);
+//       throw new Error(`Twilio WhatsApp failed: ${err.message}`);
+//     }
+//   }
+
+//   return {
+//     success: true,
+//     message: `Reports sent to ${target} via Twilio WhatsApp successfully`,
+//   };
+// }
+// async sendReportOnWhatsApp({ patientId, admissionId, reportType, target }) {
+//   const client = twilio(
+//     process.env.TWILIO_ACCOUNT_SID,
+//     process.env.TWILIO_AUTH_TOKEN
+//   );
+
+//   const patient = await PATIENT_MODEL.findById(patientId)
+//     .populate("admissionDetails.consultingDoctorId", "doctorName contactNo")
+//     .select("identityDetails patientName admissionDetails");
+
+//   if (!patient) throw new Error("Patient not found");
+
+//   const admission = patient.admissionDetails.find(
+//     (a) => a._id.toString() === admissionId
+//   );
+//   if (!admission) throw new Error("Admission not found for patient");
+
+//   let reports = [];
+//   if (reportType === "docs") reports = admission.docs;
+//   else if (reportType === "labReports") reports = admission.labReports;
+//   else if (reportType === "radiologyReports") reports = admission.radiologyReports;
+
+//   if (!reports.length) throw new Error(`No ${reportType} found for this admission`);
+
+//   // Dynamic recipient
+//   let recipientNumber;
+//   if (target === "doctor") recipientNumber = admission.consultingDoctorId?.contactNo;
+//   else if (target === "patient") recipientNumber = patient.identityDetails.whatsappNo || patient.identityDetails.contactNo;
+
+//   if (!recipientNumber) throw new Error("Recipient number not available");
+
+//   recipientNumber = `whatsapp:+${recipientNumber.toString().replace(/\D/g, "")}`;
+
+//   // Send reports
+//   for (const report of reports) {
+//     if (!report.path.startsWith("https://")) {
+//       console.warn(`⚠️ Report URL must be public HTTPS: ${report.path}`);
+//       continue;
+//     }
+
+//     try {
+//       const message = await client.messages.create({
+//         from: process.env.TWILIO_WHATSAPP_NUMBER, // sandbox number
+//         to: 'whatsapp:+919834747298',
+//         body: `Hello, here is your ${reportType} report for patient ${patient.identityDetails.patientName}.`,
+//         mediaUrl: [report.path],
+//       });
+
+//       console.log(`✅ Twilio WhatsApp sent (SID: ${message.sid}) to ${recipientNumber}`);
+//     } catch (err) {
+//       console.error("❌ Twilio API error:", err.message);
+//       throw new Error(`Twilio WhatsApp failed: ${err.message}`);
+//     }
+//   }
+
+//   return {
+//     success: true,
+//     message: `Reports sent to ${target} via Twilio WhatsApp successfully`,
+//   };
+// }
+
+async sendReportOnWhatsApp({ patientId, admissionId, reportType, target }) {
+  const patient = await PATIENT_MODEL.findById(patientId)
+    .populate("admissionDetails.consultingDoctorId", "doctorName contactNo")
+    .select("identityDetails patientName admissionDetails");
+
+  if (!patient) throw new Error("Patient not found");
+
+  const admission = patient.admissionDetails.find(
+    (a) => a._id.toString() === admissionId
+  );
+  if (!admission) throw new Error("Admission not found for patient");
+
+  // Pick reports
+  let reports = [];
+  if (reportType === "docs") reports = admission.docs;
+  else if (reportType === "labReports") reports = admission.labReports;
+  else if (reportType === "radiologyReports") reports = admission.radiologyReports;
+
+  if (!reports || reports.length === 0) {
+    throw new Error(`No ${reportType} found for this admission`);
+  }
+
+  // Decide recipient
+  let recipientNumber;
+  if (target === "doctor") {
+    recipientNumber = admission.consultingDoctorId?.contactNo;
+  } else if (target === "patient") {
+    recipientNumber =
+      patient.identityDetails.whatsappNo || patient.identityDetails.contactNo;
+  }
+
+  if (!recipientNumber) throw new Error("Recipient number not available");
+
+  // ✅ Convert to international format (without +, only digits)
+  recipientNumber = recipientNumber.toString().replace(/\D/g, "");
+
+  // WhatsApp Cloud API call
+  const url = `https://graph.facebook.com/v20.0/${process.env.WHATSAPP_PHONE_NUMBER_ID}/messages`;
+  const token = process.env.WHATSAPP_ACCESS_TOKEN;
+
+  try {
+    for (const report of reports) {
+      const res = await axios.post(
+        url,
+        {
+          messaging_product: "whatsapp",
+          to: recipientNumber, // ✅ must be international format e.g., 919876543210
+          type: "document",
+          document: {
+            link: report.path, // ✅ must be public HTTPS
+            filename: report.name || "report.pdf",
+          },
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      console.log("✅ WhatsApp API response:", res.data);
+    }
+
+    return { success: true, message: `Reports sent to ${target} successfully` };
+  } catch (err) {
+    console.error("❌ WhatsApp API error:", err.response?.data || err.message);
+    return {
+      success: false,
+      message: err.response?.data?.error?.message || err.message,
+    };
+  }
+}
 
 }
 

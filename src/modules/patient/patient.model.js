@@ -260,6 +260,7 @@ const AdmissionSchema = new mongoose.Schema(
     vitalData: [{ note: String, addedBy: String, addedAt: { type: Date, default: Date.now }}],
     dischargeTemplates: [{template: { type: mongoose.Schema.Types.Mixed }}],
     otNotesTemplates: [{ template: { type: mongoose.Schema.Types.Mixed }}],
+    documentPdf: [{name: String, path: String }]
   },
 );
 

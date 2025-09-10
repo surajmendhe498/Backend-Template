@@ -1,0 +1,108 @@
+import Documents_pdfsService from "./documents_pdfs.service.js";
+import { statusCode } from "../../utils/constants/statusCode.js";
+
+export default class Documents_pdfsController {
+  constructor() {
+    this.documents_pdfsService = Documents_pdfsService;
+  }
+
+// upload = async (req, res, next) => {
+//   try {
+//     if (!req.file) {
+//       return res.fail("No file provided", statusCode.BAD_REQUEST);
+//     }
+
+//     const { doc, message } = await this.documents_pdfsService.uploadDoc(req.file);
+
+//     res.success(message, doc, statusCode.CREATED);
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+// bulk uploads pdfs
+  upload = async (req, res, next) => {
+    try {
+      if (!req.files || req.files.length === 0) {
+        return res.fail("No files provided", statusCode.BAD_REQUEST);
+      }
+
+      const { docs, message } = await this.documents_pdfsService.uploadDocs(req.files);
+
+      res.success(message, docs, statusCode.CREATED);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getAll = async (req, res, next) => {
+    try {
+      const docs = await this.documents_pdfsService.getAll();
+      res.success("Fetched all PDFs", docs, statusCode.OK);
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const doc = await this.documents_pdfsService.getById(id);
+
+    if(!doc){
+      return res.status(statusCode.NOT_FOUND).json({message: "Document not found"});
+    }
+    
+    res.success("Fetched document successfully", doc, statusCode.OK);
+  } catch (err) {
+    next(err);
+  }
+};
+
+  addPdfToPatient = async (req, res, next) => {
+    try {
+      const { patientId, admissionId, pdfName } = req.body;
+      if (!req.file) {
+        return res
+          .status(statusCode.BAD_REQUEST)
+          .json({ message: "PDF file is required" });
+      }
+
+      const result = await this.documents_pdfsService.addPdfToPatient({
+        patientId,
+        admissionId,
+        pdfName,
+        pdfBuffer: req.file.buffer
+      });
+
+      res.status(statusCode.OK).json({
+        success: true,
+        message: result.message,
+        data: result
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+updateColor = async (req, res, next) => {
+  try {
+    const { pdfIds, color } = req.body;
+
+    if (!pdfIds || !color) {
+      return res.status(400).json({ success: false, message: "PDF IDs and color are required" });
+    }
+
+    const result = await this.documents_pdfsService.updateColorForPdfs({ pdfIds, color });
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+      modifiedCount: result.modifiedCount
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+
+}

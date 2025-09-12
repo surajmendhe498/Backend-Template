@@ -305,6 +305,63 @@ class Documents_pdfsService {
     };
   }
 
+  async getPdfsByPatient({ patientId, admissionId }) {
+  const patient = await PATIENT_MODEL.findById(patientId);
+  if (!patient) throw new Error("Patient not found");
+
+  const admission = patient.admissionDetails.id(admissionId);
+  if (!admission) throw new Error("Admission not found");
+
+  return admission.documentPdf || [];
+}
+
+// patient
+async updatePdfDocument({ patientId, admissionId, pdfId, fileName, pdfBuffer }) {
+  const patient = await PATIENT_MODEL.findById(patientId);
+  if (!patient) throw new Error("Patient not found");
+
+  const admission = patient.admissionDetails.id(admissionId);
+  if (!admission) throw new Error("Admission not found");
+
+  const pdfDoc = admission.documentPdf.id(pdfId);
+  if (!pdfDoc) throw new Error("PDF document not found");
+
+  if (fileName) {
+    pdfDoc.name = fileName;
+  }
+
+  if (pdfBuffer) {
+    const uploadResponse = await imagekit.upload({
+      file: pdfBuffer,
+      fileName: fileName || pdfDoc.name, 
+      folder: "/patient-pdfs",
+    });
+    pdfDoc.path = uploadResponse.url;
+  }
+
+  await patient.save();
+  return pdfDoc;
+}
+
+// patient
+async deletePdfDocument({ patientId, admissionId, pdfId }) {
+  const patient = await PATIENT_MODEL.findById(patientId);
+  if (!patient) throw new Error("Patient not found");
+
+  const admission = patient.admissionDetails.id(admissionId);
+  if (!admission) throw new Error("Admission not found");
+
+  const pdfIndex = admission.documentPdf.findIndex(
+    (doc) => doc._id.toString() === pdfId
+  );
+  if (pdfIndex === -1) throw new Error("PDF document not found");
+
+  admission.documentPdf.splice(pdfIndex, 1);
+
+  await patient.save();
+  return { pdfId, message: "PDF document deleted successfully" };
+}
+
   async updateColorForPdfs({ pdfIds, color }) {
     if (!pdfIds || pdfIds.length === 0) {
       throw new Error("No PDF IDs provided");

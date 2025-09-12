@@ -84,6 +84,74 @@ export default class Documents_pdfsController {
     }
   };
 
+  getPdfsByPatient = async (req, res, next) => {
+  try {
+    const { patientId, admissionId } = req.params;
+
+    const pdfDocuments = await this.documents_pdfsService.getPdfsByPatient({
+      patientId,
+      admissionId,
+    });
+
+    res.status(statusCode.OK).json({
+      success: true,
+      message: "Fetched PDF documents successfully",
+      data: pdfDocuments,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+updatePdfDocument = async (req, res, next) => {
+  try {
+    const { patientId, admissionId, pdfId, fileName } = req.body;
+
+    if (!fileName && !req.file) {
+      return res.status(statusCode.BAD_REQUEST).json({
+        success: false,
+        message: "Provide at least fileName or pdfFile to update",
+      });
+    }
+
+    const updatedPdf = await this.documents_pdfsService.updatePdfDocument({
+      patientId,
+      admissionId,
+      pdfId,
+      fileName,
+      pdfBuffer: req.file ? req.file.buffer : null,
+    });
+
+    res.status(statusCode.OK).json({
+      success: true,
+      message: "PDF document updated successfully",
+      data: updatedPdf,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+deletePdfDocument = async (req, res, next) => {
+  try {
+    const { patientId, admissionId, pdfId } = req.params;
+
+    const result = await this.documents_pdfsService.deletePdfDocument({
+      patientId,
+      admissionId,
+      pdfId,
+    });
+
+    res.status(statusCode.OK).json({
+      success: true,
+      message: result.message,
+      data: { pdfId: result.pdfId },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 updateColor = async (req, res, next) => {
   try {
     const { pdfIds, color } = req.body;

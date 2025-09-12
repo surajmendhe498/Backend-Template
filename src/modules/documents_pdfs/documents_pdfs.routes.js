@@ -9,7 +9,12 @@ const documents_pdfsController = new Documents_pdfsController();
 // router.post("/upload", uploadPdf.single("pdf"), documents_pdfsController.upload);
 router.get("/", documents_pdfsController.getAll);
 router.get("/:id", documents_pdfsController.getById);
-router.post("/add-pdf", uploadPdf.single("pdfFile"), documents_pdfsController.addPdfToPatient);
 router.put("/update-color", documents_pdfsController.updateColor);
+
+router.post("/add-pdf", uploadPdf.single("pdfFile"), documents_pdfsController.addPdfToPatient);
+router.get("/:patientId/:admissionId", documents_pdfsController.getPdfsByPatient);
+router.put("/update-pdf", uploadPdf.single("pdfFile"), documents_pdfsController.updatePdfDocument);
+router.delete("/delete-pdf/:patientId/:admissionId/:pdfId", documents_pdfsController.deletePdfDocument);
+
 
 export default router;

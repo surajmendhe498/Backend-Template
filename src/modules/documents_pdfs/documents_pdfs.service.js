@@ -89,182 +89,425 @@ import imagekit from "../../helpers/imagekit.js";
 class Documents_pdfsService {
   async seedIfEmpty() {
     const count = await DOCUMENT_PDF_MODEL.countDocuments();
-    if (count === 0) {
-      const defaultDocs = [
-  {
-    pdfName: "AMBULANCE BOOKING FORM.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/AMBULANCE_BOOKING_FORM_igv-xSCtE.pdf",
-    color: ""
-  },
-  {
-    pdfName: "Blood Component Request Form .docx",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/Blood_Component_Request_Form__jrCFwE0ze.docx",
-    color: ""
-  },
-  {
-    pdfName: "Blood Issue Release slip.docx",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/Blood_Issue_Release_slip_myyY7mOSlg.docx",
-    color: ""
-  },
-  {
-    pdfName: "CONSENT FOR BLOOD TRANSFUSION.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/CONSENT_FOR_BLOOD_TRANSFUSION_QPovE0OZ2z.pdf",
-    color: ""
-  },
-  {
-    pdfName: "CONSENT FOR BLOODTRANSFUSIONORREFUSAL.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/CONSENT_FOR_BLOODTRANSFUSIONORREFUSAL_W3q9NmQ7Kt.pdf",
-    color: ""
-  },
-  {
-    pdfName: "CONSENT FOR HIGH RISK SURGERY.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/CONSENT_FOR_HIGH_RISK_SURGERY_Bu5kAgEw7n.pdf",
-    color: ""
-  },
-  {
-    pdfName: "CONSENT FORM FOR HIV TEST.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/CONSENT_FORM_FOR_HIV_TEST_bykcGn839.pdf",
-    color: ""
-  },
-  {
-    pdfName: "CONSENT FORM FOR STRESS TEST.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/CONSENT_FORM_FOR_STRESS_TEST_DM1G_oC5yh.pdf",
-    color: ""
-  },
-  {
-    pdfName: "CONSENT FORM FOR USING RESTRAINTS.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/CONSENT_FORM_FOR_USING_RESTRAINTS_VQWDnQshm.pdf",
-    color: ""
-  },
-  {
-    pdfName: "CONSULTANT TRANSFER FORM.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/CONSULTANT_TRANSFER_FORM_mPL2OL3Yb.pdf",
-    color: ""
-  },
-  {
-    pdfName: "CROSS REFERENCE NOTES.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/CROSS_REFERENCE_NOTES__pOyJVO15.pdf",
-    color: ""
-  },
-  {
-    pdfName: "DAILY NOTES.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/DAILY_NOTES_nhTMLpO9-.pdf",
-    color: ""
-  },
-  {
-    pdfName: "Daily notes.xlsx",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/Daily_notes_7gYgbQsy5.xlsx",
-    color: ""
-  },
-  {
-    pdfName: "DISCHARGE SUMMARY (1).pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/DISCHARGE_SUMMARY__1__LgX5FZRpy.pdf",
-    color: ""
-  },
-  {
-    pdfName: "EMERGENCY ASSESSMENT & OBSERVATION FORM.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/EMERGENCY_ASSESSMENT___OBSERVATION_FORM__OIm7aRp3.pdf",
-    color: ""
-  },
-  {
-    pdfName: "ER NURSING ASSESSMENT FORM.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/ER_NURSING_ASSESSMENT_FORM_EA2_EkwBp.pdf",
-    color: ""
-  },
-  {
-    pdfName: "HEMODILYSIS FLOW CHART.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/HEMODILYSIS_FLOW_CHART_QvYrd8nXs.pdf",
-    color: ""
-  },
-  {
-    pdfName: "high cost medicine consent.docx",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/high_cost_medicine_consent_joOXfy-CA.docx",
-    color: ""
-  },
-  {
-    pdfName: "INCIDENT REPORTING FORM.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/INCIDENT_REPORTING_FORM_quN95J4lRq.pdf",
-    color: ""
-  },
-  {
-    pdfName: "INVESTIGATION RESULT CHART.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/INVESTIGATION_RESULT_CHART_Wrr23Xyc5e.pdf",
-    color: ""
-  },
-  {
-    pdfName: "INVESTIGATION RESULT CHART (1).pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/INVESTIGATION_RESULT_CHART__1__BqMcePJ3O.pdf",
-    color: ""
-  },
-  {
-    pdfName: "IPD CARD FORM 8 PAGES.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/IPD_CARD_FORM_8_PAGES_aS-phCppi.pdf",
-    color: ""
-  },
-  {
-    pdfName: "Nursing Assessment on Admission_ok-1.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/Nursing_Assessment_on_Admission_ok-1_PPqckSGvO.pdf",
-    color: ""
-  },
-  {
-    pdfName: "OPERATION  PROCEDURE BILLING FORM.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/OPERATION__PROCEDURE_BILLING_FORM_pghAQ8Ul9.pdf",
-    color: ""
-  },
-  {
-    pdfName: "OT CLEARANCE FORM.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/OT_CLEARANCE_FORM_oNf9SuboZ.pdf",
-    color: ""
-  },
-  {
-    pdfName: "PATIENT & FAMILY EDUCATION RECORD.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/PATIENT___FAMILY_EDUCATION_RECORD_3_fHrw8yP.pdf",
-    color: ""
-  },
-  {
-    pdfName: "PATIENT REGISTRATION FORM (INDOOR).pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/PATIENT_REGISTRATION_FORM__INDOOR__4rBUyt6z3.pdf",
-    color: ""
-  },
-  {
-    pdfName: "PATIENT RELATIVE EDUCATION RECORD.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/PATIENT_RELATIVE_EDUCATION_RECORD_SUxRq1uzV2.pdf",
-    color: ""
-  },
-  {
-    pdfName: "PATIENT VALUABLES FORM.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/PATIENT_VALUABLES_FORM_BRU6OIL6r.pdf",
-    color: ""
-  },
-  {
-    pdfName: "RESTRAINT PATIENT CARE AND.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/RESTRAINT_PATIENT_CARE_AND_4jEjRBZqT5.pdf",
-    color: ""
-  },
-  {
-    pdfName: "SURGICAL SAFETY CHECKLIST..pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/SURGICAL_SAFETY_CHECKLIST._uOXgWpKjd.pdf",
-    color: ""
-  },
-  {
-    pdfName: "TRANSPORTATION CONSENT FORM.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/TRANSPORTATION_CONSENT_FORM_4F7Ua6G5MY.pdf",
-    color: ""
-  },
-  {
-    pdfName: "TREATMENT CHART 6 PAGES-1.pdf",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/TREATMENT_CHART_6_PAGES-1_slTXp2b0W.pdf",
-    color: ""
-  },
-  {
-    pdfName: "જનરલ એનેસ્થેસીયા.docx",
-    pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/જનરલ_એનેસ્થેસીયા_U4pcGfvuPV.docx",
-    color: ""
-  },
-];
+  if (count === 0) {
+    let defaultDocs = [
+      {
+        pdfName: "AMBULANCE BOOKING FORM.pdf",
+        files: [
+          {
+            name: "AMBULANCE BOOKING FORM - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/AMBULANCE_BOOKING_FORM_igv-xSCtE.pdf",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "Blood Component Request Form .docx",
+        files: [
+          {
+            name: "Blood Component Request Form - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/Blood_Component_Request_Form__jrCFwE0ze.docx",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "Blood Issue Release slip.docx",
+        files: [
+          {
+            name: "Blood Issue Release slip - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/Blood_Issue_Release_slip_myyY7mOSlg.docx",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "CONSENT FOR BLOOD TRANSFUSION.pdf",
+        files: [
+          {
+            name: "CONSENT FOR BLOOD TRANSFUSION - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/CONSENT_FOR_BLOOD_TRANSFUSION_QPovE0OZ2z.pdf",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "CONSENT FOR BLOODTRANSFUSIONORREFUSAL.pdf",
+        files: [
+          {
+            name: "CONSENT FOR BLOODTRANSFUSIONORREFUSAL - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/CONSENT_FOR_BLOODTRANSFUSIONORREFUSAL_W3q9NmQ7Kt.pdf",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "CONSENT FOR HIGH RISK SURGERY.pdf",
+        files: [
+          {
+            name: "CONSENT FOR HIGH RISK SURGERY - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/CONSENT_FOR_HIGH_RISK_SURGERY_Bu5kAgEw7n.pdf",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "CONSENT FORM FOR HIV TEST.pdf",
+        files: [
+          {
+            name: "CONSENT FORM FOR HIV TEST - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/CONSENT_FORM_FOR_HIV_TEST_bykcGn839.pdf",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "CONSENT FORM FOR STRESS TEST.pdf",
+        files: [
+          {
+            name: "CONSENT FORM FOR STRESS TEST - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/CONSENT_FORM_FOR_STRESS_TEST_DM1G_oC5yh.pdf",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "CONSENT FORM FOR USING RESTRAINTS.pdf",
+        files: [
+          {
+            name: "CONSENT FORM FOR USING RESTRAINTS - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/CONSENT_FORM_FOR_USING_RESTRAINTS_VQWDnQshm.pdf",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "CONSULTANT TRANSFER FORM.pdf",
+        files: [
+          {
+            name: "CONSULTANT TRANSFER FORM - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/CONSULTANT_TRANSFER_FORM_mPL2OL3Yb.pdf",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "CROSS REFERENCE NOTES.pdf",
+        files: [
+          {
+            name: "CROSS REFERENCE NOTES - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/CROSS_REFERENCE_NOTES__pOyJVO15.pdf",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "DAILY NOTES.pdf",
+        files: [
+          {
+            name: "DAILY NOTES - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/DAILY_NOTES_nhTMLpO9-.pdf",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "Daily notes.xlsx",
+        files: [
+          {
+            name: "Daily notes - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/Daily_notes_7gYgbQsy5.xlsx",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "DISCHARGE SUMMARY (1).pdf",
+        files: [
+          {
+            name: "DISCHARGE SUMMARY (1) - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/DISCHARGE_SUMMARY__1__LgX5FZRpy.pdf",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "EMERGENCY ASSESSMENT & OBSERVATION FORM.pdf",
+        files: [
+          {
+            name: "EMERGENCY ASSESSMENT & OBSERVATION FORM - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/EMERGENCY_ASSESSMENT___OBSERVATION_FORM__OIm7aRp3.pdf",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "ER NURSING ASSESSMENT FORM.pdf",
+        files: [
+          {
+            name: "ER NURSING ASSESSMENT FORM - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/ER_NURSING_ASSESSMENT_FORM_EA2_EkwBp.pdf",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "HEMODILYSIS FLOW CHART.pdf",
+        files: [
+          {
+            name: "HEMODILYSIS FLOW CHART - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/HEMODILYSIS_FLOW_CHART_QvYrd8nXs.pdf",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "high cost medicine consent.docx",
+        files: [
+          {
+            name: "high cost medicine consent - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/high_cost_medicine_consent_joOXfy-CA.docx",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "INCIDENT REPORTING FORM.pdf",
+        files: [
+          {
+            name: "INCIDENT REPORTING FORM - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/INCIDENT_REPORTING_FORM_quN95J4lRq.pdf",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+      {
+        pdfName: "INVESTIGATION RESULT CHART.pdf",
+        files: [
+          {
+            name: "INVESTIGATION RESULT CHART - English",
+            language: "english",
+            pdfUrl:
+              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/INVESTIGATION_RESULT_CHART_Wrr23Xyc5e.pdf",
+          },
+          { name: "", language: "hindi", pdfUrl: "" },
+          { name: "", language: "gujarati", pdfUrl: "" },
+        ],
+        color: "",
+      },
+    
+      {
+  pdfName: "INVESTIGATION RESULT CHART (1).pdf",
+  files: [
+    { name: "INVESTIGATION RESULT CHART (1) - English", language: "english", pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/INVESTIGATION_RESULT_CHART__1__BqMcePJ3O.pdf" },
+    { name: "", language: "hindi", pdfUrl: "" },
+    { name: "", language: "gujarati", pdfUrl: "" },
+  ],
+  color: "",
+},
+{
+  pdfName: "IPD CARD FORM 8 PAGES.pdf",
+  files: [
+    { name: "IPD CARD FORM 8 PAGES - English", language: "english", pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/IPD_CARD_FORM_8_PAGES_aS-phCppi.pdf" },
+    { name: "", language: "hindi", pdfUrl: "" },
+    { name: "", language: "gujarati", pdfUrl: "" },
+  ],
+  color: "",
+},
+{
+  pdfName: "Nursing Assessment on Admission_ok-1.pdf",
+  files: [
+    { name: "Nursing Assessment on Admission_ok-1 - English", language: "english", pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/Nursing_Assessment_on_Admission_ok-1_PPqckSGvO.pdf" },
+    { name: "", language: "hindi", pdfUrl: "" },
+    { name: "", language: "gujarati", pdfUrl: "" },
+  ],
+  color: "",
+},
+{
+  pdfName: "OPERATION  PROCEDURE BILLING FORM.pdf",
+  files: [
+    { name: "OPERATION PROCEDURE BILLING FORM - English", language: "english", pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/OPERATION__PROCEDURE_BILLING_FORM_pghAQ8Ul9.pdf" },
+    { name: "", language: "hindi", pdfUrl: "" },
+    { name: "", language: "gujarati", pdfUrl: "" },
+  ],
+  color: "",
+},
+{
+  pdfName: "OT CLEARANCE FORM.pdf",
+  files: [
+    { name: "OT CLEARANCE FORM - English", language: "english", pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/OT_CLEARANCE_FORM_oNf9SuboZ.pdf" },
+    { name: "", language: "hindi", pdfUrl: "" },
+    { name: "", language: "gujarati", pdfUrl: "" },
+  ],
+  color: "",
+},
+{
+  pdfName: "PATIENT & FAMILY EDUCATION RECORD.pdf",
+  files: [
+    { name: "PATIENT & FAMILY EDUCATION RECORD - English", language: "english", pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/PATIENT___FAMILY_EDUCATION_RECORD_3_fHrw8yP.pdf" },
+    { name: "", language: "hindi", pdfUrl: "" },
+    { name: "", language: "gujarati", pdfUrl: "" },
+  ],
+  color: "",
+},
+{
+  pdfName: "PATIENT REGISTRATION FORM (INDOOR).pdf",
+  files: [
+    { name: "PATIENT REGISTRATION FORM (INDOOR) - English", language: "english", pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/PATIENT_REGISTRATION_FORM__INDOOR__4rBUyt6z3.pdf" },
+    { name: "", language: "hindi", pdfUrl: "" },
+    { name: "", language: "gujarati", pdfUrl: "" },
+  ],
+  color: "",
+},
+{
+  pdfName: "PATIENT RELATIVE EDUCATION RECORD.pdf",
+  files: [
+    { name: "PATIENT RELATIVE EDUCATION RECORD - English", language: "english", pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/PATIENT_RELATIVE_EDUCATION_RECORD_SUxRq1uzV2.pdf" },
+    { name: "", language: "hindi", pdfUrl: "" },
+    { name: "", language: "gujarati", pdfUrl: "" },
+  ],
+  color: "",
+},
+{
+  pdfName: "PATIENT VALUABLES FORM.pdf",
+  files: [
+    { name: "PATIENT VALUABLES FORM - English", language: "english", pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/PATIENT_VALUABLES_FORM_BRU6OIL6r.pdf" },
+    { name: "", language: "hindi", pdfUrl: "" },
+    { name: "", language: "gujarati", pdfUrl: "" },
+  ],
+  color: "",
+},
+{
+  pdfName: "RESTRAINT PATIENT CARE AND.pdf",
+  files: [
+    { name: "RESTRAINT PATIENT CARE AND - English", language: "english", pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/RESTRAINT_PATIENT_CARE_AND_4jEjRBZqT5.pdf" },
+    { name: "", language: "hindi", pdfUrl: "" },
+    { name: "", language: "gujarati", pdfUrl: "" },
+  ],
+  color: "",
+},
+{
+  pdfName: "SURGICAL SAFETY CHECKLIST..pdf",
+  files: [
+    { name: "SURGICAL SAFETY CHECKLIST - English", language: "english", pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/SURGICAL_SAFETY_CHECKLIST._uOXgWpKjd.pdf" },
+    { name: "", language: "hindi", pdfUrl: "" },
+    { name: "", language: "gujarati", pdfUrl: "" },
+  ],
+  color: "",
+},
+{
+  pdfName: "TRANSPORTATION CONSENT FORM.pdf",
+  files: [
+    { name: "TRANSPORTATION CONSENT FORM - English", language: "english", pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/TRANSPORTATION_CONSENT_FORM_4F7Ua6G5MY.pdf" },
+    { name: "", language: "hindi", pdfUrl: "" },
+    { name: "", language: "gujarati", pdfUrl: "" },
+  ],
+  color: "",
+},
+{
+  pdfName: "TREATMENT CHART 6 PAGES-1.pdf",
+  files: [
+    { name: "TREATMENT CHART 6 PAGES-1 - English", language: "english", pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/TREATMENT_CHART_6_PAGES-1_slTXp2b0W.pdf" },
+    { name: "", language: "hindi", pdfUrl: "" },
+    { name: "", language: "gujarati", pdfUrl: "" },
+  ],
+  color: "",
+},
+{
+  pdfName: "જનરલ એનેસ્થેસીયા.docx",
+  files: [
+    { name: "", language: "english", pdfUrl: "" },
+    { name: "", language: "hindi", pdfUrl: "" },
+    { name: "જનરલ એનેસ્થેસીયા - Gujarati", language: "gujarati", pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/જનરલ_એનેસ્થેસીયા_U4pcGfvuPV.docx" },
+  ],
+  color: "",
+  }
+    ];
+
+    defaultDocs = defaultDocs.map(doc => ({
+      pdfName: doc.pdfName,
+      files: doc.files.filter(f => f.pdfUrl), // only keep if pdfUrl is not empty
+    }));
+
     await DOCUMENT_PDF_MODEL.insertMany(defaultDocs);
-    console.log("Default PDFs seeded into database.");
-    }
+    console.log("Seeded all multi-language PDFs (English only, Hindi/Gujarati empty).");
+  }
   }
 
   async getAll() {
@@ -275,6 +518,36 @@ class Documents_pdfsService {
   async getById(id) {
     return await DOCUMENT_PDF_MODEL.findById(id);
   }
+
+  async addLanguageVersion(pdfId, language, file, name) {
+  const pdf = await DOCUMENT_PDF_MODEL.findById(pdfId);
+  if (!pdf) throw new Error("PDF not found");
+
+  if (!file) throw new Error("No file provided for upload");
+
+  const uploadResponse = await imagekit.upload({
+    file: file.buffer,
+    fileName: file.originalname,
+    folder: "/patient-pdfs",
+  });
+
+  const pdfUrl = uploadResponse.url;
+
+  // Check if language already exists
+  const existing = pdf.files.find(f => f.language === language);
+  if (existing) {
+    existing.pdfUrl = pdfUrl;
+    existing.name = name || existing.name || ""; // update name if provided
+  } else {
+    pdf.files.push({
+      language,
+      pdfUrl,
+      name: name || `${pdf.pdfName} - ${language}`, // default fallback
+    });
+  }
+
+  return pdf.save();
+}
 
   async addPdfToPatient({ patientId, admissionId, pdfName, pdfBuffer }) {
     const patient = await PATIENT_MODEL.findById(patientId);

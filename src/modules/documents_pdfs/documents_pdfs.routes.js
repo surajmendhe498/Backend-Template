@@ -9,6 +9,7 @@ const documents_pdfsController = new Documents_pdfsController();
 // router.post("/upload", uploadPdf.single("pdf"), documents_pdfsController.upload);
 router.get("/", documents_pdfsController.getAll);
 router.get("/:id", documents_pdfsController.getById);
+router.post("/:pdfId/add-language", uploadPdf.single("file"), documents_pdfsController.addLanguageVersion);
 router.put("/update-color", documents_pdfsController.updateColor);
 
 router.post("/add-pdf", uploadPdf.single("pdfFile"), documents_pdfsController.addPdfToPatient);

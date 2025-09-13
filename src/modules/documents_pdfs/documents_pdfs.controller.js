@@ -58,6 +58,23 @@ export default class Documents_pdfsController {
   }
 };
 
+  addLanguageVersion = async (req, res, next) => {
+    try {
+      const { pdfId } = req.params;
+      const { language, name } = req.body;
+      const file = req.file;
+
+      const updatedPdf = await this.documents_pdfsService.addLanguageVersion(pdfId, language, file, name);
+      res.status(statusCode.OK).json({
+        success: true,
+        message: `PDF ${language} version added/updated successfully`,
+        data: updatedPdf,
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
+
   addPdfToPatient = async (req, res, next) => {
     try {
       const { patientId, admissionId, pdfName } = req.body;

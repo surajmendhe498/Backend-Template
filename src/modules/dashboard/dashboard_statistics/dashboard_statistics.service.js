@@ -1,9 +1,9 @@
 import { DashboardStatistics } from "./dashboard_statistics.model.js";
 import { PATIENT_MODEL } from "../../patient/patient.model.js";
-import { startOfDay, endOfDay } from 'date-fns';
 import {DOCTOR_MODEL} from "../../doctor_master/doctor_master.model.js";
 import {REFERRED_DOCTOR_MODEL} from "../../doctor_master/referred_doctor/referred_doctor.model.js";
 import {NURSE_MODEL} from "../../nursing_master/nursing_master.model.js";
+import { FINAL_DISCHARGE_MODEL } from "../../discharge/final_discharge/final_discharge.model.js";
 
 class Dashboard_statisticsService {
   async getAll() {
@@ -25,64 +25,140 @@ class Dashboard_statisticsService {
     return stats;
   }
 
-  
-  async getTrends(year = new Date().getFullYear()) {
-  const trends = await PATIENT_MODEL.aggregate([
-    {
-      $match: {
-        "admissionDetails.admissionDate": {
-          $gte: new Date(`${year}-01-01T00:00:00.000Z`),
-          $lt: new Date(`${year + 1}-01-01T00:00:00.000Z`),
-        },
-        "admissionDetails.patientStatus": { $in: ["Admitted", "Discharged"] },
-      },
-    },
-    {
-      $project: {
-        month: { $month: "$admissionDetails.admissionDate" },
-        status: "$admissionDetails.patientStatus",
-      },
-    },
-    {
-      $group: {
-        _id: "$month",
-        admitted: {
-          $sum: { $cond: [{ $eq: ["$status", "Admitted"] }, 1, 0] },
-        },
-        discharged: {
-          $sum: { $cond: [{ $eq: ["$status", "Discharged"] }, 1, 0] },
-        },
-      },
-    },
-    {
-      $project: {
-        month: "$_id",
-        admitted: 1,
-        discharged: 1,
-        _id: 0,
-      },
-    },
-    {
-      $sort: { month: 1 },
-    },
-  ]);
-
-  const months = [
-    "January", "February", "March", "April", "May", "June",
-    "July", "August", "September", "October", "November", "December",
-  ];
-
-  const trendsWithMonthNames = Array(12).fill(0).map((_, index) => {
-    const monthData = trends.find((t) => t.month === index + 1) || { admitted: 0, discharged: 0 };
-    return {
-      month: months[index],
-      admitted: monthData.admitted,
-      discharged: monthData.discharged,
+async getTrends(type = "monthly", year) {
+    const getTruncUnit = (t) => {
+      switch (t) {
+        case "daily": return "day";
+        case "weekly": return "week";
+        case "monthly": return "month";
+        case "yearly": return "year";
+        default: return "month";
+      }
     };
-  });
 
-  return trendsWithMonthNames;
-}
+    const truncUnit = getTruncUnit(type);
+
+    // === Admissions ===
+    const admissionsPipeline = [
+      { $unwind: "$admissionDetails" },
+      {
+        $match: { "admissionDetails.admissionDate": { $exists: true, $ne: null } },
+      },
+      {
+        $addFields: {
+          admissionDate: {
+            $cond: [
+              { $eq: [{ $type: "$admissionDetails.admissionDate" }, "string"] },
+              { $toDate: "$admissionDetails.admissionDate" },
+              "$admissionDetails.admissionDate",
+            ],
+          },
+        },
+      },
+      ...(year ? [{
+        $match: {
+          $expr: { $eq: [{ $year: "$admissionDate" }, year] },
+        },
+      }] : []),
+      {
+        $group: {
+          _id: { $dateTrunc: { date: "$admissionDate", unit: truncUnit } },
+          admitted: { $sum: 1 },
+        },
+      },
+      { $sort: { "_id": 1 } },
+    ];
+
+    // === Discharges ===
+    const dischargesPipeline = [
+      { $match: { dateOfDischarge: { $exists: true, $ne: null } } },
+      {
+        $addFields: {
+          dischargeDate: {
+            $cond: [
+              { $eq: [{ $type: "$dateOfDischarge" }, "string"] },
+              { $toDate: "$dateOfDischarge" },
+              "$dateOfDischarge",
+            ],
+          },
+        },
+      },
+      ...(year ? [{
+        $match: {
+          $expr: { $eq: [{ $year: "$dischargeDate" }, year] },
+        },
+      }] : []),
+      {
+        $group: {
+          _id: { $dateTrunc: { date: "$dischargeDate", unit: truncUnit } },
+          discharged: { $sum: 1 },
+        },
+      },
+      { $sort: { "_id": 1 } },
+    ];
+
+    const [admissions, discharges] = await Promise.all([
+      PATIENT_MODEL.aggregate(admissionsPipeline),
+      FINAL_DISCHARGE_MODEL.aggregate(dischargesPipeline),
+    ]);
+
+    const trendsMap = new Map();
+    admissions.forEach((a) => {
+      trendsMap.set(a._id.toISOString(), {
+        date: a._id,
+        admitted: a.admitted,
+        discharged: 0,
+      });
+    });
+    discharges.forEach((d) => {
+      const key = d._id.toISOString();
+      if (trendsMap.has(key)) {
+        trendsMap.get(key).discharged = d.discharged;
+      } else {
+        trendsMap.set(key, {
+          date: d._id,
+          admitted: 0,
+          discharged: d.discharged,
+        });
+      }
+    });
+
+    const rawTrends = Array.from(trendsMap.values()).sort((a, b) => a.date - b.date);
+
+    // === Format output based on type ===
+    const formattedTrends = rawTrends.map((t) => {
+      const dateObj = new Date(t.date);
+      if (type === "yearly") {
+        return {
+          year: dateObj.getUTCFullYear(),
+          admitted: t.admitted,
+          discharged: t.discharged,
+        };
+      } else if (type === "monthly") {
+        return {
+          month: dateObj.toLocaleString("en-US", { month: "long", year: "numeric" }),
+          admitted: t.admitted,
+          discharged: t.discharged,
+        };
+      } else if (type === "weekly") {
+        const weekStart = dateObj.toISOString().split("T")[0];
+        return {
+          weekStart,
+          admitted: t.admitted,
+          discharged: t.discharged,
+        };
+      } else { // daily
+        const day = dateObj.toISOString().split("T")[0];
+        return {
+          day,
+          admitted: t.admitted,
+          discharged: t.discharged,
+        };
+      }
+    });
+
+    return formattedTrends;
+  }
 
 async getGenderDistribution() {
   const genderStats = await PATIENT_MODEL.aggregate([
@@ -115,40 +191,105 @@ async getGenderDistribution() {
   return result;
 }
 
+// async getPatientAdmittedByTime(type = 'monthly') {
+//   const admissions = await PATIENT_MODEL.aggregate([
+//     { $unwind: "$admissionDetails" },
+//     {
+//       $group: {
+//         _id: {
+//           month: { $month: "$admissionDetails.admissionDate" },
+//           year: { $year: "$admissionDetails.admissionDate" },
+//           hour: "$admissionDetails.admissionTime"
+//         },
+//         count: { $sum: 1 }
+//       }
+//     },
+//     { $sort: { "_id.year": 1, "_id.month": 1, "_id.hour": 1 } }
+//   ]);
 
+//   const result = {};
+//   admissions.forEach(adm => {
+//     const monthYear = `${adm._id.month}-${adm._id.year}`; 
+//     if (!result[monthYear]) result[monthYear] = [];
 
-  // Get patient admitted by time
-  async getPatientAdmittedByTime(date) {
-  const selectedDate = new Date(date);
-  const start = startOfDay(selectedDate);
-  const end = endOfDay(selectedDate);
+//     if (adm.count > 0) {
+//       result[monthYear].push({
+//         time: adm._id.hour,
+//         count: adm.count
+//       });
+//     }
+//   });
 
-  const patients = await PATIENT_MODEL.find({
-    "admissionDetails.admissionDate": { $gte: start, $lte: end },
-    // "admissionDetails.patientStatus": "Admitted"  
-  });
-
-  const hourlyCount = Array.from({ length: 24 }, (_, i) => ({
-    hour: `${i.toString().padStart(2, '0')}:00`,
-    count: 0,
-  }));
-
-  for (const patient of patients) {
-    const timeStr = patient.admissionDetails?.timeOfAdmission;
-    if (!timeStr) continue;
-
-    const [time, modifier] = timeStr.split(" ");
-    let [hours, minutes] = time.split(":").map(Number);
-    if (modifier === "PM" && hours < 12) hours += 12;
-    if (modifier === "AM" && hours === 12) hours = 0;
-
-    const hourLabel = `${hours.toString().padStart(2, '0')}:00`;
-
-    const slot = hourlyCount.find((h) => h.hour === hourLabel);
-    if (slot) slot.count += 1;
+//   return {
+//     success: true,
+//     message: `Patient admitted by time (${type}) fetched successfully`,
+//     type,
+//     data: result
+//   };
+// }
+async getPatientAdmittedByTime(type = 'monthly') {
+  let groupId = {};
+  if (type === 'daily') {
+    groupId = {
+      day: { $dayOfMonth: "$admissionDetails.admissionDate" },
+      month: { $month: "$admissionDetails.admissionDate" },
+      year: { $year: "$admissionDetails.admissionDate" },
+      hour: "$admissionDetails.admissionTime"
+    };
+  } else if (type === 'monthly') {
+    groupId = {
+      month: { $month: "$admissionDetails.admissionDate" },
+      year: { $year: "$admissionDetails.admissionDate" },
+      hour: "$admissionDetails.admissionTime"
+    };
+  } else if (type === 'yearly') {
+    groupId = {
+      year: { $year: "$admissionDetails.admissionDate" },
+      hour: "$admissionDetails.admissionTime"
+    };
   }
 
-  return hourlyCount;
+  const admissions = await PATIENT_MODEL.aggregate([
+    { $unwind: "$admissionDetails" },
+    {
+      $group: {
+        _id: groupId,
+        count: { $sum: 1 }
+      }
+    },
+    { $sort: { "_id.year": 1, "_id.month": 1, "_id.day": 1, "_id.hour": 1 } }
+  ]);
+
+  const result = {};
+
+  admissions.forEach(adm => {
+    let key = "";
+    let entry = {};
+
+    if (type === 'daily') {
+      key = `${adm._id.day}-${adm._id.month}-${adm._id.year}`;
+      entry = { time: adm._id.hour, count: adm.count };
+      if (!result[key]) result[key] = [];
+      if (adm.count > 0) result[key].push(entry);
+    } else if (type === 'monthly') {
+      key = `${adm._id.month}-${adm._id.year}`;
+      entry = { time: adm._id.hour, count: adm.count };
+      if (!result[key]) result[key] = [];
+      if (adm.count > 0) result[key].push(entry);
+    } else if (type === 'yearly') {
+      key = `${adm._id.year}`;
+      entry = { time: adm._id.hour, count: adm.count };
+      if (!result[key]) result[key] = [];
+      if (adm.count > 0) result[key].push(entry);
+    }
+  });
+
+  return {
+    success: true,
+    message: `Patient admitted by time (${type}) fetched successfully`,
+    type,
+    data: result
+  };
 }
 
 async getTotalHospitalStaff() {
@@ -167,6 +308,79 @@ async getTotalHospitalStaff() {
       totalHospitalStaff,
     };
   }
-}
+
+async getIpdDocumentStats(type = "monthly", year) {
+    let groupFormat;
+    switch (type) {
+      case "yearly":
+        groupFormat = "%Y";
+        break;
+      case "monthly":
+        groupFormat = "%Y-%m";
+        break;
+      case "weekly":
+        groupFormat = "%G-%V";
+        break;
+      case "daily":
+      default:
+        groupFormat = "%Y-%m-%d";
+    }
+
+    const matchStage = {
+      "admissionDetails.registrationType": "IPD",
+    };
+
+    // Add year filter if provided
+    if (year) {
+      matchStage["admissionDetails.admissionDate"] = {
+        $gte: new Date(`${year}-01-01T00:00:00.000Z`),
+        $lte: new Date(`${year}-12-31T23:59:59.999Z`),
+      };
+    }
+
+    const pipeline = [
+      { $unwind: "$admissionDetails" },
+      { $match: matchStage }, 
+      {
+        $unwind: {
+          path: "$admissionDetails.documentPdf",
+          preserveNullAndEmptyArrays: false,
+        },
+      },
+      {
+        $group: {
+          _id: {
+            period: {
+              $dateToString: {
+                format: groupFormat,
+                date: "$admissionDetails.admissionDate",
+              },
+            },
+          },
+          totalDocs: { $sum: 1 },
+        },
+      },
+      { $sort: { "_id.period": 1 } },
+    ];
+
+    const rawData = await PATIENT_MODEL.aggregate(pipeline);
+
+    return rawData.map((item) => {
+      if (type === "yearly") {
+        return { year: item._id.period, totalDocs: item.totalDocs };
+      } else if (type === "monthly") {
+        const [yr, mo] = item._id.period.split("-");
+        return { month: `${yr}-${mo}`, totalDocs: item.totalDocs };
+      } else if (type === "weekly") {
+        return { week: item._id.period, totalDocs: item.totalDocs };
+      } else {
+        return { date: item._id.period, totalDocs: item.totalDocs };
+      }
+    });
+  }
+ 
+}  
+
+
 
 export default new Dashboard_statisticsService();

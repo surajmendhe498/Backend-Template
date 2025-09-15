@@ -20,11 +20,12 @@ export default class Dashboard_statisticsController {
     }
   };
 
-  
-  getTrends = async (req, res, next) => {
+getTrends = async (req, res, next) => {
   try {
-    const year = req.query.year ? parseInt(req.query.year) : undefined;
-    const trends = await this.dashboard_statisticsService.getTrends(year);
+    const { type = 'monthly', year } = req.query;
+    const parsedYear = year ? parseInt(year) : undefined;
+
+    const trends = await this.dashboard_statisticsService.getTrends(type, parsedYear);
 
     res.status(statusCode.OK).json({
       success: true,
@@ -53,27 +54,18 @@ getGenderDistribution = async (req, res, next) => {
 };
 
 getPatientAdmittedByTime = async (req, res, next) => {
-    try {
-      const { date } = req.query;
-      if (!date) {
-        return res.status(statusCode.BAD_REQUEST).json({
-          success: false,
-          message: "Query parameter 'date' is required",
-        });
-      }
+  try {
+    const type = req.query.type || 'daily';
+    const referenceDate = req.query.date ? new Date(req.query.date) : new Date();
 
-      const result = await this.dashboard_statisticsService.getPatientAdmittedByTime(date);
+    const data = await this.dashboard_statisticsService.getPatientAdmittedByTime(type, referenceDate);
 
-      res.status(statusCode.OK).json({
-        success: true,
-        message: "Patient admission by time fetched successfully",
-        data: result,
-      });
-    } catch (err) {
-      console.error("Error fetching admission by time:", err);
-      next(err);
-    }
-  };
+    res.status(200).json(data);
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
+};
 
   getTotalHospitalStaff = async (req, res, next) => {
   try {
@@ -83,6 +75,24 @@ getPatientAdmittedByTime = async (req, res, next) => {
       success: true,
       message: "Total hospital staff count fetched successfully",
       data: result,
+    });
+  } catch (err) {
+    console.error("Error fetching total hospital staff:", err);
+    next(err);
+  }
+};
+
+getIpdDocuments = async (req, res, next) => {
+ try {
+    const { type = "monthly", year } = req.query;
+    const parsedYear = year ? parseInt(year) : undefined;
+
+    const result = await this.dashboard_statisticsService.getIpdDocumentStats(type, parsedYear);
+
+    return res.status(200).json({
+      success: true,
+      message: "Total IPD document-pdfs stats fetched successfully",
+      data: result
     });
   } catch (err) {
     console.error("Error fetching total hospital staff:", err);

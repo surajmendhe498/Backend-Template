@@ -43,7 +43,6 @@ export default class Change_consultantController {
   }
 };
 
-
 getByPatientAndAdmissionId = async (req, res, next) => {
   try {
     const { patientId, admissionId } = req.params;
@@ -53,5 +52,6 @@ getByPatientAndAdmissionId = async (req, res, next) => {
     res.fail('Error fetching consultant change history', err.message, statusCode.INTERNAL_SERVER_ERROR);
   }
 };
+
 
 }

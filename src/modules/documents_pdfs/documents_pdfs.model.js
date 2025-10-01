@@ -36,4 +36,4 @@ const documentPdfSchema = new mongoose.Schema({
   color: { type: String, default: "" }, 
 });
 
-export const DOCUMENT_PDF_MODEL = mongoose.model("pdf-document3", documentPdfSchema);
+export const DOCUMENT_PDF_MODEL = mongoose.model("pdf-document4", documentPdfSchema);

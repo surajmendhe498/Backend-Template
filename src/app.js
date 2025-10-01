@@ -53,6 +53,7 @@ import finalDischargeRoute from './modules/discharge/final_discharge/final_disch
 import PatientDischargeTemplateRoute from './modules/patient/discharge_template/discharge_template.routes.js';
 import PatientOtNotesTemplateRoute from './modules/patient/ot_notes_template/ot_notes_template.routes.js';
 import documentsPdfsRoute from './modules/documents_pdfs/documents_pdfs.routes.js';
+import ticketRoute from './modules/ticket/ticket.routes.js';
 
 
 app.use(helmet());
@@ -105,6 +106,7 @@ app.use('/api/v1/discharge/final', finalDischargeRoute);
 app.use('/api/v1/patient/discharge-template', PatientDischargeTemplateRoute);
 app.use('/api/v1/patient/ot-notes-template', PatientOtNotesTemplateRoute);
 app.use('/api/v1/document-pdf', documentsPdfsRoute);
+app.use('/api/v1/ticket', ticketRoute);
      
 app.use(notFound);
 app.use(errorHandler);

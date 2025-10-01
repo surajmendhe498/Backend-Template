@@ -75,31 +75,63 @@ export default class Documents_pdfsController {
     }
   };
 
-  addPdfToPatient = async (req, res, next) => {
-    try {
-      const { patientId, admissionId, pdfName } = req.body;
-      if (!req.file) {
-        return res
-          .status(statusCode.BAD_REQUEST)
-          .json({ message: "PDF file is required" });
-      }
+//   addPdfToPatient = async (req, res, next) => {
+//   try {
+//     const { patientId, admissionId, mainPdfId, pdfName } = req.body;
 
-      const result = await this.documents_pdfsService.addPdfToPatient({
-        patientId,
-        admissionId,
-        pdfName,
-        pdfBuffer: req.file.buffer
-      });
+//     if (!req.file) {
+//       return res.status(statusCode.BAD_REQUEST).json({ message: "PDF file is required" });
+//     }
+//     if (!mainPdfId) {
+//       return res.status(statusCode.BAD_REQUEST).json({ message: "mainPdfId is required" });
+//     }
+//     if (!pdfName) {
+//       return res.status(statusCode.BAD_REQUEST).json({ message: "pdfName is required" });
+//     }
 
-      res.status(statusCode.OK).json({
-        success: true,
-        message: result.message,
-        data: result
-      });
-    } catch (err) {
-      next(err);
+//     const result = await this.documents_pdfsService.addPdfToPatient({
+//       patientId,
+//       admissionId,
+//       mainPdfId,
+//       pdfBuffer: req.file.buffer,
+//       pdfName
+//     });
+
+//     res.status(statusCode.OK).json({
+//       success: true,
+//       message: "PDF successfully uploaded and grouped",
+//       data: result
+//     });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+addPdfToPatient = async (req, res, next) => {
+  try {
+    const { patientId, admissionId, mainPdfId, pdfName } = req.body;
+
+    if (!req.file) {
+      return res.status(statusCode.BAD_REQUEST).json({ message: "PDF file is required" });
     }
-  };
+
+    const result = await this.documents_pdfsService.addPdfToPatient({
+      patientId,
+      admissionId,
+      mainPdfId,
+      pdfBuffer: req.file.buffer,
+      pdfName,
+      user: req.user 
+    });
+
+    res.status(statusCode.OK).json({
+      success: true,
+      message: "PDF successfully uploaded and grouped",
+      data: result
+    });
+  } catch (err) {
+    next(err);
+  }
+};
 
   getPdfsByPatient = async (req, res, next) => {
   try {
@@ -188,6 +220,66 @@ updateColor = async (req, res, next) => {
     next(err);
   }
 };
+
+softDeletePdfDocument = async (req, res, next) => {
+  try {
+    const { patientId, admissionId, pdfId } = req.params;
+
+    const result = await this.documents_pdfsService.softDeletePdfDocument({
+      patientId,
+      admissionId,
+      pdfId,
+    });
+
+    res.status(statusCode.OK).json({
+      success: true,
+      message: result.message,
+      data: { pdfId: result.pdfId },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+getSoftDeletedPdfs = async (req, res, next) => {
+  try {
+    const { patientId, admissionId } = req.params;
+
+    const pdfs = await this.documents_pdfsService.getSoftDeletedPdfs({
+      patientId,
+      admissionId,
+    });
+
+    res.status(statusCode.OK).json({
+      success: true,
+      message: "Fetched soft-deleted PDFs successfully",
+      data: pdfs,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
+restorePdfDocument = async (req, res, next) => {
+  try {
+    const { patientId, admissionId, pdfId } = req.params;
+
+    const result = await this.documents_pdfsService.restorePdfDocument({
+      patientId,
+      admissionId,
+      pdfId,
+    });
+
+    res.status(statusCode.OK).json({
+      success: true,
+      message: result.message,
+      data: { pdfId: result.pdfId },
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 
 
 }

@@ -40,6 +40,62 @@ class Ot_notes_templateService {
 
     return admission.otNotesTemplates;
   }
+
+  async editTemplate(patientId, admissionId, templateId, templateData) {
+    const patient = await PATIENT_MODEL.findById(patientId);
+    if (!patient) {
+      const error = new Error("Patient not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const admission = patient.admissionDetails.id(admissionId);
+    if (!admission) {
+      const error = new Error("Admission not found for this patient");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const template = admission.otNotesTemplates.id(templateId);
+    if (!template) {
+      const error = new Error("Template not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    template.template = templateData; 
+    await patient.save();
+
+    return template;
+  }
+
+  async deleteTemplate(patientId, admissionId, templateId) {
+    const patient = await PATIENT_MODEL.findById(patientId);
+    if (!patient) {
+      const error = new Error("Patient not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const admission = patient.admissionDetails.id(admissionId);
+    if (!admission) {
+      const error = new Error("Admission not found for this patient");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    const template = admission.otNotesTemplates.id(templateId);
+    if (!template) {
+      const error = new Error("Template not found");
+      error.statusCode = 404;
+      throw error;
+    }
+
+    template.deleteOne(); 
+    await patient.save();
+
+    return { message: "Template deleted successfully" };
+  }
 }
 
 export default new Ot_notes_templateService();

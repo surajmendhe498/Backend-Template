@@ -72,4 +72,65 @@ export default class NotesController {
       next(err);
     }
   };
+
+    getClinicalNotes = async (req, res, next) => {
+    try {
+      const { patientId, admissionId } = req.params;
+      const data = await this.notesService.getSpecificNotes(patientId, admissionId, "clinicalNotes");
+      res.status(statusCode.OK).json({ success: true, message: "Fetched clinical notes", data });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getNursingNotes = async (req, res, next) => {
+    try {
+      const { patientId, admissionId } = req.params;
+      const data = await this.notesService.getSpecificNotes(patientId, admissionId, "nursingNotes");
+      res.status(statusCode.OK).json({ success: true, message: "Fetched nursing notes", data });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getSurgicalNotes = async (req, res, next) => {
+    try {
+      const { patientId, admissionId } = req.params;
+      const data = await this.notesService.getSpecificNotes(patientId, admissionId, "surgicalNotes");
+      res.status(statusCode.OK).json({ success: true, message: "Fetched surgical notes", data });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getSymptoms = async (req, res, next) => {
+    try {
+      const { patientId, admissionId } = req.params;
+      const data = await this.notesService.getSpecificNotes(patientId, admissionId, "symptoms");
+      res.status(statusCode.OK).json({ success: true, message: "Fetched symptoms", data });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getPastHistory = async (req, res, next) => {
+    try {
+      const { patientId, admissionId } = req.params;
+      const data = await this.notesService.getSpecificNotes(patientId, admissionId, "pastHistory");
+      res.status(statusCode.OK).json({ success: true, message: "Fetched past history", data });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getVitalData = async (req, res, next) => {
+    try {
+      const { patientId, admissionId } = req.params;
+      const data = await this.notesService.getSpecificNotes(patientId, admissionId, "vitalData");
+      res.status(statusCode.OK).json({ success: true, message: "Fetched vital data", data });
+    } catch (err) {
+      next(err);
+    }
+  };
+
 }

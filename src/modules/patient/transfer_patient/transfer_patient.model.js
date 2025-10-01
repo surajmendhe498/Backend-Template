@@ -8,8 +8,8 @@ const TransferSchema = new mongoose.Schema({
   },
   admissionId: {  
     type: mongoose.Schema.Types.ObjectId,
+    ref: 'patients.admissionDetails',
     required: true,
-    ref: 'patients.admissionDetails'
   },
   from: {
     floor: { type: String, required: true },

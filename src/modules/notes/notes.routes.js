@@ -12,4 +12,12 @@ router.get('/:patientId/:admissionId', notesController.getNotes);
 router.put('/update', authenticate, notesController.updateNote);
 router.delete('/delete', notesController.deleteNote);
 
+router.get('/:patientId/:admissionId/clinicalNotes', notesController.getClinicalNotes);
+router.get('/:patientId/:admissionId/nursingNotes', notesController.getNursingNotes);
+router.get('/:patientId/:admissionId/surgicalNotes', notesController.getSurgicalNotes);
+router.get('/:patientId/:admissionId/symptoms', notesController.getSymptoms);
+router.get('/:patientId/:admissionId/pastHistory', notesController.getPastHistory);
+router.get('/:patientId/:admissionId/vitalData', notesController.getVitalData);
+
+
 export default router;

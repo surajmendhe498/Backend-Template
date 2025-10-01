@@ -64,24 +64,47 @@ export default class Transfer_patientController {
   }
 };
 
+// getTransferHistoryByPatientAndAdmission = async (req, res, next) => {
+//   try {
+//     const { patientId, admissionId } = req.params;
+
+//     const history = await this.transfer_patientService.getTransferHistoryByPatientAndAdmission(patientId, admissionId);
+
+//     if (!history.length) {
+//       return res.status(statusCode.NOT_FOUND).json({
+//         success: false,
+//         message: "No transfer history found for this patient and admission",
+//         data: [],
+//       });
+//     }
+
+//     res.success("Transfer history fetched successfully", history, statusCode.OK);
+//   } catch (err) {
+//     res.fail("Error fetching transfer history", err.message, statusCode.INTERNAL_SERVER_ERROR);
+//   }
+// };
+
 
 getTransferHistoryByPatientAndAdmission = async (req, res, next) => {
   try {
     const { patientId, admissionId } = req.params;
 
-    const history = await this.transfer_patientService.getTransferHistoryByPatientAndAdmission(patientId, admissionId);
+    const history = await this.transfer_patientService.getHistoryByPatientAndAdmission(
+      patientId,
+      admissionId
+    );
 
     if (!history.length) {
       return res.status(statusCode.NOT_FOUND).json({
         success: false,
-        message: "No transfer history found for this patient and admission",
+        message: "No transfer or exchange history found",
         data: [],
       });
     }
 
-    res.success("Transfer history fetched successfully", history, statusCode.OK);
+    res.success("Transfer, Exchange & Assign history fetched successfully", history, statusCode.OK);
   } catch (err) {
-    res.fail("Error fetching transfer history", err.message, statusCode.INTERNAL_SERVER_ERROR);
+    res.fail("Error fetching history", err.message, statusCode.INTERNAL_SERVER_ERROR);
   }
 };
 

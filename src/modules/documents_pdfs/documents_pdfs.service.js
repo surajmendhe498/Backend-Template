@@ -85,6 +85,7 @@
 import { DOCUMENT_PDF_MODEL } from "./documents_pdfs.model.js";
 import { PATIENT_MODEL } from "../patient/patient.model.js";
 import imagekit from "../../helpers/imagekit.js";
+import mongoose from "mongoose";
 
 class Documents_pdfsService {
   async seedIfEmpty() {
@@ -105,34 +106,34 @@ class Documents_pdfsService {
         ],
         color: "",
       },
-      {
-        pdfName: "Blood Component Request Form .docx",
-        files: [
-          {
-            name: "Blood Component Request Form - English",
-            language: "english",
-            pdfUrl:
-              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/Blood_Component_Request_Form__jrCFwE0ze.docx",
-          },
-          { name: "", language: "hindi", pdfUrl: "" },
-          { name: "", language: "gujarati", pdfUrl: "" },
-        ],
-        color: "",
-      },
-      {
-        pdfName: "Blood Issue Release slip.docx",
-        files: [
-          {
-            name: "Blood Issue Release slip - English",
-            language: "english",
-            pdfUrl:
-              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/Blood_Issue_Release_slip_myyY7mOSlg.docx",
-          },
-          { name: "", language: "hindi", pdfUrl: "" },
-          { name: "", language: "gujarati", pdfUrl: "" },
-        ],
-        color: "",
-      },
+      // {
+      //   pdfName: "Blood Component Request Form .docx",
+      //   files: [
+      //     {
+      //       name: "Blood Component Request Form - English",
+      //       language: "english",
+      //       pdfUrl:
+      //         "https://ik.imagekit.io/wukb4sljv/documents-PDFs/Blood_Component_Request_Form__jrCFwE0ze.docx",
+      //     },
+      //     { name: "", language: "hindi", pdfUrl: "" },
+      //     { name: "", language: "gujarati", pdfUrl: "" },
+      //   ],
+      //   color: "",
+      // },
+      // {
+      //   pdfName: "Blood Issue Release slip.docx",
+      //   files: [
+      //     {
+      //       name: "Blood Issue Release slip - English",
+      //       language: "english",
+      //       pdfUrl:
+      //         "https://ik.imagekit.io/wukb4sljv/documents-PDFs/Blood_Issue_Release_slip_myyY7mOSlg.docx",
+      //     },
+      //     { name: "", language: "hindi", pdfUrl: "" },
+      //     { name: "", language: "gujarati", pdfUrl: "" },
+      //   ],
+      //   color: "",
+      // },
       {
         pdfName: "CONSENT FOR BLOOD TRANSFUSION.pdf",
         files: [
@@ -259,20 +260,20 @@ class Documents_pdfsService {
         ],
         color: "",
       },
-      {
-        pdfName: "Daily notes.xlsx",
-        files: [
-          {
-            name: "Daily notes - English",
-            language: "english",
-            pdfUrl:
-              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/Daily_notes_7gYgbQsy5.xlsx",
-          },
-          { name: "", language: "hindi", pdfUrl: "" },
-          { name: "", language: "gujarati", pdfUrl: "" },
-        ],
-        color: "",
-      },
+      // {
+      //   pdfName: "Daily notes.xlsx",
+      //   files: [
+      //     {
+      //       name: "Daily notes - English",
+      //       language: "english",
+      //       pdfUrl:
+      //         "https://ik.imagekit.io/wukb4sljv/documents-PDFs/Daily_notes_7gYgbQsy5.xlsx",
+      //     },
+      //     { name: "", language: "hindi", pdfUrl: "" },
+      //     { name: "", language: "gujarati", pdfUrl: "" },
+      //   ],
+      //   color: "",
+      // },
       {
         pdfName: "DISCHARGE SUMMARY (1).pdf",
         files: [
@@ -329,20 +330,20 @@ class Documents_pdfsService {
         ],
         color: "",
       },
-      {
-        pdfName: "high cost medicine consent.docx",
-        files: [
-          {
-            name: "high cost medicine consent - English",
-            language: "english",
-            pdfUrl:
-              "https://ik.imagekit.io/wukb4sljv/documents-PDFs/high_cost_medicine_consent_joOXfy-CA.docx",
-          },
-          { name: "", language: "hindi", pdfUrl: "" },
-          { name: "", language: "gujarati", pdfUrl: "" },
-        ],
-        color: "",
-      },
+      // {
+      //   pdfName: "high cost medicine consent.docx",
+      //   files: [
+      //     {
+      //       name: "high cost medicine consent - English",
+      //       language: "english",
+      //       pdfUrl:
+      //         "https://ik.imagekit.io/wukb4sljv/documents-PDFs/high_cost_medicine_consent_joOXfy-CA.docx",
+      //     },
+      //     { name: "", language: "hindi", pdfUrl: "" },
+      //     { name: "", language: "gujarati", pdfUrl: "" },
+      //   ],
+      //   color: "",
+      // },
       {
         pdfName: "INCIDENT REPORTING FORM.pdf",
         files: [
@@ -489,15 +490,15 @@ class Documents_pdfsService {
   ],
   color: "",
 },
-{
-  pdfName: "જનરલ એનેસ્થેસીયા.docx",
-  files: [
-    { name: "", language: "english", pdfUrl: "" },
-    { name: "", language: "hindi", pdfUrl: "" },
-    { name: "જનરલ એનેસ્થેસીયા - Gujarati", language: "gujarati", pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/જનરલ_એનેસ્થેસીયા_U4pcGfvuPV.docx" },
-  ],
-  color: "",
-  }
+// {
+//   pdfName: "જનરલ એનેસ્થેસીયા.docx",
+//   files: [
+//     { name: "", language: "english", pdfUrl: "" },
+//     { name: "", language: "hindi", pdfUrl: "" },
+//     { name: "જનરલ એનેસ્થેસીયા - Gujarati", language: "gujarati", pdfUrl: "https://ik.imagekit.io/wukb4sljv/documents-PDFs/જનરલ_એનેસ્થેસીયા_U4pcGfvuPV.docx" },
+//   ],
+//   color: "",
+//   }
     ];
 
     defaultDocs = defaultDocs.map(doc => ({
@@ -549,34 +550,62 @@ class Documents_pdfsService {
   return pdf.save();
 }
 
-  async addPdfToPatient({ patientId, admissionId, pdfName, pdfBuffer }) {
-    const patient = await PATIENT_MODEL.findById(patientId);
-    if (!patient) throw new Error("Patient not found");
+async addPdfToPatient({ patientId, admissionId, mainPdfId, pdfBuffer, pdfName, user }) {
+  if (!mainPdfId) throw new Error("mainPdfId is required");
+  if (!pdfName) throw new Error("pdfName is required");
+  if (!pdfBuffer) throw new Error("PDF file buffer is required");
 
-    const admission = patient.admissionDetails.id(admissionId);
-    if (!admission) throw new Error("Admission not found");
+  const mainPdf = await DOCUMENT_PDF_MODEL.findById(mainPdfId);
+  if (!mainPdf) throw new Error("mainPdfId does not exist");
 
-    const uploadResponse = await imagekit.upload({
-      file: pdfBuffer,            
-      fileName: pdfName,          
-      folder: "/patient-pdfs"     
-    });
+  const patient = await PATIENT_MODEL.findById(patientId);
+  if (!patient) throw new Error("Patient not found");
 
+  const admission = patient.admissionDetails.id(admissionId);
+  if (!admission) throw new Error("Admission not found");
+
+  const uploadResponse = await imagekit.upload({
+    file: pdfBuffer,
+    fileName: pdfName,
+    folder: "/patient-pdfs"
+  });
+
+  const fileData = {
+    name: pdfName,
+    path: uploadResponse.url,
+    deleted: false,
+    uploadedAt: new Date(),
+    uploadedBy: {
+      id: user._id,
+      name: `${user.firstName} ${user.lastName}`
+    }
+  };
+
+  const existingGroup = admission.documentPdf.find(
+    doc => doc.mainPdfId?.toString() === mainPdfId
+  );
+
+  if (existingGroup) {
+    existingGroup.files.push(fileData);
+  } else {
     admission.documentPdf.push({
-      name: pdfName,
-      path: uploadResponse.url    
+      mainPdfId,
+      files: [fileData]
     });
-
-    await patient.save();
-
-    return {
-      patientId,
-      admissionId,
-      pdfName,
-      pdfPath: uploadResponse.url,
-      // message: "PDF successfully uploaded to ImageKit and saved to patient"
-    };
   }
+
+  await patient.save();
+
+  return {
+    patientId,
+    admissionId,
+    mainPdfId,
+    pdfName,
+    pdfPath: uploadResponse.url,
+    uploadedBy: fileData.uploadedBy,
+    uploadedAt: fileData.uploadedAt
+  };
+}
 
   async getPdfsByPatient({ patientId, admissionId }) {
   const patient = await PATIENT_MODEL.findById(patientId);
@@ -596,24 +625,31 @@ async updatePdfDocument({ patientId, admissionId, pdfId, fileName, pdfBuffer }) 
   const admission = patient.admissionDetails.id(admissionId);
   if (!admission) throw new Error("Admission not found");
 
-  const pdfDoc = admission.documentPdf.id(pdfId);
-  if (!pdfDoc) throw new Error("PDF document not found");
+  let updatedFile = null;
 
-  if (fileName) {
-    pdfDoc.name = fileName;
+  for (const group of admission.documentPdf) {
+    const file = group.files.id(pdfId);
+    if (file) {
+      if (fileName) file.name = fileName;
+
+      if (pdfBuffer) {
+        const uploadResponse = await imagekit.upload({
+          file: pdfBuffer,
+          fileName: fileName || file.name,
+          folder: "/patient-pdfs",
+        });
+        file.path = uploadResponse.url;
+      }
+
+      updatedFile = file;
+      break;
+    }
   }
 
-  if (pdfBuffer) {
-    const uploadResponse = await imagekit.upload({
-      file: pdfBuffer,
-      fileName: fileName || pdfDoc.name, 
-      folder: "/patient-pdfs",
-    });
-    pdfDoc.path = uploadResponse.url;
-  }
+  if (!updatedFile) throw new Error("PDF file not found");
 
   await patient.save();
-  return pdfDoc;
+  return updatedFile;
 }
 
 // patient
@@ -624,15 +660,28 @@ async deletePdfDocument({ patientId, admissionId, pdfId }) {
   const admission = patient.admissionDetails.id(admissionId);
   if (!admission) throw new Error("Admission not found");
 
-  const pdfIndex = admission.documentPdf.findIndex(
-    (doc) => doc._id.toString() === pdfId
-  );
-  if (pdfIndex === -1) throw new Error("PDF document not found");
+  const group = admission.documentPdf.find(doc => doc._id.toString() === pdfId);
+  if (group) {
+    admission.documentPdf = admission.documentPdf.filter(doc => doc._id.toString() !== pdfId);
+    await patient.save();
+    return { message: "PDF group deleted successfully", pdfId };
+  }
 
-  admission.documentPdf.splice(pdfIndex, 1);
+  let fileDeleted = false;
+  admission.documentPdf.forEach(group => {
+    const fileIndex = group.files.findIndex(file => file._id.toString() === pdfId);
+    if (fileIndex !== -1) {
+      group.files.splice(fileIndex, 1);
+      fileDeleted = true;
+    }
+  });
+
+  if (!fileDeleted) throw new Error("PDF file not found");
+
+  admission.documentPdf = admission.documentPdf.filter(group => group.files.length > 0);
 
   await patient.save();
-  return { pdfId, message: "PDF document deleted successfully" };
+  return { message: "PDF file deleted successfully", pdfId };
 }
 
   async updateColorForPdfs({ pdfIds, color }) {
@@ -650,6 +699,80 @@ async deletePdfDocument({ patientId, admissionId, pdfId }) {
       message: `${result.modifiedCount} PDF(s) updated with color "${color}".`
     };
   }
+
+async softDeletePdfDocument({ patientId, admissionId, pdfId }) {
+  const patient = await PATIENT_MODEL.findById(patientId);
+  if (!patient) throw new Error("Patient not found");
+
+  const admission = patient.admissionDetails.id(admissionId);
+  if (!admission) throw new Error("Admission not found");
+
+  let found = false;
+
+  for (const group of admission.documentPdf) {
+    const file = group.files.find(f => f._id.toString() === pdfId);
+    if (file) {
+      if (file.deleted) throw new Error("PDF already soft-deleted");
+      file.deleted = true;
+      found = true;
+      break;
+    }
+  }
+
+  if (!found) throw new Error("PDF document not found");
+
+  await patient.save();
+
+  return { pdfId, message: "PDF soft-deleted successfully" };
+}
+
+async getSoftDeletedPdfs({ patientId, admissionId }) {
+  const patient = await PATIENT_MODEL.findById(patientId);
+  if (!patient) throw new Error("Patient not found");
+
+  const admission = patient.admissionDetails.id(admissionId);
+  if (!admission) throw new Error("Admission not found");
+
+  const softDeleted = admission.documentPdf
+    .map(group => {
+      const deletedFiles = group.files.filter(f => f.deleted);
+      if (deletedFiles.length > 0) {
+        return {
+          mainPdfId: group.mainPdfId,
+          files: deletedFiles
+        };
+      }
+      return null;
+    })
+    .filter(g => g !== null);
+
+  return softDeleted;
+}
+
+async restorePdfDocument({ patientId, admissionId, pdfId }) {
+  const patient = await PATIENT_MODEL.findById(patientId);
+  if (!patient) throw new Error("Patient not found");
+
+  const admission = patient.admissionDetails.id(admissionId);
+  if (!admission) throw new Error("Admission not found");
+
+  let restored = false;
+
+  for (const group of admission.documentPdf) {
+    const file = group.files.id(pdfId);
+    if (file) {
+      if (!file.deleted) throw new Error("PDF is not soft-deleted");
+      file.deleted = false;
+      restored = true;
+      break;
+    }
+  }
+
+  if (!restored) throw new Error("PDF file not found");
+
+  await patient.save();
+  return { pdfId, message: "PDF restored successfully" };
+}
   
 }
 

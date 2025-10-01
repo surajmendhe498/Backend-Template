@@ -25,140 +25,289 @@ class Dashboard_statisticsService {
     return stats;
   }
 
-async getTrends(type = "monthly", year) {
-    const getTruncUnit = (t) => {
-      switch (t) {
-        case "daily": return "day";
-        case "weekly": return "week";
-        case "monthly": return "month";
-        case "yearly": return "year";
-        default: return "month";
-      }
-    };
+// async getTrends(type = "monthly", year) {
+//     const getTruncUnit = (t) => {
+//       switch (t) {
+//         case "daily": return "day";
+//         case "weekly": return "week";
+//         case "monthly": return "month";
+//         case "yearly": return "year";
+//         default: return "month";
+//       }
+//     };
 
-    const truncUnit = getTruncUnit(type);
+//     const truncUnit = getTruncUnit(type);
 
-    // === Admissions ===
-    const admissionsPipeline = [
-      { $unwind: "$admissionDetails" },
-      {
-        $match: { "admissionDetails.admissionDate": { $exists: true, $ne: null } },
-      },
-      {
-        $addFields: {
-          admissionDate: {
-            $cond: [
-              { $eq: [{ $type: "$admissionDetails.admissionDate" }, "string"] },
-              { $toDate: "$admissionDetails.admissionDate" },
-              "$admissionDetails.admissionDate",
-            ],
-          },
-        },
-      },
-      ...(year ? [{
-        $match: {
-          $expr: { $eq: [{ $year: "$admissionDate" }, year] },
-        },
-      }] : []),
-      {
-        $group: {
-          _id: { $dateTrunc: { date: "$admissionDate", unit: truncUnit } },
-          admitted: { $sum: 1 },
-        },
-      },
-      { $sort: { "_id": 1 } },
-    ];
+//     // === Admissions ===
+//     const admissionsPipeline = [
+//       { $unwind: "$admissionDetails" },
+//       {
+//         $match: { "admissionDetails.admissionDate": { $exists: true, $ne: null } },
+//       },
+//       {
+//         $addFields: {
+//           admissionDate: {
+//             $cond: [
+//               { $eq: [{ $type: "$admissionDetails.admissionDate" }, "string"] },
+//               { $toDate: "$admissionDetails.admissionDate" },
+//               "$admissionDetails.admissionDate",
+//             ],
+//           },
+//         },
+//       },
+//       ...(year ? [{
+//         $match: {
+//           $expr: { $eq: [{ $year: "$admissionDate" }, year] },
+//         },
+//       }] : []),
+//       {
+//         $group: {
+//           _id: { $dateTrunc: { date: "$admissionDate", unit: truncUnit } },
+//           admitted: { $sum: 1 },
+//         },
+//       },
+//       { $sort: { "_id": 1 } },
+//     ];
 
-    // === Discharges ===
-    const dischargesPipeline = [
-      { $match: { dateOfDischarge: { $exists: true, $ne: null } } },
-      {
-        $addFields: {
-          dischargeDate: {
-            $cond: [
-              { $eq: [{ $type: "$dateOfDischarge" }, "string"] },
-              { $toDate: "$dateOfDischarge" },
-              "$dateOfDischarge",
-            ],
-          },
+//     // === Discharges ===
+//     const dischargesPipeline = [
+//       { $match: { dateOfDischarge: { $exists: true, $ne: null } } },
+//       {
+//         $addFields: {
+//           dischargeDate: {
+//             $cond: [
+//               { $eq: [{ $type: "$dateOfDischarge" }, "string"] },
+//               { $toDate: "$dateOfDischarge" },
+//               "$dateOfDischarge",
+//             ],
+//           },
+//         },
+//       },
+//       ...(year ? [{
+//         $match: {
+//           $expr: { $eq: [{ $year: "$dischargeDate" }, year] },
+//         },
+//       }] : []),
+//       {
+//         $group: {
+//           _id: { $dateTrunc: { date: "$dischargeDate", unit: truncUnit } },
+//           discharged: { $sum: 1 },
+//         },
+//       },
+//       { $sort: { "_id": 1 } },
+//     ];
+
+//     const [admissions, discharges] = await Promise.all([
+//       PATIENT_MODEL.aggregate(admissionsPipeline),
+//       FINAL_DISCHARGE_MODEL.aggregate(dischargesPipeline),
+//     ]);
+
+//     const trendsMap = new Map();
+//     admissions.forEach((a) => {
+//       trendsMap.set(a._id.toISOString(), {
+//         date: a._id,
+//         admitted: a.admitted,
+//         discharged: 0,
+//       });
+//     });
+//     discharges.forEach((d) => {
+//       const key = d._id.toISOString();
+//       if (trendsMap.has(key)) {
+//         trendsMap.get(key).discharged = d.discharged;
+//       } else {
+//         trendsMap.set(key, {
+//           date: d._id,
+//           admitted: 0,
+//           discharged: d.discharged,
+//         });
+//       }
+//     });
+
+
+  //   const rawTrends = Array.from(trendsMap.values()).sort((a, b) => a.date - b.date);
+
+  //   // === Format output based on type ===
+  //   const formattedTrends = rawTrends.map((t) => {
+  //     const dateObj = new Date(t.date);
+  //     if (type === "yearly") {
+  //       return {
+  //         year: dateObj.getUTCFullYear(),
+  //         admitted: t.admitted,
+  //         discharged: t.discharged,
+  //       };
+  //     } else if (type === "monthly") {
+  //       return {
+  //         month: dateObj.toLocaleString("en-US", { month: "long", year: "numeric" }),
+  //         admitted: t.admitted,
+  //         discharged: t.discharged,
+  //       };
+  //     } else if (type === "weekly") {
+  //       const weekStart = dateObj.toISOString().split("T")[0];
+  //       return {
+  //         weekStart,
+  //         admitted: t.admitted,
+  //         discharged: t.discharged,
+  //       };
+  //     } else { // daily
+  //       const day = dateObj.toISOString().split("T")[0];
+  //       return {
+  //         day,
+  //         admitted: t.admitted,
+  //         discharged: t.discharged,
+  //       };
+  //     }
+  //   });
+
+  //   return formattedTrends;
+  // }
+  async getTrends(type = "monthly", year) {
+  const getTruncUnit = (t) => {
+    switch (t) {
+      case "daily": return "day";
+      case "weekly": return "week";
+      case "monthly": return "month";
+      case "yearly": return "year";
+      default: return "month";
+    }
+  };
+
+  const truncUnit = getTruncUnit(type);
+
+  // === Admissions ===
+  const admissionsPipeline = [
+    { $unwind: "$admissionDetails" },
+    { $match: { "admissionDetails.admissionDate": { $exists: true, $ne: null } } },
+    {
+      $addFields: {
+        admissionDate: {
+          $cond: [
+            { $eq: [{ $type: "$admissionDetails.admissionDate" }, "string"] },
+            { $toDate: "$admissionDetails.admissionDate" },
+            "$admissionDetails.admissionDate",
+          ],
         },
       },
-      ...(year ? [{
-        $match: {
-          $expr: { $eq: [{ $year: "$dischargeDate" }, year] },
-        },
-      }] : []),
-      {
-        $group: {
-          _id: { $dateTrunc: { date: "$dischargeDate", unit: truncUnit } },
-          discharged: { $sum: 1 },
+    },
+    ...(year ? [{
+      $match: { $expr: { $eq: [{ $year: "$admissionDate" }, year] } },
+    }] : []),
+    {
+      $group: {
+        _id: { $dateTrunc: { date: "$admissionDate", unit: truncUnit } },
+        admitted: { $sum: 1 },
+      },
+    },
+    { $sort: { "_id": 1 } },
+  ];
+
+  // === Discharges ===
+  const dischargesPipeline = [
+    { $match: { dateOfDischarge: { $exists: true, $ne: null } } },
+    {
+      $addFields: {
+        dischargeDate: {
+          $cond: [
+            { $eq: [{ $type: "$dateOfDischarge" }, "string"] },
+            { $toDate: "$dateOfDischarge" },
+            "$dateOfDischarge",
+          ],
         },
       },
-      { $sort: { "_id": 1 } },
-    ];
+    },
+    ...(year ? [{
+      $match: { $expr: { $eq: [{ $year: "$dischargeDate" }, year] } },
+    }] : []),
+    {
+      $group: {
+        _id: { $dateTrunc: { date: "$dischargeDate", unit: truncUnit } },
+        discharged: { $sum: 1 },
+      },
+    },
+    { $sort: { "_id": 1 } },
+  ];
 
-    const [admissions, discharges] = await Promise.all([
-      PATIENT_MODEL.aggregate(admissionsPipeline),
-      FINAL_DISCHARGE_MODEL.aggregate(dischargesPipeline),
-    ]);
+  const [admissions, discharges] = await Promise.all([
+    PATIENT_MODEL.aggregate(admissionsPipeline),
+    FINAL_DISCHARGE_MODEL.aggregate(dischargesPipeline),
+  ]);
 
-    const trendsMap = new Map();
-    admissions.forEach((a) => {
-      trendsMap.set(a._id.toISOString(), {
-        date: a._id,
-        admitted: a.admitted,
-        discharged: 0,
+  const trendsMap = new Map();
+  admissions.forEach((a) => {
+    trendsMap.set(a._id.toISOString(), {
+      date: a._id,
+      admitted: a.admitted,
+      discharged: 0,
+    });
+  });
+  discharges.forEach((d) => {
+    const key = d._id.toISOString();
+    if (trendsMap.has(key)) {
+      trendsMap.get(key).discharged = d.discharged;
+    } else {
+      trendsMap.set(key, {
+        date: d._id,
+        admitted: 0,
+        discharged: d.discharged,
       });
-    });
-    discharges.forEach((d) => {
-      const key = d._id.toISOString();
-      if (trendsMap.has(key)) {
-        trendsMap.get(key).discharged = d.discharged;
-      } else {
-        trendsMap.set(key, {
-          date: d._id,
-          admitted: 0,
-          discharged: d.discharged,
-        });
-      }
-    });
+    }
+  });
 
-    const rawTrends = Array.from(trendsMap.values()).sort((a, b) => a.date - b.date);
+  const rawTrends = Array.from(trendsMap.values()).sort((a, b) => a.date - b.date);
 
-    // === Format output based on type ===
-    const formattedTrends = rawTrends.map((t) => {
-      const dateObj = new Date(t.date);
-      if (type === "yearly") {
-        return {
-          year: dateObj.getUTCFullYear(),
-          admitted: t.admitted,
-          discharged: t.discharged,
-        };
-      } else if (type === "monthly") {
-        return {
-          month: dateObj.toLocaleString("en-US", { month: "long", year: "numeric" }),
-          admitted: t.admitted,
-          discharged: t.discharged,
-        };
-      } else if (type === "weekly") {
-        const weekStart = dateObj.toISOString().split("T")[0];
-        return {
-          weekStart,
-          admitted: t.admitted,
-          discharged: t.discharged,
-        };
-      } else { // daily
-        const day = dateObj.toISOString().split("T")[0];
-        return {
-          day,
-          admitted: t.admitted,
-          discharged: t.discharged,
-        };
-      }
-    });
+  // === Helper to get ISO Week Number ===
+  const getISOWeek = (date) => {
+    const tmp = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    const dayNum = tmp.getUTCDay() || 7;
+    tmp.setUTCDate(tmp.getUTCDate() + 4 - dayNum);
+    const yearStart = new Date(Date.UTC(tmp.getUTCFullYear(), 0, 1));
+    return Math.ceil((((tmp - yearStart) / 86400000) + 1) / 7);
+  };
 
-    return formattedTrends;
-  }
+  // === Format Output ===
+  const formattedTrends = rawTrends.map((t) => {
+    const dateObj = new Date(t.date);
+
+    if (type === "yearly") {
+      return {
+        year: dateObj.getUTCFullYear(),
+        admitted: t.admitted,
+        discharged: t.discharged,
+      };
+    }
+
+    if (type === "monthly") {
+      return {
+        month: dateObj.toLocaleString("en-US", { month: "long", year: "numeric" }),
+        admitted: t.admitted,
+        discharged: t.discharged,
+      };
+    }
+
+    if (type === "weekly") {
+      const week = getISOWeek(dateObj);
+      return {
+        [`Week-${week}-${dateObj.getUTCFullYear()}`]: {
+          admitted: t.admitted,
+          discharged: t.discharged,
+        },
+      };
+    }
+
+    // === Daily ===
+    return {
+      day: dateObj.toISOString().split("T")[0],
+      admitted: t.admitted,
+      discharged: t.discharged,
+    };
+  });
+
+  return {
+    success: true,
+    message: "Trends data fetched successfully",
+    data: formattedTrends,
+  };
+}
+
 
 async getGenderDistribution() {
   const genderStats = await PATIENT_MODEL.aggregate([

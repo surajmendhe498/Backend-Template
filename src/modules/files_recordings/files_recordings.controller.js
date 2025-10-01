@@ -245,62 +245,36 @@ moveFileToFolder = async (req, res, next) => {
   }
 };
 
-// sendReportOnWhatsApp = async (req, res, next) => {
-//   try {
-//     const { patientId, admissionId, reportType, target } = req.body;
-
-//     if (!patientId || !admissionId || !reportType || !target) {
-//       return res.status(statusCode.BAD_REQUEST).json({
-//         success: false,
-//         message: "patientId, admissionId, reportType, and target are required",
-//       });
-//     }
-
-//     const result = await this.files_recordingsService.sendReportOnWhatsApp({
-//       patientId,
-//       admissionId,
-//       reportType,
-//       target,
-//     });
-
-//     res.status(statusCode.OK).json({
-//       success: true,
-//       message: result.message,
-//     });
-//   } catch (err) {
-//     next(err);
-//   }
-// };
 sendReportOnWhatsApp = async (req, res, next) => {
-    try {
-      const { patientId, admissionId, reportType, target } = req.body;
+  try {
+    const { patientId, admissionId, reportType, target, reportId } = req.body;
 
-      if (!patientId || !admissionId || !reportType || !target) {
-        return res.status(statusCode.BAD_REQUEST).json({
-          success: false,
-          message:
-            "patientId, admissionId, reportType, and target are required",
-        });
-      }
-
-      const result = await this.files_recordingsService.sendReportOnWhatsApp({
-        patientId,
-        admissionId,
-        reportType,
-        target,
-      });
-
-      res.status(statusCode.OK).json({
-        success: true,
-        message: result.message,
-      });
-    } catch (err) {
-      console.error("❌ Controller error:", err.message);
-      res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+    if (!patientId || !admissionId || !reportType || !target || !reportId) {
+      return res.status(statusCode.BAD_REQUEST).json({
         success: false,
-        message: err.message,
+        message: "patientId, admissionId, reportType, target, and reportId are required",
       });
     }
-  };
+
+    const result = await this.files_recordingsService.sendReportOnWhatsApp({
+      patientId,
+      admissionId,
+      reportType,
+      target,
+      reportId,
+    });
+
+    res.status(statusCode.OK).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (err) {
+    console.error("sendReportOnWhatsApp error:", err.message);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
 
 }

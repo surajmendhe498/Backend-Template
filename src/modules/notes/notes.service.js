@@ -115,6 +115,22 @@ class NotesService {
   return { message: `Note deleted successfully from ${field}`, noteId };
 }
 
+  async getSpecificNotes(patientId, admissionId, field) {
+    const patient = await PATIENT_MODEL.findById(patientId)
+      .select(`identityDetails.patientName admissionDetails._id admissionDetails.${field}`);
+    
+    if (!patient) throw new Error("Patient not found");
+
+    const admission = patient.admissionDetails.find(a => a._id.toString() === admissionId);
+    if (!admission) throw new Error("Admission not found");
+
+    return {
+      patientName: patient.identityDetails?.patientName,
+      admissionId: admission._id,
+      [field]: admission[field] || []
+    };
+  }
+
 
 }
 

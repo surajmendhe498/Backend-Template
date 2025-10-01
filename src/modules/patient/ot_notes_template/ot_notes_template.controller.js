@@ -43,4 +43,35 @@ export default class Ot_notes_templateController {
       next(err);
     }
   };
+
+  edit = async (req, res, next) => {
+    try {
+      const { patientId, admissionId, templateId } = req.params;
+      const templateData = req.body;
+
+      const updatedTemplate =
+        await this.ot_notes_templateService.editTemplate(patientId, admissionId, templateId, templateData);
+
+      res.success(
+        "OT notes template updated successfully",
+        updatedTemplate,
+        statusCode.OK
+      );
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  delete = async (req, res, next) => {
+    try {
+      const { patientId, admissionId, templateId } = req.params;
+
+      const result =
+        await this.ot_notes_templateService.deleteTemplate(patientId, admissionId, templateId);
+
+      res.success(result.message, null, statusCode.OK);
+    } catch (err) {
+      next(err);
+    }
+  };
 }

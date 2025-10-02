@@ -98,5 +98,36 @@ export default class Discharge_templateController {
       next(err);
     }
   };
+
+  sendMultipleOnWhatsApp = async (req, res, next) => {
+  try {
+    const { patientId, admissionId } = req.params;
+    const { target, templateIds } = req.body; // array of template IDs
+
+    if (!target || !['doctor', 'patient'].includes(target)) {
+      return res.status(400).json({
+        success: false,
+        message: "Target must be 'doctor' or 'patient'"
+      });
+    }
+
+    const response = await this.discharge_templateService.sendDischargeTemplatesOnWhatsApp({
+      patientId,
+      admissionId,
+      templateIds: templateIds || [],
+      target
+    });
+
+    res.status(200).json({
+      success: true,
+      message: response.message,
+      data: response.details
+    });
+
+  } catch (err) {
+    next(err);
+  }
+};
+
   
 }

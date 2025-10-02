@@ -247,12 +247,12 @@ moveFileToFolder = async (req, res, next) => {
 
 sendReportOnWhatsApp = async (req, res, next) => {
   try {
-    const { patientId, admissionId, reportType, target, reportId } = req.body;
+    const { patientId, admissionId, reportType, target, reportIds } = req.body;
 
-    if (!patientId || !admissionId || !reportType || !target || !reportId) {
+    if (!patientId || !admissionId || !reportType || !target || !reportIds?.length) {
       return res.status(statusCode.BAD_REQUEST).json({
         success: false,
-        message: "patientId, admissionId, reportType, target, and reportId are required",
+        message: "patientId, admissionId, reportType, target, and at least one reportId are required",
       });
     }
 
@@ -261,15 +261,42 @@ sendReportOnWhatsApp = async (req, res, next) => {
       admissionId,
       reportType,
       target,
-      reportId,
+      reportIds,
     });
 
     res.status(statusCode.OK).json({
       success: true,
       message: result.message,
+      details: result.details,
     });
   } catch (err) {
     console.error("sendReportOnWhatsApp error:", err.message);
+    res.status(statusCode.INTERNAL_SERVER_ERROR).json({
+      success: false,
+      message: err.message,
+    });
+  }
+};
+
+listSentMessages = async (req, res, next) => {
+  try {
+    const { patientId, admissionId, fromDate, toDate, messageType } = req.query;
+
+    const messages = await this.files_recordingsService.listSentMessages({
+      patientId,
+      admissionId,
+      fromDate,
+      toDate,
+      messageType,
+    });
+
+    res.status(statusCode.OK).json({
+      success: true,
+      message: "Fetched sent WhatsApp messages successfully",
+      data: messages,
+    });
+  } catch (err) {
+    console.error("listSentMessages error:", err.message);
     res.status(statusCode.INTERNAL_SERVER_ERROR).json({
       success: false,
       message: err.message,

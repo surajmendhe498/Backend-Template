@@ -1,4 +1,5 @@
 import { PATIENT_MODEL } from "../patient.model.js";
+import twilio from 'twilio';
 
 class Discharge_templateService {
 
@@ -90,6 +91,71 @@ class Discharge_templateService {
   await patient.save();
 
   return { deleted: true };
+}
+
+async sendDischargeTemplatesOnWhatsApp({ patientId, admissionId, templateIds = [], target }) {
+  const client = twilio(
+    process.env.TWILIO_ACCOUNT_SID,
+    process.env.TWILIO_AUTH_TOKEN
+  );
+
+  const patient = await PATIENT_MODEL.findById(patientId)
+    .populate("admissionDetails.consultingDoctorId", "doctorName contactNo")
+    .select("identityDetails patientName admissionDetails");
+  if (!patient) throw new Error("Patient not found");
+
+  const admission = patient.admissionDetails.find(a => a._id.toString() === admissionId);
+  if (!admission) throw new Error("Admission not found");
+
+  // Filter discharge templates by IDs
+  let templates = admission.dischargeTemplates;
+  if (templateIds.length) {
+    templates = templates.filter(t => templateIds.includes(t._id.toString()));
+    if (!templates.length) throw new Error("No discharge templates matched the provided IDs");
+  }
+
+  // Get recipient number
+  let recipientNumber;
+  if (target === "doctor") {
+    recipientNumber = admission.consultingDoctorId?.contactNo;
+  } else if (target === "patient") {
+    recipientNumber = patient.identityDetails.whatsappNo || patient.identityDetails.contactNo;
+  }
+  if (!recipientNumber) throw new Error("Recipient number not available");
+
+  recipientNumber = `whatsapp:+${recipientNumber.toString().replace(/\D/g, "")}`;
+
+  const results = [];
+
+  for (const template of templates) {
+  const templateType = template.type || "Not specified";
+
+  const templateContent = Object.entries(template.template || {})
+    .map(([key, value]) => `${key}: ${value}`)
+    .join("\n");
+
+  const bodyMessage = `Hello, here is the ${templateType} discharge summary for patient ${patient.identityDetails.patientName}:\n\n${templateContent}`;
+
+  await client.messages.create({
+    from: process.env.TWILIO_WHATSAPP_NUMBER,
+    // to: recipientNumber,
+    to: 'whatsapp:+919834747298',
+    body: bodyMessage,
+  });
+
+  results.push({
+    templateId: template._id,
+    type: templateType,
+    content: templateContent
+  });
+}
+
+
+  return {
+    success: true,
+    message: `Sent ${results.length} discharge template(s) to ${target} successfully`,
+    details: results
+  };
 }
 
 }

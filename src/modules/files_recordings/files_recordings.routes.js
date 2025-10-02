@@ -19,5 +19,6 @@ router.get('/:patientId/:admissionId/docs', files_recordingsController.getDocs);
 router.get('/:patientId/:admissionId/labReports', files_recordingsController.getLabReports);
 router.get('/:patientId/:admissionId/radiologyReports', files_recordingsController.getRadiologyReports);
 router.post("/send-whatsapp", files_recordingsController.sendReportOnWhatsApp);
+router.get("/sent-messages", files_recordingsController.listSentMessages);
 
 export default router;

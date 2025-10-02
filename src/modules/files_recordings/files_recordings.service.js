@@ -5,6 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { FOLDER_MODEL } from '../folders/folders.model.js';
 import twilio from "twilio";
+import { SENT_MESSAGE_MODEL } from './sentMessage.model.js';
 
 class Files_recordingsService {
   async uploadFiles({ patientId, admissionId, files, user }) {
@@ -332,7 +333,70 @@ async moveFileToFolder({ patientId, admissionId, fileId, folderId, fileType }) {
   return movedFile;
 }
 
-async sendReportOnWhatsApp({ patientId, admissionId, reportType, target, reportId }) {
+// async sendReportOnWhatsApp({ patientId, admissionId, reportType, target, reportIds }) {
+//   const client = twilio(
+//     process.env.TWILIO_ACCOUNT_SID,
+//     process.env.TWILIO_AUTH_TOKEN
+//   );
+
+//   const patient = await PATIENT_MODEL.findById(patientId)
+//     .populate("admissionDetails.consultingDoctorId", "doctorName contactNo")
+//     .select("identityDetails patientName admissionDetails");
+//   if (!patient) throw new Error("Patient not found");
+
+//   const admission = patient.admissionDetails.find(
+//     (a) => a._id.toString() === admissionId
+//   );
+//   if (!admission) throw new Error("Admission not found for patient");
+
+//   let reports = [];
+//   if (reportType === "docs") reports = admission.docs || [];
+//   else if (reportType === "labReports") reports = admission.labReports || [];
+//   else if (reportType === "radiologyReports") reports = admission.radiologyReports || [];
+//   else throw new Error("Invalid reportType");
+
+//   if (!reports.length) throw new Error(`No ${reportType} found for this admission`);
+
+//   if (reportIds && reportIds.length) {
+//     reports = reports.filter((r) => reportIds.includes(r._id?.toString() || r._id));
+//     if (!reports.length) throw new Error("No reports matched the provided IDs");
+//   }
+
+//   let recipientNumber;
+//   if (target === "doctor") {
+//     recipientNumber = admission.consultingDoctorId?.contactNo;
+//   } else if (target === "patient") {
+//     recipientNumber =
+//       patient.identityDetails.whatsappNo || patient.identityDetails.contactNo;
+//   }
+//   if (!recipientNumber) throw new Error("Recipient number not available");
+
+//   recipientNumber = `whatsapp:+${recipientNumber.toString().replace(/\D/g, "")}`;
+
+//   const results = [];
+//   for (const report of reports) {
+//     if (!report.path?.startsWith("https://")) {
+//       throw new Error(`Report URL must be public HTTPS: ${report.path}`);
+//     }
+
+//     const message = await client.messages.create({
+//       from: process.env.TWILIO_WHATSAPP_NUMBER,
+//       to: 'whatsapp:+919834747298',  
+//       // to: recipientNumber,
+//       body: `Hello, here is your ${reportType} report for patient ${patient.identityDetails.patientName}: ${report.name}`,
+//       mediaUrl: [report.path],
+//     });
+
+//     results.push({ reportId: report._id});
+//   }
+
+//   return {
+//     success: true,
+//     message: `Selected ${reports.length} ${reportType} reports sent to ${target} via WhatsApp successfully`,
+//     details: results
+//   };
+// }
+async sendReportOnWhatsApp({ patientId, admissionId, reportType, target, reportIds }) {
   const client = twilio(
     process.env.TWILIO_ACCOUNT_SID,
     process.env.TWILIO_AUTH_TOKEN
@@ -356,9 +420,9 @@ async sendReportOnWhatsApp({ patientId, admissionId, reportType, target, reportI
 
   if (!reports.length) throw new Error(`No ${reportType} found for this admission`);
 
-  if (reportId) {
-    reports = reports.filter((r) => (r._id?.toString() || r._id) === reportId);
-    if (!reports.length) throw new Error("No report matched the provided ID");
+  if (reportIds && reportIds.length) {
+    reports = reports.filter((r) => reportIds.includes(r._id?.toString() || r._id));
+    if (!reports.length) throw new Error("No reports matched the provided IDs");
   }
 
   let recipientNumber;
@@ -372,25 +436,125 @@ async sendReportOnWhatsApp({ patientId, admissionId, reportType, target, reportI
 
   recipientNumber = `whatsapp:+${recipientNumber.toString().replace(/\D/g, "")}`;
 
-  const report = reports[0];
-  if (!report.path?.startsWith("https://")) {
-    throw new Error(`Report URL must be public HTTPS: ${report.path}`);
+  const results = [];
+  for (const report of reports) {
+    if (!report.path?.startsWith("https://")) {
+      throw new Error(`Report URL must be public HTTPS: ${report.path}`);
+    }
+
+    // const message = await client.messages.create({
+    //   from: process.env.TWILIO_WHATSAPP_NUMBER,
+    //   to: 'whatsapp:+919834747298',  
+    //   // to: recipientNumber,
+    //   body: `Hello, here is your ${reportType} report for patient ${patient.identityDetails.patientName}: ${report.name}`,
+    //   mediaUrl: [report.path],
+    // });
+    const message = await client.messages.create({
+  from: process.env.TWILIO_WHATSAPP_NUMBER,
+  to: 'whatsapp:+918380813991',  
+  // to: recipientNumber,
+  body: `Hello, here is your ${reportType} report for patient ${patient.identityDetails.patientName}: ${report.name}`,
+  mediaUrl: [report.path],
+});
+
+// Save message record
+await SENT_MESSAGE_MODEL.create({
+  patientId,
+  admissionId,
+  reportType,
+  reportId: report._id,
+  target,
+  recipientNumber,
+  messageSid: message.sid,
+  status: "sent"
+});
+
+
+    results.push({ reportId: report._id});
   }
-
-  const message = await client.messages.create({
-    from: process.env.TWILIO_WHATSAPP_NUMBER,
-    to: 'whatsapp:+919834747298',
-    // to: recipientNumber,
-    body: `Hello, here is your ${reportType} report for patient ${patient.identityDetails.patientName}: ${report.name}`,
-    mediaUrl: [report.path],
-  });
-
-  console.log(`WhatsApp sent (SID: ${message.sid}) → ${recipientNumber}`);
 
   return {
     success: true,
-    message: `Selected ${reportType} report sent to ${target} via WhatsApp successfully`,
+    message: `Selected ${reports.length} ${reportType} reports sent to ${target} via WhatsApp successfully`,
+    details: results
   };
+}
+
+// async listSentMessages({ patientId, admissionId, fromDate, toDate, messageType }) {
+//   const query = {};
+
+//   if (patientId) query.patientId = patientId;
+//   if (admissionId) query.admissionId = admissionId;
+//   if (messageType) query.reportType = messageType;
+
+//   // Date filter
+//   if (fromDate || toDate) {
+//     query.createdAt = {};
+//     if (fromDate) query.createdAt.$gte = new Date(fromDate);
+//     if (toDate) {
+//       // Ensure "toDate" includes entire day (23:59:59)
+//       const endDate = new Date(toDate);
+//       endDate.setHours(23, 59, 59, 999);
+//       query.createdAt.$lte = endDate;
+//     }
+//   }
+
+//   return await SENT_MESSAGE_MODEL.find(query)
+//     .populate("patientId", "identityDetails.patientName")
+//     .sort({ createdAt: -1 });
+// }
+async listSentMessages({ patientId, admissionId, fromDate, toDate, messageType }) {
+  const query = {};
+  if (patientId) query.patientId = patientId;
+  if (admissionId) query.admissionId = admissionId;
+  if (messageType) query.reportType = messageType;
+
+  // Date filter
+  if (fromDate || toDate) {
+    query.createdAt = {};
+    if (fromDate) query.createdAt.$gte = new Date(fromDate);
+    if (toDate) {
+      const endDate = new Date(toDate);
+      endDate.setHours(23, 59, 59, 999);
+      query.createdAt.$lte = endDate;
+    }
+  }
+
+  // 1. Get messages
+  const messages = await SENT_MESSAGE_MODEL.find(query)
+    .populate("patientId", "identityDetails.patientName")
+    .sort({ createdAt: -1 })
+    .lean();
+
+  // 2. Attach PDF details by looking up patient admissions
+  for (let msg of messages) {
+    const patient = await PATIENT_MODEL.findById(msg.patientId._id)
+      .select("admissionDetails")
+      .lean();
+
+    if (!patient) continue;
+    const admission = patient.admissionDetails.find(
+      (a) => a._id.toString() === msg.admissionId.toString()
+    );
+    if (!admission) continue;
+
+    let reports = [];
+    if (msg.reportType === "docs") reports = admission.docs || [];
+    else if (msg.reportType === "labReports") reports = admission.labReports || [];
+    else if (msg.reportType === "radiologyReports") reports = admission.radiologyReports || [];
+
+    const report = reports.find((r) => r._id.toString() === msg.reportId.toString());
+    if (report) {
+      msg.reportDetails = {
+        name: report.name,
+        path: report.path,
+        uploadedBy: report.uploadedBy,
+        uploadedAt: report.uploadedAt,
+      };
+    }
+  }
+
+  return messages;
 }
 
 }

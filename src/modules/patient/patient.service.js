@@ -374,74 +374,114 @@ async getPatientCountByDepartment() {
 //     await BEDMASTER_MODEL.findByIdAndUpdate(cancelledAdmission.bedId, { bedStatus: 'Vacant' });
 //   }
 
+//   // Delete OT schedules related to this patient + admission
+//   await SCHEDULE_MODEL.deleteMany({
+//     patientId,
+//     admissionId: cancelledAdmission._id
+//   });
+
 //   await patient.save();
 
 //   const cancelledRecord = await CANCELLED_ADMISSION_MODEL.create({
 //     patientId,
 //     admissionId: cancelledAdmission._id,
 //     reason,
+//     patientIdentity: patient.identityDetails,
+//     admissionDetails: cancelledAdmission
 //   });
 
 //   return cancelledRecord;
 // }
-
 // async cancelAdmission(patientId, admissionId, reason) {
 //   const patient = await PATIENT_MODEL.findById(patientId);
 //   if (!patient) throw new Error('Patient not found');
 
-//   const admissionIndex = patient.admissionDetails.findIndex(adm => adm._id.toString() === admissionId);
+//   const admissionIndex = patient.admissionDetails.findIndex(
+//     adm => adm._id.toString() === admissionId
+//   );
 //   if (admissionIndex === -1) throw new Error('Admission not found');
 
 //   const [cancelledAdmission] = patient.admissionDetails.splice(admissionIndex, 1);
 
-//   // Free the bed if assigned
+//   // free bed
 //   if (cancelledAdmission.bedId) {
-//     await BEDMASTER_MODEL.findByIdAndUpdate(cancelledAdmission.bedId, { bedStatus: 'Vacant' });
+//     await BEDMASTER_MODEL.findByIdAndUpdate(
+//       cancelledAdmission.bedId,
+//       { bedStatus: 'Vacant' }
+//     );
+//   }
+
+//   // delete OT schedules
+//   await SCHEDULE_MODEL.deleteMany({
+//     patientId,
+//     admissionId: cancelledAdmission._id
+//   });
+
+//   // prepare snapshot BEFORE modifying patient.identityDetails
+//   const snapshotIdentity = patient.identityDetails ? { ...patient.identityDetails._doc } : null;
+
+//   // remove identityDetails only if last admission
+//   if (patient.admissionDetails.length === 0) {
+//     patient.identityDetails = undefined;
 //   }
 
 //   await patient.save();
 
-//   // Store in CancelledAdmissions including patient identity and admission snapshot
+//   // save in cancelled_admissions (always include snapshot)
 //   const cancelledRecord = await CANCELLED_ADMISSION_MODEL.create({
 //     patientId,
 //     admissionId: cancelledAdmission._id,
 //     reason,
-//     patientIdentity: patient.identityDetails,  // new field to store identity
-//     admissionDetails: cancelledAdmission      // new field to store admission snapshot
+//     patientIdentity: snapshotIdentity,     // always provide copy here
+//     admissionDetails: cancelledAdmission
 //   });
 
 //   return cancelledRecord;
 // }
-
 async cancelAdmission(patientId, admissionId, reason) {
   const patient = await PATIENT_MODEL.findById(patientId);
   if (!patient) throw new Error('Patient not found');
 
-  const admissionIndex = patient.admissionDetails.findIndex(adm => adm._id.toString() === admissionId);
+  const admissionIndex = patient.admissionDetails.findIndex(
+    adm => adm._id.toString() === admissionId
+  );
   if (admissionIndex === -1) throw new Error('Admission not found');
 
+  // remove admission from array
   const [cancelledAdmission] = patient.admissionDetails.splice(admissionIndex, 1);
 
-  // Free the bed if assigned
+  // free bed if allocated
   if (cancelledAdmission.bedId) {
-    await BEDMASTER_MODEL.findByIdAndUpdate(cancelledAdmission.bedId, { bedStatus: 'Vacant' });
+    await BEDMASTER_MODEL.findByIdAndUpdate(
+      cancelledAdmission.bedId,
+      { bedStatus: 'Vacant' }
+    );
   }
 
-  // Delete OT schedules related to this patient + admission
+  // delete OT schedules for this admission
   await SCHEDULE_MODEL.deleteMany({
     patientId,
     admissionId: cancelledAdmission._id
   });
 
-  await patient.save();
+  // snapshot identity before modifying patient
+  const snapshotIdentity = patient.identityDetails ? { ...patient.identityDetails._doc } : null;
 
+  // save in cancelled_admissions (keep snapshot always)
   const cancelledRecord = await CANCELLED_ADMISSION_MODEL.create({
     patientId,
     admissionId: cancelledAdmission._id,
     reason,
-    patientIdentity: patient.identityDetails,
-    admissionDetails: cancelledAdmission
+    patientIdentity: snapshotIdentity,   
+    admissionDetails: cancelledAdmission 
   });
+
+  // if no more admissions → delete patient
+  if (patient.admissionDetails.length === 0) {
+    await PATIENT_MODEL.findByIdAndDelete(patientId);
+  } else {
+    await patient.save();
+  }
 
   return cancelledRecord;
 }

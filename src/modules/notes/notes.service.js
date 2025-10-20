@@ -1,8 +1,62 @@
 import { PATIENT_MODEL } from '../patient/patient.model.js';
+import imagekit from '../../helpers/imagekit.js';
 
 class NotesService {
 
-   async addNotes({ patientId, admissionId, notes, user }) {
+//  async addNotes({ patientId, admissionId, notes, user, files }) {
+//     const patient = await PATIENT_MODEL.findById(patientId);
+//     if (!patient) throw new Error("Patient not found");
+
+//     const admission = patient.admissionDetails.id(admissionId);
+//     if (!admission) throw new Error("Admission not found");
+
+//     const addedBy = user?.firstName || user?.username || "Unknown User";
+//     const addedAt = new Date();
+
+//     const fields = ['clinicalNotes','nursingNotes','surgicalNotes','symptoms','pastHistory','vitalData', 'otherData'];
+//     const addedNotesData = {}; 
+
+//     for (const field of fields) {
+//       if (notes[field]) {
+//         const noteObj = { note: notes[field], addedBy, addedAt };
+
+//         const pdfFieldName = `${field}Pdf`;
+//         if (files && files[pdfFieldName]) {
+//           noteObj.pdfs = [];
+
+//           for (const file of files[pdfFieldName]) {
+//             const uploadResult = await imagekit.upload({
+//               file: file.buffer,
+//               fileName: file.originalname,
+//               folder: `/patient_notes/${patientId}/${admissionId}`
+//             });
+
+//             noteObj.pdfs.push({
+//               name: file.originalname,
+//               url: uploadResult.url,
+//               uploadedAt: new Date()
+//             });
+//           }
+//         }
+
+//         admission[field] = admission[field] || [];
+//         admission[field].push(noteObj);
+//         addedNotesData[field] = [noteObj];
+//       }
+//     }
+
+//     await patient.save();
+
+//     return {
+//       message: "Notes added successfully",
+//       data: {
+//         patientId,
+//         admissionId,
+//         ...addedNotesData
+//       }
+//     };
+//   }
+async addNotes({ patientId, admissionId, notes, user, files }) {
     const patient = await PATIENT_MODEL.findById(patientId);
     if (!patient) throw new Error("Patient not found");
 
@@ -12,35 +66,54 @@ class NotesService {
     const addedBy = user?.firstName || user?.username || "Unknown User";
     const addedAt = new Date();
 
-    const fields = ['clinicalNotes','nursingNotes','surgicalNotes','symptoms','pastHistory','vitalData'];
+    const fields = ['clinicalNotes','nursingNotes','surgicalNotes','symptoms','pastHistory','vitalData','otherData'];
+    const addedNotesData = {};
 
-    const addedNotesData = {}; 
-
-    fields.forEach(field => {
+    for (const field of fields) {
       if (notes[field]) {
-        const noteObj = { note: notes[field], addedBy, addedAt };
+        // Check if PDF uploaded
+        const pdfFieldName = `${field}Pdf`;
+        let pdfObj = null;
+
+        if (files && files[pdfFieldName]) {
+          const file = files[pdfFieldName][0];
+          const uploadResult = await imagekit.upload({
+            file: file.buffer,
+            fileName: file.originalname,
+            folder: `/patient_notes/${patientId}/${admissionId}`
+          });
+
+          pdfObj = { name: file.originalname, url: uploadResult.url, uploadedAt: new Date() };
+        }
+
+        // Notes entry
+        const noteEntry = {
+          pdf: pdfObj, // null if not provided
+          notes: [{
+            text: notes[field],
+            addedBy,
+            addedAt
+          }]
+        };
+
         admission[field] = admission[field] || [];
-        admission[field].push(noteObj);
-        addedNotesData[field] = [noteObj];
+        admission[field].push(noteEntry);
+        addedNotesData[field] = [noteEntry];
       }
-    });
+    }
 
     await patient.save();
 
     return {
       message: "Notes added successfully",
-      data: {
-        patientId,
-        admissionId,
-        ...addedNotesData
-      }
+      data: { patientId, admissionId, ...addedNotesData }
     };
   }
 
   async getNotes(patientId, admissionId) {
     const patient = await PATIENT_MODEL.findById(patientId)
       .select(
-        'identityDetails.patientName admissionDetails._id admissionDetails.clinicalNotes admissionDetails.nursingNotes admissionDetails.surgicalNotes admissionDetails.symptoms admissionDetails.pastHistory admissionDetails.vitalData'
+        'identityDetails.patientName admissionDetails._id admissionDetails.clinicalNotes admissionDetails.nursingNotes admissionDetails.surgicalNotes admissionDetails.symptoms admissionDetails.pastHistory admissionDetails.vitalData admissionDetails.otherData'
       );
     
     if (!patient) return [];
@@ -56,51 +129,150 @@ class NotesService {
       surgicalNotes: admission.surgicalNotes,
       symptoms: admission.symptoms,
       pastHistory: admission.pastHistory,
-      vitalData: admission.vitalData
+      vitalData: admission.vitalData,
+      otherData: admission.otherData
     };
   }
 
- 
-  async updateSpecificNote({ patientId, admissionId, field, noteId, newNote, user }) {
-    const allowedFields = ['clinicalNotes','nursingNotes','surgicalNotes','symptoms','pastHistory','vitalData'];
-    if (!allowedFields.includes(field)) throw new Error("Invalid note field");
-    if (!noteId) throw new Error("noteId is required");
+// async updateSpecificNote({ patientId, admissionId, noteGroupId, noteId, newText, pdfFile, user }) {
+//   const allowedFields = ['clinicalNotes','nursingNotes','surgicalNotes','symptoms','pastHistory','vitalData','otherData'];
 
-    const updatedBy = user?.firstName || user?.username || "Unknown User";
+//   const patient = await PATIENT_MODEL.findById(patientId);
+//   if (!patient) throw new Error("Patient not found");
 
-    const admission = await PATIENT_MODEL.findOne(
-      { _id: patientId, "admissionDetails._id": admissionId },
-      { "admissionDetails.$": 1 }
-    );
-    if (!admission) throw new Error("Admission not found");
+//   const admission = patient.admissionDetails.id(admissionId);
+//   if (!admission) throw new Error("Admission not found");
 
-    const noteArray = admission.admissionDetails[0][field];
-    const noteIndex = noteArray.findIndex(n => n._id.toString() === noteId);
-    if (noteIndex === -1) throw new Error(`No note with _id ${noteId} found in ${field}`);
+//   let updatedNote = null;
 
-    const updateObj = {};
-    updateObj[`admissionDetails.$.${field}.${noteIndex}.note`] = newNote;
-    updateObj[`admissionDetails.$.${field}.${noteIndex}.addedBy`] = updatedBy;
-    updateObj[`admissionDetails.$.${field}.${noteIndex}.addedAt`] = new Date();
+//   for (const field of allowedFields) {
+//     const noteGroup = admission[field]?.id(noteGroupId);
+//     if (!noteGroup) continue;
 
-    await PATIENT_MODEL.updateOne(
-      { _id: patientId, "admissionDetails._id": admissionId },
-      { $set: updateObj }
-    );
+//     // Replace PDF only if pdfFile is provided
+//     if (pdfFile) {
+//       noteGroup.pdf = {
+//         name: pdfFile.originalname,
+//         url: (await imagekit.upload({
+//           file: pdfFile.buffer,
+//           fileName: pdfFile.originalname,
+//           folder: `/patient_notes/${patientId}/${admissionId}`
+//         })).url,
+//         uploadedAt: new Date()
+//       };
+//     }
 
-    return {
-      message: `Note updated successfully in ${field}`,
-      updatedNote: {
-        _id: noteId,
-        note: newNote,
-        addedBy: updatedBy,
-        addedAt: new Date()
+//     //Update existing text note if noteId is provided
+//     if (noteId) {
+//       const noteIndex = noteGroup.notes.findIndex(n => n._id.toString() === noteId);
+//       if (noteIndex === -1) throw new Error("Note not found");
+//       noteGroup.notes[noteIndex].text = newText;
+//       noteGroup.notes[noteIndex].addedBy = user?.firstName || user?.username || "Unknown User";
+//       noteGroup.notes[noteIndex].addedAt = new Date();
+//       updatedNote = noteGroup.notes[noteIndex];
+//     }
+
+//     // Add new text note only if newText is provided AND noteId is not provided
+//     if (newText && !noteId) {
+//       const newNoteObj = {
+//         text: newText,
+//         addedBy: user?.firstName || user?.username || "Unknown User",
+//         addedAt: new Date()
+//       };
+//       noteGroup.notes.push(newNoteObj);
+//       updatedNote = newNoteObj;
+//     }
+
+//     break; 
+//   }
+
+//   await patient.save();
+
+//   return {
+//     message: "Note updated successfully",
+//     updatedNote
+//   };
+// }
+async updateSpecificNote({ patientId, admissionId, noteGroupId, noteId, newText, pdfFile, user }) {
+  const allowedFields = [
+    'clinicalNotes',
+    'nursingNotes',
+    'surgicalNotes',
+    'symptoms',
+    'pastHistory',
+    'vitalData',
+    'otherData'
+  ];
+
+  const patient = await PATIENT_MODEL.findById(patientId);
+  if (!patient) throw new Error("Patient not found");
+
+  const admission = patient.admissionDetails.id(admissionId);
+  if (!admission) throw new Error("Admission not found");
+
+  let updatedNote = null;
+  let noteGroupFound = false;
+
+  for (const field of allowedFields) {
+    const noteGroup = admission[field]?.id(noteGroupId);
+    if (!noteGroup) continue;
+
+    noteGroupFound = true;
+
+    // Replace PDF only if pdfFile is provided
+    if (pdfFile) {
+      const uploadResult = await imagekit.upload({
+        file: pdfFile.buffer,
+        fileName: pdfFile.originalname,
+        folder: `/patient_notes/${patientId}/${admissionId}`
+      });
+
+      noteGroup.pdf = {
+        name: pdfFile.originalname,
+        url: uploadResult.url,
+        uploadedAt: new Date()
+      };
+    }
+
+    // Update existing text note if noteId is provided
+    if (noteId) {
+      const noteIndex = noteGroup.notes.findIndex(n => n._id.toString() === noteId);
+      if (noteIndex === -1) {
+        throw new Error("Note not found in this note group");
       }
-    };
+      noteGroup.notes[noteIndex].text = newText;
+      noteGroup.notes[noteIndex].addedBy = user?.firstName || user?.username || "Unknown User";
+      noteGroup.notes[noteIndex].addedAt = new Date();
+      updatedNote = noteGroup.notes[noteIndex];
+    }
+
+    // Add new text note only if newText is provided AND noteId is not provided
+    if (newText && !noteId) {
+      const newNoteObj = {
+        text: newText,
+        addedBy: user?.firstName || user?.username || "Unknown User",
+        addedAt: new Date()
+      };
+      noteGroup.notes.push(newNoteObj);
+      updatedNote = newNoteObj;
+    }
+
+    break; 
   }
+
+  if (!noteGroupFound) throw new Error("Note group not found with this noteGroupId");
+  if (!updatedNote && !pdfFile) throw new Error("Nothing to update: provide newText, noteId, or pdfFile");
+
+  await patient.save();
+
+  return {
+    message: "Note updated successfully",
+    updatedNote: updatedNote || { pdf: "PDF replaced successfully" }
+  };
+}
 
   async deleteNote({ patientId, admissionId, field, noteId }) {
-  const allowedFields = ['clinicalNotes','nursingNotes','surgicalNotes','symptoms','pastHistory','vitalData'];
+  const allowedFields = ['clinicalNotes','nursingNotes','surgicalNotes','symptoms','pastHistory','vitalData', 'otherData'];
   if (!allowedFields.includes(field)) throw new Error("Invalid note field");
 
   const result = await PATIENT_MODEL.updateOne(

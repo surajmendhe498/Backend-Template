@@ -20,6 +20,6 @@ router.delete("/delete-pdf/:patientId/:admissionId/:pdfId", documents_pdfsContro
 router.patch("/soft-delete/:patientId/:admissionId/:pdfId", documents_pdfsController.softDeletePdfDocument);
 router.get("/soft-deleted/:patientId/:admissionId", documents_pdfsController.getSoftDeletedPdfs);
 router.patch("/restore/:patientId/:admissionId/:pdfId", documents_pdfsController.restorePdfDocument);
-
+router.post("/send-whatsapp", documents_pdfsController.sendDocumentPdfOnWhatsApp);
 
 export default router;

@@ -50,11 +50,15 @@ class Nursing_masterService {
   }
 
   async update(id, data) {
-    const departmentExists = await DEPARTMENT_MODEL.findById(data.departmentId);
-    if (!departmentExists) throw new Error('Department with given ID does not exist');
+    if(data.departmentId){
+      const departmentExists = await DEPARTMENT_MODEL.findById(data.departmentId);
+      if (!departmentExists) throw new Error('Department with given ID does not exist');
+    }
 
-    const wardExists = await WARDMASTER_MODEL.findById(data.wardId);
-    if (!wardExists) throw new Error('Ward with given ID does not exist');
+    if(data.wardId){
+      const wardExists = await WARDMASTER_MODEL.findById(data.wardId);
+      if (!wardExists) throw new Error('Ward with given ID does not exist');
+    }
 
     return await NURSE_MODEL.findByIdAndUpdate(id, data, { new: true })
       .populate('departmentId', 'name')

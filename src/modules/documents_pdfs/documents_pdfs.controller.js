@@ -280,6 +280,26 @@ restorePdfDocument = async (req, res, next) => {
   }
 };
 
+sendDocumentPdfOnWhatsApp = async (req, res, next) => {
+    try {
+      const { patientId, admissionId, mainPdfIds, fileIds, target } = req.body;
 
+      const result = await this.documents_pdfsService.sendDocumentPdfOnWhatsApp({
+        patientId,
+        admissionId,
+        mainPdfIds,  // optional array of mainPdfIds
+        fileIds,     // optional array of specific fileIds
+        target       // "doctor" or "patient"
+      });
+
+      res.status(statusCode.OK).json({
+        success: true,
+        message: result.message,
+        data: result.details
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 
 }

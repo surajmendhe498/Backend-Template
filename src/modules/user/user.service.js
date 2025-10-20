@@ -109,7 +109,6 @@ return { message: "Password reset email sent successfully" };
     return { message: "Password reset successful" };
   }
 
-  
   async update(id, { firstName, lastName, email, password, role, photo  }) {
   const user = await USER_MODEL.findById(id);
   if (!user) {

@@ -129,5 +129,41 @@ export default class Discharge_templateController {
   }
 };
 
-  
+ sendDischargePdfOnWhatsApp = async (req, res, next) => {
+  try {
+    const { patientId, admissionId } = req.params;
+    const { target } = req.body;
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No PDF file uploaded",
+      });
+    }
+
+    if (!target || !["doctor", "patient"].includes(target)) {
+      return res.status(400).json({
+        success: false,
+        message: "Target must be 'doctor' or 'patient'",
+      });
+    }
+
+    const response = await this.discharge_templateService.sendDischargeTemplatePdfOnWhatsApp({
+      patientId,
+      admissionId,
+      target,
+      fileBuffer: req.file.buffer,
+      fileName: req.file.originalname,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: response.message,
+      data: response.details,
+    });
+  } catch (err) {
+    next(err);
+  }
+};
+
 }

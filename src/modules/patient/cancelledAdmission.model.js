@@ -23,10 +23,9 @@ const CancelledAdmissionSchema = new mongoose.Schema({
     required: true,
     enum: ["Financial Issue", "Double Entry", "Low/High BP", "Fever", "Shifting to other hospital", "Ayushman Card Issue"], 
   },
-  patientIdentity: { type: mongoose.Schema.Types.Mixed, required: true }, // store identity snapshot
-  admissionDetails: { type: mongoose.Schema.Types.Mixed, required: true }, // store admission snapshot
+  patientIdentity: { type: mongoose.Schema.Types.Mixed, required: true }, 
+  admissionDetails: { type: mongoose.Schema.Types.Mixed, required: true }, 
   cancelledAt: { type: Date, default: Date.now },
 });
-
 
 export const CANCELLED_ADMISSION_MODEL = mongoose.model('cancelled_admissions', CancelledAdmissionSchema);

@@ -47,7 +47,8 @@ export default class TicketController {
     next(err);
   }
 };
-  fetchUserTickets = async (req, res, next) => {
+
+fetchUserTickets = async (req, res, next) => {
   try {
     console.log("Logged in user:", req.user._id);
     const tickets = await this.ticketService.getUserTickets(req.user._id);

@@ -13,6 +13,6 @@ router.get('/', ticketController.getAll);
 router.get("/my-tickets", authenticate, ticketController.fetchUserTickets); 
 router.get('/:id', ticketController.getById);
 router.put('/:id/status', ticketController.updateStatus);
-// router.get("/my-tickets", authenticate, ticketController.fetchUserTickets);  
+ 
 
 export default router;

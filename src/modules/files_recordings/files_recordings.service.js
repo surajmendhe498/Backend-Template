@@ -482,7 +482,6 @@ await SENT_MESSAGE_MODEL.create({
 
 // async listSentMessages({ patientId, admissionId, fromDate, toDate, messageType }) {
 //   const query = {};
-
 //   if (patientId) query.patientId = patientId;
 //   if (admissionId) query.admissionId = admissionId;
 //   if (messageType) query.reportType = messageType;
@@ -492,16 +491,112 @@ await SENT_MESSAGE_MODEL.create({
 //     query.createdAt = {};
 //     if (fromDate) query.createdAt.$gte = new Date(fromDate);
 //     if (toDate) {
-//       // Ensure "toDate" includes entire day (23:59:59)
 //       const endDate = new Date(toDate);
 //       endDate.setHours(23, 59, 59, 999);
 //       query.createdAt.$lte = endDate;
 //     }
 //   }
 
-//   return await SENT_MESSAGE_MODEL.find(query)
+//   // 1. Get messages
+//   const messages = await SENT_MESSAGE_MODEL.find(query)
 //     .populate("patientId", "identityDetails.patientName")
-//     .sort({ createdAt: -1 });
+//     .sort({ createdAt: -1 })
+//     .lean();
+
+//   // 2. Attach PDF details by looking up patient admissions
+//   for (let msg of messages) {
+//     const patient = await PATIENT_MODEL.findById(msg.patientId._id)
+//       .select("admissionDetails")
+//       .lean();
+
+//     if (!patient) continue;
+//     const admission = patient.admissionDetails.find(
+//       (a) => a._id.toString() === msg.admissionId.toString()
+//     );
+//     if (!admission) continue;
+
+//     let reports = [];
+//     if (msg.reportType === "docs") reports = admission.docs || [];
+//     else if (msg.reportType === "labReports") reports = admission.labReports || [];
+//     else if (msg.reportType === "radiologyReports") reports = admission.radiologyReports || [];
+
+//     const report = reports.find((r) => r._id.toString() === msg.reportId.toString());
+//     if (report) {
+//       msg.reportDetails = {
+//         name: report.name,
+//         path: report.path,
+//         uploadedBy: report.uploadedBy,
+//         uploadedAt: report.uploadedAt,
+//       };
+//     }
+//   }
+
+//   return messages;
+// }
+// docs/labReports/radiologyReports/discharge_template
+// async listSentMessages({ patientId, admissionId, fromDate, toDate, messageType }) {
+//   const query = {};
+//   if (patientId) query.patientId = patientId;
+//   if (admissionId) query.admissionId = admissionId;
+//   if (messageType) query.reportType = messageType;
+
+//   // Date filter
+//   if (fromDate || toDate) {
+//     query.createdAt = {};
+//     if (fromDate) query.createdAt.$gte = new Date(fromDate);
+//     if (toDate) {
+//       const endDate = new Date(toDate);
+//       endDate.setHours(23, 59, 59, 999);
+//       query.createdAt.$lte = endDate;
+//     }
+//   }
+
+//   const messages = await SENT_MESSAGE_MODEL.find(query)
+//     .populate("patientId", "identityDetails.patientName")
+//     .sort({ createdAt: -1 })
+//     .lean();
+
+//   for (let msg of messages) {
+//     const patient = await PATIENT_MODEL.findById(msg.patientId._id)
+//       .select("admissionDetails")
+//       .lean();
+//     if (!patient) continue;
+
+//     const admission = patient.admissionDetails.find(
+//       (a) => a._id.toString() === msg.admissionId.toString()
+//     );
+//     if (!admission) continue;
+
+//     let report = null;
+
+//     if (msg.reportType === "docs") {
+//       report = (admission.docs || []).find(r => r._id.toString() === msg.reportId.toString());
+//     } else if (msg.reportType === "labReports") {
+//       report = (admission.labReports || []).find(r => r._id.toString() === msg.reportId.toString());
+//     } else if (msg.reportType === "radiologyReports") {
+//       report = (admission.radiologyReports || []).find(r => r._id.toString() === msg.reportId.toString());
+//     } else if (msg.reportType === "dischargeTemplate") {
+//       report = (admission.dischargeTemplates || []).find(r => r._id.toString() === msg.reportId.toString());
+//       if (report) {
+//         msg.reportDetails = {
+//           type: report.type,
+//           template: report.template
+//         };
+//       }
+//       continue;
+//     }
+
+//     if (report) {
+//       msg.reportDetails = {
+//         name: report.name,
+//         path: report.path,
+//         uploadedBy: report.uploadedBy,
+//         uploadedAt: report.uploadedAt,
+//       };
+//     }
+//   }
+
+//   return messages;
 // }
 async listSentMessages({ patientId, admissionId, fromDate, toDate, messageType }) {
   const query = {};
@@ -520,31 +615,55 @@ async listSentMessages({ patientId, admissionId, fromDate, toDate, messageType }
     }
   }
 
-  // 1. Get messages
   const messages = await SENT_MESSAGE_MODEL.find(query)
     .populate("patientId", "identityDetails.patientName")
     .sort({ createdAt: -1 })
     .lean();
 
-  // 2. Attach PDF details by looking up patient admissions
   for (let msg of messages) {
     const patient = await PATIENT_MODEL.findById(msg.patientId._id)
       .select("admissionDetails")
       .lean();
-
     if (!patient) continue;
+
     const admission = patient.admissionDetails.find(
       (a) => a._id.toString() === msg.admissionId.toString()
     );
     if (!admission) continue;
 
-    let reports = [];
-    if (msg.reportType === "docs") reports = admission.docs || [];
-    else if (msg.reportType === "labReports") reports = admission.labReports || [];
-    else if (msg.reportType === "radiologyReports") reports = admission.radiologyReports || [];
+    let report = null;
 
-    const report = reports.find((r) => r._id.toString() === msg.reportId.toString());
-    if (report) {
+    if (msg.reportType === "docs") {
+      report = (admission.docs || []).find(r => r._id.toString() === msg.reportId.toString());
+    } else if (msg.reportType === "labReports") {
+      report = (admission.labReports || []).find(r => r._id.toString() === msg.reportId.toString());
+    } else if (msg.reportType === "radiologyReports") {
+      report = (admission.radiologyReports || []).find(r => r._id.toString() === msg.reportId.toString());
+    } else if (msg.reportType === "discharge_template") {
+      report = (admission.dischargeTemplates || []).find(r => r._id.toString() === msg.reportId.toString());
+      if (report) {
+        msg.reportDetails = {
+          type: report.type,
+          template: report.template
+        };
+      }
+      continue;
+    } else if (msg.reportType === "documentPdf") {
+      report = (admission.documentPdf || [])
+        .flatMap(group => group.files || [])
+        .find(r => r._id.toString() === msg.reportId.toString());
+
+      if (report) {
+        msg.reportDetails = {
+          name: report.name,
+          path: report.path,
+          uploadedBy: report.uploadedBy,
+          uploadedAt: report.uploadedAt,
+        };
+      }
+    }
+
+    if (report && msg.reportType !== "discharge_template") {
       msg.reportDetails = {
         name: report.name,
         path: report.path,

@@ -16,5 +16,6 @@ router.put("/rename", foldersController.renameFileInFolder);
 router.delete("/delete", foldersController.deleteFileFromFolder);
 router.put("/update-rec", uploadAudioVideoRec, foldersController.updateRecordingFile);
 router.put("/update-file", uploadFiles, foldersController.updateFile);
+router.post("/send-whatsapp", foldersController.sendFolderFilesOnWhatsApp);
 
 export default router;

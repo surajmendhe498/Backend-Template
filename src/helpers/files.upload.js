@@ -1,63 +1,3 @@
-// // uploads.js
-// import multer from 'multer';
-// import { CloudinaryStorage } from 'multer-storage-cloudinary';
-// import cloudinary from './cloudinary.js'; 
-
-// const filesAndRecordingsStorage = new CloudinaryStorage({
-//   cloudinary,
-//   params: async (req, file) => {
-//     let folderName = 'misc-files';
-//     let allowedFormats = ['jpeg', 'png', 'webp', 'pdf'];
-//     let resourceType = 'raw'; // default for docs & labReports
-
-//     const fieldName = file.fieldname;
-
-//     if (fieldName === 'docs') {
-//       folderName = 'patient-docs';
-//       allowedFormats = ['jpeg', 'png', 'webp', 'pdf'];
-//       resourceType = 'raw';
-//     } 
-//     else if (fieldName === 'labReports') {
-//       folderName = 'lab-reports';
-//       allowedFormats = ['jpeg', 'png', 'webp', 'pdf'];
-//       resourceType = 'raw';
-//     }
-//     else if (fieldName === 'radiologyReports') {
-//       folderName = 'radiology-reports';
-//       allowedFormats = ['jpeg', 'png', 'webp', 'pdf'];
-//       resourceType = 'raw';
-//     }
-//     else if (fieldName === 'audioRecordings') {
-//       folderName = 'audio-recordings';
-//       allowedFormats = ['mp3', 'wav', 'm4a', 'webm'];
-//       resourceType = 'video'; // Cloudinary treats audio as video
-//     }
-//     else if (fieldName === 'videoRecordings') {
-//       folderName = 'video-recordings';
-//       allowedFormats = ['mp4', 'avi', 'mov', 'mkv'];
-//       resourceType = 'video';
-//     }
-
-//     return {
-//       folder: folderName,
-//       resource_type: resourceType,
-//       allowed_formats: allowedFormats,
-//     };
-//   },
-// });
-
-// const uploadFilesAndRecordings = multer({ storage: filesAndRecordingsStorage }).fields([
-//   { name: 'docs', maxCount: 20 },
-//   { name: 'labReports', maxCount: 20 },
-//   { name: 'radiologyReports', maxCount: 20 },
-//   { name: 'audioRecordings', maxCount: 10 },
-//   { name: 'videoRecordings', maxCount: 10 },
-// ]);
-
-// export default uploadFilesAndRecordings;
-
-
-
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -67,7 +7,6 @@ if (!fs.existsSync(uploadPath)) {
   fs.mkdirSync(uploadPath, { recursive: true });
 }
 
-// Temporary local storage (before uploading to ImageKit)
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     cb(null, uploadPath); 
@@ -78,21 +17,12 @@ const storage = multer.diskStorage({
   },
 });
 
-// File filter for validation
 const fileFilter = (req, file, cb) => {
   const fieldName = file.fieldname;
   let allowedFormats = [];
 
-  if (fieldName === "docs") {
+  if (["docs", "labReports", "radiologyReports"].includes(fieldName)) {
     allowedFormats = [".pdf"];
-  } else if (fieldName === "labReports") {
-    allowedFormats = [".pdf"];
-  } else if (fieldName === "radiologyReports") {
-    allowedFormats = [".pdf"];
-  } else if (fieldName === "audioRecordings") {
-    allowedFormats = ['.mp3', '.wav', '.m4a', '.webm'];
-  } else if (fieldName === "videoRecordings") {
-    allowedFormats = [".mp4", ".avi", ".mov", ".mkv"];
   }
 
   if (allowedFormats.includes(path.extname(file.originalname).toLowerCase())) {
@@ -102,16 +32,13 @@ const fileFilter = (req, file, cb) => {
   }
 };
 
-// Multer middleware
 const uploadFilesAndRecordings = multer({
   storage,
   fileFilter,
 }).fields([
   { name: "docs", maxCount: 20 },
   { name: "labReports", maxCount: 20 },
-  { name: "radiologyReports", maxCount: 20 },
-  { name: "audioRecordings", maxCount: 10 },
-  { name: "videoRecordings", maxCount: 10 },
+  { name: "radiologyReports", maxCount: 20 }
 ]);
 
 export default uploadFilesAndRecordings;

@@ -3,12 +3,14 @@ import mongoose from "mongoose";
 const SentMessageSchema = new mongoose.Schema({
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: "patients", required: true },
   admissionId: { type: mongoose.Schema.Types.ObjectId, required: true },
-  reportType: { type: String, enum: ["docs", "labReports", "radiologyReports"], required: true },
+  reportType: { type: String, enum: ["docs", "labReports", "radiologyReports", "discharge_template", "documentPdf"], required: true },
   reportId: { type: mongoose.Schema.Types.ObjectId, required: true },
   target: { type: String, enum: ["doctor", "patient"], required: true },
   recipientNumber: { type: String, required: true },
   messageSid: { type: String },  // Twilio SID
   status: { type: String, default: "sent" }, // sent, failed, delivered
+  content: { type: String },   // ✅ new
+  type: { type: String },  
   createdAt: { type: Date, default: Date.now }
 });
 

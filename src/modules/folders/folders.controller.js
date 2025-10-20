@@ -192,5 +192,33 @@ updateFile = async (req, res) => {
   }
 };
 
+sendFolderFilesOnWhatsApp = async (req, res, next) => {
+    try {
+      const { folderId, patientId, admissionId, target, fileIds } = req.body;
+
+      if (!folderId || !patientId || !admissionId || !target || !fileIds) {
+        return res.status(statusCode.BAD_REQUEST).json({
+          success: false,
+          message: "folderId, patientId, admissionId, target, and fileIds are required",
+        });
+      }
+
+      const result = await this.foldersService.sendFolderFilesOnWhatsApp({
+        folderId,
+        patientId,
+        admissionId,
+        target,
+        fileIds,
+      });
+
+      res.status(statusCode.OK).json({
+        success: true,
+        message: result.message,
+        details: result.details
+      });
+    } catch (err) {
+      next(err);
+    }
+  };
 
 };

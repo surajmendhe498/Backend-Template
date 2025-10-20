@@ -1,4 +1,5 @@
 import { PATIENT_MODEL } from "../patient.model.js";
+import imagekit from "../../../helpers/imagekit.js";
 import twilio from 'twilio';
 
 class Discharge_templateService {
@@ -158,6 +159,60 @@ async sendDischargeTemplatesOnWhatsApp({ patientId, admissionId, templateIds = [
   };
 }
 
+async sendDischargeTemplatePdfOnWhatsApp({ patientId, admissionId, target, fileBuffer, fileName }) {
+    const client = twilio(
+      process.env.TWILIO_ACCOUNT_SID,
+      process.env.TWILIO_AUTH_TOKEN
+    );
+
+    const patient = await PATIENT_MODEL.findById(patientId)
+      .populate("admissionDetails.consultingDoctorId", "doctorName contactNo")
+      .select("identityDetails patientName admissionDetails");
+
+    if (!patient) throw new Error("Patient not found");
+
+    const admission = patient.admissionDetails.find(a => a._id.toString() === admissionId);
+    if (!admission) throw new Error("Admission not found");
+
+    const uploadResponse = await imagekit.upload({
+      file: fileBuffer.toString("base64"),
+      fileName: fileName || `discharge_${Date.now()}.pdf`,
+      folder: "discharge_pdfs"
+    });
+
+    const pdfUrl = uploadResponse.url;
+
+    // Determine recipient
+    let recipientNumber;
+    if (target === "doctor") {
+      recipientNumber = admission.consultingDoctorId?.contactNo;
+    } else if (target === "patient") {
+      recipientNumber = patient.identityDetails.whatsappNo || patient.identityDetails.contactNo;
+    }
+
+    if (!recipientNumber) throw new Error("Recipient number not available");
+
+    recipientNumber = `whatsapp:+${recipientNumber.toString().replace(/\D/g, "")}`;
+
+    const message = await client.messages.create({
+      from: process.env.TWILIO_WHATSAPP_NUMBER,
+      // to: recipientNumber,
+      to: 'whatsapp:+919834747298',
+      body: `Hello, your discharge summary PDF is ready. You can download it here:\n${pdfUrl}`,
+    });
+
+    return {
+      success: true,
+      message: "Discharge summary PDF sent successfully via WhatsApp",
+      details: {
+        patientName: patient.identityDetails.patientName,
+        admissionId,
+        pdfUrl,
+        to: recipientNumber,
+        messageSid: message.sid,
+      },
+    };
+  }
 }
 
 export default new Discharge_templateService();

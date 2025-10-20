@@ -395,25 +395,6 @@ getPatientCountByDepartment = async (req, res, next) => {
   }
 };
 
-// cancelAdmission = async (req, res, next) => {
-//     try {
-//     const { patientId, admissionId } = req.params;
-//     const { reason } = req.body;
-
-//     if (!reason) return res.status(400).json({ success: false, message: 'Cancellation reason is required' });
-
-//     const allowedReasons = ["Financial Issue", "Double Entry", "Low/High BP", "Fever", "Shifting to other hospital", "Ayushman Card Issue"];
-//     if (!allowedReasons.includes(reason)) {
-//       return res.status(400).json({ success: false, message: 'Invalid cancellation reason' });
-//     }
-
-//     const cancelledAdmission = await this.patientService.cancelAdmission(patientId, admissionId, reason);
-//     res.success('Admission cancelled successfully', cancelledAdmission);
-//     } catch (err) {
-//       next(err);
-//     }
-//   };
-
 cancelAdmission = async (req, res, next) => {
   try {
     const { patientId, admissionId } = req.params;

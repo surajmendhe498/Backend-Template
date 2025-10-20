@@ -6,34 +6,52 @@ export default class NotesController {
     this.notesService = NotesService;
   }
 
-  addNotes = async (req, res, next) => {
+//   addNotes = async (req, res, next) => {
+//   try {
+//     const { patientId, admissionId, clinicalNotes, nursingNotes, surgicalNotes, symptoms, pastHistory, vitalData, otherData } = req.body;
+
+//     if (!patientId || !admissionId) {
+//       return res.status(400).json({ success: false, message: 'patientId and admissionId are required' });
+//     }
+
+//     const notes = { clinicalNotes, nursingNotes, surgicalNotes, symptoms, pastHistory, vitalData, otherData };
+
+//     const result = await this.notesService.addNotes({
+//       patientId,
+//       admissionId,
+//       notes,
+//       user: req.user,
+//       files: req.files  
+//     });
+
+//     res.status(200).json({ success: true, message: result.message, data: result.data });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+addNotes = async (req, res, next) => {
     try {
-      const { patientId, admissionId, clinicalNotes, nursingNotes, surgicalNotes, symptoms, pastHistory, vitalData } = req.body;
+      const { patientId, admissionId, clinicalNotes, nursingNotes, surgicalNotes, symptoms, pastHistory, vitalData, otherData } = req.body;
 
       if (!patientId || !admissionId) {
-        return res.status(statusCode.BAD_REQUEST).json({
-          success: false,
-          message: 'patientId and admissionId are required'
-        });
+        return res.status(400).json({ success: false, message: 'patientId and admissionId are required' });
       }
 
-      const result = await NotesService.addNotes({
+      const notes = { clinicalNotes, nursingNotes, surgicalNotes, symptoms, pastHistory, vitalData, otherData };
+
+      const result = await this.notesService.addNotes({
         patientId,
         admissionId,
-        notes: { clinicalNotes, nursingNotes, surgicalNotes, symptoms, pastHistory, vitalData },
-        user: req.user
+        notes,
+        user: req.user,
+        files: req.files
       });
 
-      res.status(statusCode.OK).json({
-        success: true,
-        message: result.message,
-        data: result.data   
-      });
-
+      res.status(200).json({ success: true, message: result.message, data: result.data });
     } catch (err) {
       next(err);
     }
-  }
+  };
 
   getNotes = async (req, res, next) => {
     try {
@@ -45,15 +63,66 @@ export default class NotesController {
     }
   };
 
-  updateNote = async (req, res, next) => {
+// updateNote = async (req, res, next) => {
+//   try {
+//     const { patientId, admissionId, noteId, newNote, pdfId } = req.body;
+
+//     if (!patientId || !admissionId || !noteId) {
+//       return res.status(400).json({ success: false, message: 'patientId, admissionId, and noteId are required' });
+//     }
+
+//     let pdfFile;
+//     if (req.files?.clinicalNotesPdf) pdfFile = req.files.clinicalNotesPdf[0];
+//     else if (req.files?.nursingNotesPdf) pdfFile = req.files.nursingNotesPdf[0];
+//     else if (req.files?.surgicalNotesPdf) pdfFile = req.files.surgicalNotesPdf[0];
+//     else if (req.files?.symptomsPdf) pdfFile = req.files.symptomsPdf[0];
+//     else if (req.files?.pastHistoryPdf) pdfFile = req.files.pastHistoryPdf[0]; 
+//     else if (req.files?.vitalDataPdf) pdfFile = req.files.vitalDataPdf[0];
+//     else if (req.files?.otherDataPdf) pdfFile = req.files.otherDataPdf[0];
+
+//     const result = await this.notesService.updateSpecificNote({
+//       patientId,
+//       admissionId,
+//       noteId,
+//       newNote,
+//       pdfFile,  
+//       pdfId,
+//       user: req.user
+//     });
+
+//     res.status(200).json({ success: true, message: result.message, data: result.updatedNote });
+//   } catch (err) {
+//     next(err);
+//   }
+// };
+updateNote = async (req, res, next) => {
     try {
-      const { patientId, admissionId, field, noteId, newNote } = req.body;
-      if (!patientId || !admissionId || !field || !noteId || !newNote) {
-        return res.status(statusCode.BAD_REQUEST).json({ success: false, message: 'All fields are required' });
+      const { patientId, admissionId, noteGroupId, noteId, newText } = req.body;
+
+      if (!patientId || !admissionId || !noteGroupId) {
+        return res.status(400).json({ success: false, message: 'patientId, admissionId, and noteGroupId are required' });
       }
 
-      const result = await this.notesService.updateSpecificNote({ patientId, admissionId, field, noteId, newNote, user: req.user });
-      res.status(statusCode.OK).json({ success: true, message: result.message, data: result.updatedNote });
+      let pdfFile;
+      if (req.files?.clinicalNotesPdf) pdfFile = req.files.clinicalNotesPdf[0];
+      else if (req.files?.nursingNotesPdf) pdfFile = req.files.nursingNotesPdf[0];
+      else if (req.files?.surgicalNotesPdf) pdfFile = req.files.surgicalNotesPdf[0];
+      else if (req.files?.symptomsPdf) pdfFile = req.files.symptomsPdf[0];
+      else if (req.files?.pastHistoryPdf) pdfFile = req.files.pastHistoryPdf[0];
+      else if (req.files?.vitalDataPdf) pdfFile = req.files.vitalDataPdf[0];
+      else if (req.files?.otherDataPdf) pdfFile = req.files.otherDataPdf[0];
+
+      const result = await this.notesService.updateSpecificNote({
+        patientId,
+        admissionId,
+        noteGroupId,
+        noteId,
+        newText,
+        pdfFile,
+        user: req.user
+      });
+
+      res.status(200).json({ success: true, message: result.message, data: result.updatedNote });
     } catch (err) {
       next(err);
     }
@@ -128,6 +197,16 @@ export default class NotesController {
       const { patientId, admissionId } = req.params;
       const data = await this.notesService.getSpecificNotes(patientId, admissionId, "vitalData");
       res.status(statusCode.OK).json({ success: true, message: "Fetched vital data", data });
+    } catch (err) {
+      next(err);
+    }
+  };
+
+  getOtherData = async (req, res, next) => {
+    try {
+      const { patientId, admissionId } = req.params;
+      const data = await this.notesService.getSpecificNotes(patientId, admissionId, "otherData");
+      res.status(statusCode.OK).json({ success: true, message: "Fetched other data", data });
     } catch (err) {
       next(err);
     }

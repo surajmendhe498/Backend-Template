@@ -30,8 +30,6 @@ export const resetPasswordSchema = z.object({
   }),
 });
 
-
-
 export const updateSchema = z.object({
   body: z.object({
     firstName: z.string().optional(),

@@ -86,6 +86,8 @@ import { DOCUMENT_PDF_MODEL } from "./documents_pdfs.model.js";
 import { PATIENT_MODEL } from "../patient/patient.model.js";
 import imagekit from "../../helpers/imagekit.js";
 import mongoose from "mongoose";
+import twilio from 'twilio';
+import { SENT_MESSAGE_MODEL } from "../files_recordings/sentMessage.model.js";
 
 class Documents_pdfsService {
   async seedIfEmpty() {
@@ -774,6 +776,165 @@ async restorePdfDocument({ patientId, admissionId, pdfId }) {
   return { pdfId, message: "PDF restored successfully" };
 }
   
+// async sendDocumentPdfOnWhatsApp({ patientId, admissionId, mainPdfIds, fileIds, target }) {
+//     const client = twilio(
+//       process.env.TWILIO_ACCOUNT_SID,
+//       process.env.TWILIO_AUTH_TOKEN
+//     );
+
+//     const patient = await PATIENT_MODEL.findById(patientId)
+//       .populate("admissionDetails.consultingDoctorId", "doctorName contactNo")
+//       .select("identityDetails patientName admissionDetails");
+
+//     if (!patient) throw new Error("Patient not found");
+
+//     const admission = patient.admissionDetails.find(a => a._id.toString() === admissionId);
+//     if (!admission) throw new Error("Admission not found");
+
+//     // Filter documentPdf by mainPdfIds if provided
+//     let pdfGroups = admission.documentPdf;
+//     if (mainPdfIds?.length) {
+//       pdfGroups = pdfGroups.filter(d => mainPdfIds.includes(d.mainPdfId.toString()));
+//     }
+
+//     if (!pdfGroups.length) throw new Error("No matching document PDFs found");
+
+//     // Collect files to send
+//     let filesToSend = [];
+//     for (const group of pdfGroups) {
+//       let files = group.files.filter(f => !f.deleted); // skip deleted
+//       if (fileIds?.length) {
+//         files = files.filter(f => fileIds.includes(f._id.toString()));
+//       }
+//       filesToSend.push(...files);
+//     }
+
+//     if (!filesToSend.length) throw new Error("No matching document PDF files found");
+
+//     // Determine recipient number
+//     let recipientNumber;
+//     if (target === "doctor") {
+//       recipientNumber = admission.consultingDoctorId?.contactNo;
+//     } else if (target === "patient") {
+//       recipientNumber = patient.identityDetails.whatsappNo || patient.identityDetails.contactNo;
+//     }
+//     if (!recipientNumber) throw new Error("Recipient number not available");
+
+//     recipientNumber = `whatsapp:+${recipientNumber.toString().replace(/\D/g, "")}`;
+
+//     const results = [];
+//     for (const file of filesToSend) {
+//       if (!file.path?.startsWith("https://")) {
+//         throw new Error(`PDF URL must be public HTTPS: ${file.path}`);
+//       }
+
+//       await client.messages.create({
+//         from: process.env.TWILIO_WHATSAPP_NUMBER,
+//         to: 'whatsapp:+919834747298',
+//         // to: recipientNumber,
+//         body: `Hello, here is your PDF document: ${file.name}`,
+//         mediaUrl: [file.path],
+//       });
+
+//       results.push({ pdfId: file._id, pdfName: file.name, pdfPath: file.path });
+//     }
+
+//     return {
+//       success: true,
+//       message: `Sent ${filesToSend.length} document PDFs to ${target} via WhatsApp successfully`,
+//       details: results
+//     };
+//   }
+async sendDocumentPdfOnWhatsApp({ patientId, admissionId, mainPdfIds, fileIds, target }) {
+  const client = twilio(
+    process.env.TWILIO_ACCOUNT_SID,
+    process.env.TWILIO_AUTH_TOKEN
+  );
+
+  const patient = await PATIENT_MODEL.findById(patientId)
+    .populate("admissionDetails.consultingDoctorId", "doctorName contactNo")
+    .select("identityDetails patientName admissionDetails");
+
+  if (!patient) throw new Error("Patient not found");
+
+  const admission = patient.admissionDetails.find(a => a._id.toString() === admissionId);
+  if (!admission) throw new Error("Admission not found");
+
+  // Filter documentPdf by mainPdfIds if provided
+  let pdfGroups = admission.documentPdf;
+  if (mainPdfIds?.length) {
+    pdfGroups = pdfGroups.filter(d => mainPdfIds.includes(d.mainPdfId.toString()));
+  }
+
+  if (!pdfGroups.length) throw new Error("No matching document PDFs found");
+
+  // Collect files to send
+  let filesToSend = [];
+  for (const group of pdfGroups) {
+    let files = group.files.filter(f => !f.deleted); // skip deleted
+    if (fileIds?.length) {
+      files = files.filter(f => fileIds.includes(f._id.toString()));
+    }
+    filesToSend.push(...files);
+  }
+
+  if (!filesToSend.length) throw new Error("No matching document PDF files found");
+
+  // Determine recipient number
+  let recipientNumber;
+  if (target === "doctor") {
+    recipientNumber = admission.consultingDoctorId?.contactNo;
+  } else if (target === "patient") {
+    recipientNumber = patient.identityDetails.whatsappNo || patient.identityDetails.contactNo;
+  }
+  if (!recipientNumber) throw new Error("Recipient number not available");
+
+  recipientNumber = `whatsapp:+${recipientNumber.toString().replace(/\D/g, "")}`;
+
+  const results = [];
+  for (const file of filesToSend) {
+    if (!file.path?.startsWith("https://")) {
+      throw new Error(`PDF URL must be public HTTPS: ${file.path}`);
+    }
+
+    // Send WhatsApp message
+    const message = await client.messages.create({
+      from: process.env.TWILIO_WHATSAPP_NUMBER,
+      to: 'whatsapp:+919834747298',
+      // to: recipientNumber, // replace static with dynamic
+      body: `Hello, here is your PDF document: ${file.name}`,
+      mediaUrl: [file.path],
+    });
+
+    // Save sent message to DB
+    await SENT_MESSAGE_MODEL.create({
+      patientId,
+      admissionId,
+      reportType: "documentPdf",
+      reportId: file._id,
+      target,
+      recipientNumber,
+      messageSid: message.sid,
+      status: "sent",
+      // content: `Hello, here is your PDF document: ${file.name}`,
+      // type: "documentPdf"
+    });
+
+    results.push({
+      pdfId: file._id,
+      pdfName: file.name,
+      pdfPath: file.path,
+      messageSid: message.sid
+    });
+  }
+
+  return {
+    success: true,
+    message: `Sent ${filesToSend.length} document PDF(s) to ${target} via WhatsApp successfully`,
+    details: results
+  };
+}
+
 }
 
 export default new Documents_pdfsService();

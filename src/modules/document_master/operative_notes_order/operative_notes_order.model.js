@@ -1,13 +1,14 @@
 import mongoose from 'mongoose';
 
-const OperativeTNotesOrderSchema = new mongoose.Schema({
-  title: { type: String, required: true },       
+const OperativeTNotesOrderSchema = new mongoose.Schema({     
+  name: { type: String },                 
+  label: { type: String },                 
+  type: { type: String },                 
   otherTitle: { type: String },                 
-  status: { type: Boolean, default: false}
-}, {
-  timestamps: true, 
-});
+  status: { type: Boolean, default: false},
+},  
+);
 
-export const OPERATIVENOTESORDER_MODEL = mongoose.model('operativenotesorder', OperativeTNotesOrderSchema);
+export const OPERATIVENOTESORDER_MODEL = mongoose.model('operativenotes-order', OperativeTNotesOrderSchema);
 
 

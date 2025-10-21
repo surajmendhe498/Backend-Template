@@ -34,6 +34,16 @@ class Ward_masterService {
   async delete(id) {
     return await WARDMASTER_MODEL.findByIdAndDelete(id);
   }
+
+  async getWardByFloorId(floorId) {
+  const floorExists = await FLOORMASTER_MODEL.findById(floorId);
+  if (!floorExists) {
+    throw new Error('Floor with the given ID does not exist');
+  }
+
+  return await WARDMASTER_MODEL.find({ floorId }).populate('floorId', 'floorName');
+}
+
 }
 
 export default new Ward_masterService();

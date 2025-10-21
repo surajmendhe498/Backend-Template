@@ -172,61 +172,122 @@ async updateFile({ folderId, fileId, file }) {
   return fileDoc;
 }
 
-async sendFolderFilesOnWhatsApp({ folderId, patientId, admissionId, target, fileIds }) {
-    const client = twilio(
-      process.env.TWILIO_ACCOUNT_SID,
-      process.env.TWILIO_AUTH_TOKEN
-    );
+// async sendFolderFilesOnWhatsApp({ folderId, patientId, admissionId, target, fileIds }) {
+//     const client = twilio(
+//       process.env.TWILIO_ACCOUNT_SID,
+//       process.env.TWILIO_AUTH_TOKEN
+//     );
 
-    const patient = await PATIENT_MODEL.findById(patientId)
-      .populate("admissionDetails.consultingDoctorId", "doctorName contactNo")
-      .select("identityDetails admissionDetails");
-    if (!patient) throw new Error("Patient not found");
+//     const patient = await PATIENT_MODEL.findById(patientId)
+//       .populate("admissionDetails.consultingDoctorId", "doctorName contactNo")
+//       .select("identityDetails admissionDetails");
+//     if (!patient) throw new Error("Patient not found");
 
-    const admission = patient.admissionDetails.find(a => a._id.toString() === admissionId);
-    if (!admission) throw new Error("Admission not found for patient");
+//     const admission = patient.admissionDetails.find(a => a._id.toString() === admissionId);
+//     if (!admission) throw new Error("Admission not found for patient");
 
-    const folder = await FOLDER_MODEL.findById(folderId);
-    if (!folder) throw new Error("Folder not found");
+//     const folder = await FOLDER_MODEL.findById(folderId);
+//     if (!folder) throw new Error("Folder not found");
 
-    // Filter files by fileIds
-    if (!fileIds || !fileIds.length) throw new Error("fileIds array is required");
-    const filesToSend = folder.files.filter(f => fileIds.includes(f.fileId.toString()));
-    if (!filesToSend.length) throw new Error("No files matched the provided fileIds");
+//     // Filter files by fileIds
+//     if (!fileIds || !fileIds.length) throw new Error("fileIds array is required");
+//     const filesToSend = folder.files.filter(f => fileIds.includes(f.fileId.toString()));
+//     if (!filesToSend.length) throw new Error("No files matched the provided fileIds");
 
-    let recipientNumber;
-    if (target === "doctor") {
-      recipientNumber = admission.consultingDoctorId?.contactNo;
-    } else if (target === "patient") {
-      recipientNumber = patient.identityDetails.whatsappNo || patient.identityDetails.contactNo;
-    }
-    if (!recipientNumber) throw new Error("Recipient number not available");
+//     let recipientNumber;
+//     if (target === "doctor") {
+//       recipientNumber = admission.consultingDoctorId?.contactNo;
+//     } else if (target === "patient") {
+//       recipientNumber = patient.identityDetails.whatsappNo || patient.identityDetails.contactNo;
+//     }
+//     if (!recipientNumber) throw new Error("Recipient number not available");
 
-    recipientNumber = `whatsapp:+${recipientNumber.toString().replace(/\D/g, "")}`;
+//     recipientNumber = `whatsapp:+${recipientNumber.toString().replace(/\D/g, "")}`;
 
-    const details = [];
-    for (const file of filesToSend) {
-      if (!file.path?.startsWith("https://")) {
-        throw new Error(`File URL must be public HTTPS: ${file.path}`);
-      }
+//     const details = [];
+//     for (const file of filesToSend) {
+//       if (!file.path?.startsWith("https://")) {
+//         throw new Error(`File URL must be public HTTPS: ${file.path}`);
+//       }
 
-      const message = await client.messages.create({
-        from: process.env.TWILIO_WHATSAPP_NUMBER,
-        to: 'whatsapp:+919834747298',
-        // to: recipientNumber,
-        body: `Hello, here is your file: ${file.name}`,
-        mediaUrl: [file.path],
-      });
+//       const message = await client.messages.create({
+//         from: process.env.TWILIO_WHATSAPP_NUMBER,
+//         to: 'whatsapp:+919834747298',
+//         // to: recipientNumber,
+//         body: `Hello, here is your file: ${file.name}`,
+//         mediaUrl: [file.path],
+//       });
 
-      details.push({ fileId: file.fileId });
-    }
+//       details.push({ fileId: file.fileId });
+//     }
 
-    return {
-      success: true,
-      message: `Selected ${filesToSend.length} file(s) sent to ${target} via WhatsApp successfully`,
-      details
-    };
+//     return {
+//       success: true,
+//       message: `Selected ${filesToSend.length} file(s) sent to ${target} via WhatsApp successfully`,
+//       details
+//     };
+//   }
+async sendFolderFilesOnWhatsApp({ folderId, patientId, admissionId, target, fileIds, reportType }) {
+  const client = twilio(
+    process.env.TWILIO_ACCOUNT_SID,
+    process.env.TWILIO_AUTH_TOKEN
+  );
+
+  const patient = await PATIENT_MODEL.findById(patientId)
+    .populate("admissionDetails.consultingDoctorId", "doctorName contactNo")
+    .select("identityDetails admissionDetails");
+  if (!patient) throw new Error("Patient not found");
+
+  const admission = patient.admissionDetails.find(a => a._id.toString() === admissionId);
+  if (!admission) throw new Error("Admission not found for patient");
+
+  const folder = await FOLDER_MODEL.findById(folderId);
+  if (!folder) throw new Error("Folder not found");
+
+  // Validate fileType matches folder type
+  if (reportType && folder.type !== reportType) {
+    throw new Error(`Folder type (${folder.type}) does not match the requested reportType (${reportType})`);
   }
+
+  if (!fileIds || !fileIds.length) throw new Error("fileIds array is required");
+
+  // Filter files by fileIds
+  const filesToSend = folder.files.filter(f => fileIds.includes(f.fileId.toString()));
+  if (!filesToSend.length) throw new Error("No files matched the provided fileIds");
+
+  let recipientNumber;
+  if (target === "doctor") {
+    recipientNumber = admission.consultingDoctorId?.contactNo;
+  } else if (target === "patient") {
+    recipientNumber = patient.identityDetails.whatsappNo || patient.identityDetails.contactNo;
+  }
+  if (!recipientNumber) throw new Error("Recipient number not available");
+
+  recipientNumber = `whatsapp:+${recipientNumber.toString().replace(/\D/g, "")}`;
+
+  const details = [];
+  for (const file of filesToSend) {
+    if (!file.path?.startsWith("https://")) {
+      throw new Error(`File URL must be public HTTPS: ${file.path}`);
+    }
+
+    const message = await client.messages.create({
+      from: process.env.TWILIO_WHATSAPP_NUMBER,
+      // to: recipientNumber,
+      to: 'whatsapp:+919834747298',
+      body: `Hello, here is your ${reportType} file: ${file.name}`,
+      mediaUrl: [file.path],
+    });
+
+    details.push({ fileId: file.fileId, sid: message.sid });
+  }
+
+  return {
+    success: true,
+    message: `Selected ${filesToSend.length} ${reportType} file(s) sent to ${target} via WhatsApp successfully`,
+    details
+  };
+}
 
 }
 

@@ -18,13 +18,9 @@ export default class Discharge_field_masterController {
   updateField = async (req, res, next) => {
     try {
       const { id } = req.params;
-      const { summarySection, status } = req.body;
+      const { name, status } = req.body;
 
-      // if (!summarySection || !status) {
-      //   return res.fail("Both summarySection and status are required", statusCode.BAD_REQUEST);
-      // }
-
-      const updated = await this.discharge_field_masterService.update(id, { summarySection, status });
+      const updated = await this.discharge_field_masterService.update(id, { name, status });
 
       if (!updated) {
         return res.fail("Discharge field not found", statusCode.NOT_FOUND);
@@ -35,4 +31,17 @@ export default class Discharge_field_masterController {
       next(err);
     }
   };
+
+  delete = async (req, res, next) => {
+    try {
+      const dischargeField = await this.discharge_field_masterService.delete(req.params.id);
+      if(!dischargeField){
+        return res.status(statusCode.NOT_FOUND).json({message: 'Discharge field master not found'});
+      }
+      res.success(" Discharge field master deleted successfully", statusCode.OK);
+    } catch (err) {
+      next(err);
+    }
+  };
+
 }

@@ -8,7 +8,9 @@ const PatientAdmissionSchema = new mongoose.Schema({
   showInAdmissionCard: { type: Boolean, default: false },
   showInDischargeCard: { type: Boolean, default: false },
   isMandatory: { type: Boolean, default: false },
-  status: { type: Boolean, default: false }
+  status: { type: Boolean, default: false },
+  // fieldKey: { type: String },
+  // typeOfField: { type: String },
 });
 
 

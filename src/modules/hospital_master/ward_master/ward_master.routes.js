@@ -11,5 +11,7 @@ router.get('/:id', ward_masterController.getById);
 router.post('/',validate(createWardSchema), ward_masterController.create);
 router.put('/:id', validate(updateWardSchema), ward_masterController.update);
 router.delete('/:id', ward_masterController.delete);
+router.get('/floor/:floorId', ward_masterController.getWardByFloorId);
+
 
 export default router;

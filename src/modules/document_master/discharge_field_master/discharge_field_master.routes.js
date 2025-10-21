@@ -6,5 +6,6 @@ const discharge_field_masterController = new Discharge_field_masterController();
 
 router.get('/', discharge_field_masterController.getAll);
 router.put('/:id', discharge_field_masterController.updateField);
+router.delete('/:id', discharge_field_masterController.delete);
 
 export default router;

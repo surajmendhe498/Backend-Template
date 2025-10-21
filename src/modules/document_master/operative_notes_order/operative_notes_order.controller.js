@@ -22,16 +22,9 @@ export default class Operative_notes_orderController {
   updateField = async (req, res, next) => {
     try {
       const { id } = req.params;
-      const { otherTitle, status } = req.body;
+      const { name, status } = req.body;
 
-      // if (!otherTitle || !status) {
-      //   return res.status(statusCode.BAD_REQUEST).json({
-      //     success: false,
-      //     message: "Both otherTitle and status are required"
-      //   });
-      // }
-
-      const updated = await this.operative_notes_orderService.update(id, { otherTitle, status });
+      const updated = await this.operative_notes_orderService.update(id, { name, status });
 
       if (!updated) {
         return res.status(statusCode.NOT_FOUND).json({

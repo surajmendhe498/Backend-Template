@@ -97,48 +97,98 @@ async getById(id) {
     .populate('wardId', 'wardName'); 
 }
 
+// async getAllBedsWithPatient() {
+//   const beds = await BEDMASTER_MODEL.find()
+//     .populate("floorId", "floorName")
+//     .populate("departmentId", "name")
+//     .populate("wardId", "wardName");
+
+//   const result = await Promise.all(
+//     beds.map(async (bed) => {
+
+//       const patient = await PATIENT_MODEL.findOne(
+//         { "admissionDetails.bedId": bed._id },
+//         {
+//           _id: 1,
+//           "identityDetails.patientName": 1,
+//           "admissionDetails._id": 1,
+//           "admissionDetails.bedId": 1,
+//         }
+//       ).lean();
+
+//       let occupiedBy = null;
+
+//       if (patient) {
+//         const admissionId = patient.admissionDetails
+//           .filter((adm) => adm.bedId?.toString() === bed._id.toString())
+//           .map((adm) => adm._id);
+
+//         occupiedBy = {
+//           patientId: patient._id,
+//           name: patient.identityDetails.patientName,
+//           admissionId: admissionId,
+//         };
+//       }
+
+//       return {
+//         ...bed.toObject(),
+//         occupiedBy,
+//       };
+//     })
+//   );
+
+//   return result;
+// }
+
 async getAllBedsWithPatient() {
-  const beds = await BEDMASTER_MODEL.find()
-    .populate("floorId", "floorName")
-    .populate("departmentId", "name")
-    .populate("wardId", "wardName");
+    const beds = await BEDMASTER_MODEL.find()
+      .populate("floorId", "floorName")
+      .populate("departmentId", "name")
+      .populate("wardId", "wardName");
 
-  const result = await Promise.all(
-    beds.map(async (bed) => {
+    const result = await Promise.all(
+      beds.map(async (bed) => {
+    
+        const patient = await PATIENT_MODEL.findOne(
+          { "admissionDetails.bedId": bed._id },
+          {
+            _id: 1,
+            "identityDetails.patientName": 1,
+            "admissionDetails._id": 1,
+            "admissionDetails.bedId": 1,
+            "admissionDetails.admissionDate": 1, 
+          }
+        ).lean();
 
-      const patient = await PATIENT_MODEL.findOne(
-        { "admissionDetails.bedId": bed._id },
-        {
-          _id: 1,
-          "identityDetails.patientName": 1,
-          "admissionDetails._id": 1,
-          "admissionDetails.bedId": 1,
+        let occupiedBy = null;
+
+        if (patient) {
+         
+          const admissions = patient.admissionDetails.filter(
+            (adm) => adm.bedId?.toString() === bed._id.toString()
+          );
+
+          const admissionInfo = admissions.map((adm) => ({
+            admissionId: adm._id,
+            admissionDate: adm.admissionDate,
+          }));
+
+          occupiedBy = {
+            patientId: patient._id,
+            name: patient.identityDetails.patientName,
+            admissions: admissionInfo,
+          };
         }
-      ).lean();
 
-      let occupiedBy = null;
-
-      if (patient) {
-        const admissionId = patient.admissionDetails
-          .filter((adm) => adm.bedId?.toString() === bed._id.toString())
-          .map((adm) => adm._id);
-
-        occupiedBy = {
-          patientId: patient._id,
-          name: patient.identityDetails.patientName,
-          admissionId: admissionId,
+        return {
+          ...bed.toObject(),
+          occupiedBy,
         };
-      }
+      })
+    );
 
-      return {
-        ...bed.toObject(),
-        occupiedBy,
-      };
-    })
-  );
-
-  return result;
-}
+    return result;
+  }
 
 }
 

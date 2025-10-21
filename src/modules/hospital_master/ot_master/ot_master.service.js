@@ -87,7 +87,6 @@
 
 // export default new Ot_masterService();
 
-
 import { OTMASTER_MODEL } from './ot_master.model.js';
 import { FLOORMASTER_MODEL } from '../ward_or_floor_master/ward_or_floor_master.model.js';
 import { SCHEDULE_MODEL } from '../../schedule/schedule.model.js';

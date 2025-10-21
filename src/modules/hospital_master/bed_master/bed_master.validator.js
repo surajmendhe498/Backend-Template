@@ -8,7 +8,7 @@ export const createBedMasterSchema = z.object({
       .regex(/^[0-9a-fA-F]{24}$/, "Invalid Floor ID"), 
     bedName: z.string().nonempty("Bed name is required"),
     applicableClass: z.string().nonempty("Applicable class is required"),
-    bedStatus: z.enum(['Vacant', 'Occupied', 'Under Maintenance']),
+    bedStatus: z.enum(['Vacant', 'Occupied', 'Under Maintenance', 'Temporarily Unavailable']),
     departmentId: z
       .string()
       .nonempty("Department ID is required")
@@ -29,7 +29,7 @@ export const updateBedMasterSchema = z.object({
       .optional(),
     bedName: z.string().optional(),
     applicableClass: z.string().optional(),
-    bedStatus: z.enum(['Vacant', 'Occupied', 'Under Maintenance']).optional(),
+    bedStatus: z.enum(['Vacant', 'Occupied', 'Under Maintenance', 'Temporarily Unavailable']).optional(),
     departmentId: z
       .string()
       .regex(/^[0-9a-fA-F]{24}$/, "Invalid Department ID")

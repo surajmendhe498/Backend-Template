@@ -53,4 +53,17 @@ export default class Ward_masterController {
       next(err);
     }
   };
+
+  getWardByFloorId = async (req, res, next) => {
+  try {
+    const wards = await this.ward_masterService.getWardByFloorId(req.params.floorId);
+    if (!wards || wards.length === 0) {
+      return res.fail("No Wards found for this Floor ID", statusCode.NOT_FOUND);
+    }
+    res.success("Get Wards By Floor ID", wards, statusCode.OK);
+  } catch (err) {
+    next(err);
+  }
+};
+
 }

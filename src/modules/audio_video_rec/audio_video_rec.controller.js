@@ -91,19 +91,19 @@ export default class Audio_video_recController {
 
   deleteRecording = async (req, res, next) => {
   try {
-    const { patientId, admissionId, recordingId, type } = req.body;
+    const { patientId, admissionId, fileId, type } = req.body;
 
-    if (!patientId || !admissionId || !recordingId || !type) {
+    if (!patientId || !admissionId || !fileId || !type) {
       return res.status(400).json({
         success: false,
-        message: "patientId, admissionId, recordingId and type are required",
+        message: "patientId, admissionId, fileId and type are required",
       });
     }
 
     const result = await this.audio_video_recService.deleteRecording({
       patientId,
       admissionId,
-      recordingId,
+      fileId,
       type,
     });
 
@@ -119,21 +119,21 @@ export default class Audio_video_recController {
 
 updateRecording = async (req, res, next) => {
   try {
-    const { patientId, admissionId, recordingId, type, label } = req.body;
+    const { patientId, admissionId, fileId, type, label } = req.body;
     const file = req.files?.audioRecordings?.[0] || req.files?.videoRecordings?.[0] || null;
     const user = req.user;
 
-    if (!patientId || !admissionId || !recordingId || !type) {
+    if (!patientId || !admissionId || !fileId || !type) {
       return res.status(statusCode.BAD_REQUEST).json({
         success: false,
-        message: 'patientId, admissionId, recordingId and type are required'
+        message: 'patientId, admissionId, fileId and type are required'
       });
     }
 
     const result = await this.audio_video_recService.updateRecording({
       patientId,
       admissionId,
-      recordingId,
+      fileId,
       type,
       updates: { label },
       file,
@@ -152,14 +152,14 @@ updateRecording = async (req, res, next) => {
 
 editRecordingName = async (req, res, next) => {
   try {
-    const { patientId, admissionId, recordingId, type, newName } = req.body;
+    const { patientId, admissionId, fileId, type, newName } = req.body;
 
     const user = req.user;
 
     const result = await this.audio_video_recService.editRecordingName({
       patientId,
       admissionId,
-      recordingId,
+      fileId,
       type,
       newName,
       user

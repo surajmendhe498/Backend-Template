@@ -301,7 +301,7 @@ async getAudioRecordings(patientId, admissionId) {
     };
   }
 
-async deleteRecording({ patientId, admissionId, recordingId, type }) {
+async deleteRecording({ patientId, admissionId, fileId, type }) {
   if (!['audio', 'video'].includes(type)) {
     throw new Error("Type must be either 'audio' or 'video'");
   }
@@ -316,7 +316,7 @@ async deleteRecording({ patientId, admissionId, recordingId, type }) {
 
   const recordingsField = type === 'audio' ? 'audioRecordings' : 'videoRecordings';
   const recording = admission[recordingsField].find(
-    (r) => r._id.toString() === recordingId
+    (r) => r._id.toString() === fileId
   );
 
   if (!recording) throw new Error(`${type} recording not found`);
@@ -329,17 +329,17 @@ async deleteRecording({ patientId, admissionId, recordingId, type }) {
 
   await PATIENT_MODEL.updateOne(
     { _id: patientId, "admissionDetails._id": admissionId },
-    { $pull: { [`admissionDetails.$.${recordingsField}`]: { _id: recordingId } } }
+    { $pull: { [`admissionDetails.$.${recordingsField}`]: { _id: fileId } } }
   );
 
   return {
     success: true,
     message: `${type} recording deleted successfully`,
-    recordingId,
+    fileId,
   };
 }
 
-async updateRecording({ patientId, admissionId, recordingId, type, updates, file, user }) {
+async updateRecording({ patientId, admissionId, fileId, type, updates, file, user }) {
   if (!['audio', 'video'].includes(type)) {
     throw new Error("Type must be either 'audio' or 'video'");
   }
@@ -356,7 +356,7 @@ async updateRecording({ patientId, admissionId, recordingId, type, updates, file
 
   // Find existing recording
   let recordingsArray = type === 'audio' ? admission.audioRecordings : admission.videoRecordings;
-  const recordingIndex = recordingsArray.findIndex(r => r._id.toString() === recordingId);
+  const recordingIndex = recordingsArray.findIndex(r => r._id.toString() === fileId);
 
   if (recordingIndex === -1) throw new Error(`${type} recording not found`);
 
@@ -413,7 +413,7 @@ async updateRecording({ patientId, admissionId, recordingId, type, updates, file
   return updatedRecording;
 }
 
-async editRecordingName({ patientId, admissionId, recordingId, type, newName, user }) {
+async editRecordingName({ patientId, admissionId, fileId, type, newName, user }) {
     if (!['audio', 'video'].includes(type)) {
       throw new Error("Type must be either 'audio' or 'video'");
     }
@@ -427,7 +427,7 @@ async editRecordingName({ patientId, admissionId, recordingId, type, newName, us
     if (!admission) throw new Error("Admission not found");
 
     const recordings = type === 'audio' ? admission.audioRecordings : admission.videoRecordings;
-    const recording = recordings.id(recordingId);
+    const recording = recordings.id(fileId);
 
     if (!recording) throw new Error("Recording not found");
 

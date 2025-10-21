@@ -10,7 +10,7 @@ const BedMasterSchema = new mongoose.Schema({
   applicableClass: { type: String},
   bedStatus: {
     type: String,
-    enum: ['Vacant', 'Occupied', 'Under Maintenance'], 
+    enum: ['Vacant', 'Occupied', 'Under Maintenance', 'Temporarily Unavailable'], 
   },
   departmentId: {
     type: mongoose.Schema.Types.ObjectId, ref: 'department',

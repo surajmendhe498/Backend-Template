@@ -100,5 +100,19 @@ getIpdDocuments = async (req, res, next) => {
   }
 };
 
+getTotalPdfDocuments = async (req, res, next) => {
+  try {
+    const totalDocs = await this.dashboard_statisticsService.getTotalPdfDocuments();
+    res.status(statusCode.OK).json({
+      success: true,
+      message: "Total PDF documents count fetched successfully",
+      totalPdfDocuments: totalDocs,
+    });
+  } catch (err) {
+    console.error(err);
+    next(err);
+  }
+};
+
 
 }

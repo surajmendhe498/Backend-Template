@@ -10,5 +10,6 @@ router.get("/gender-distribution", dashboard_statisticsController.getGenderDistr
 router.get('/patient-admitted-by-time', dashboard_statisticsController.getPatientAdmittedByTime);
 router.get("/total-hospital-staff", dashboard_statisticsController.getTotalHospitalStaff);
 router.get("/ipd-documents", dashboard_statisticsController.getIpdDocuments);
+router.get("/pdf-documents/count", dashboard_statisticsController.getTotalPdfDocuments);
 
 export default router;

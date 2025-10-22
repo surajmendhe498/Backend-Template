@@ -8,9 +8,8 @@
 //   async getAll() {
 //     const schedules = await SCHEDULE_MODEL.find()
 //       .populate('otId', 'otName')
-//       .populate('doctorId', 'doctorName')
-//       .populate('patientId', 'identityDetails.patientName')  // Only fetch patientName
-//       .lean();
+//       .populate('patientId', 'admissionDetails.patientName')
+//       .populate('doctorId', 'doctorName');
 
 //     return schedules.map(schedule => this._formatScheduleResponse(schedule));
 //   }
@@ -39,8 +38,7 @@
 //     const populatedSchedule = await SCHEDULE_MODEL.findById(savedSchedule._id)
 //       .populate('otId', 'otName')
 //       .populate('doctorId', 'doctorName')
-//       .populate('patientId', 'identityDetails.patientName')
-//       .lean();
+//       .populate('patientId', 'admissionDetails.patientName');
 
 //     return this._formatScheduleResponse(populatedSchedule);
 //   }
@@ -76,9 +74,8 @@
 //       new: true,
 //     })
 //       .populate('otId', 'otName')
-//       .populate('doctorId', 'doctorName')
-//       .populate('patientId', 'identityDetails.patientName')
-//       .lean();
+//       .populate('patientId', 'admissionDetails.patientName')
+//       .populate('doctorId', 'doctorName');
 
 //     return this._formatScheduleResponse(updatedSchedule);
 //   }
@@ -86,30 +83,17 @@
 //   async getSchedulesByOtId(otId) {
 //     const schedules = await SCHEDULE_MODEL.find({ otId })
 //       .populate('otId', 'otName')
-//       .populate('doctorId', 'doctorName')
-//       .populate('patientId', 'identityDetails.patientName')
-//       .lean();
+//       .populate('patientId', 'admissionDetails.patientName')
+//       .populate('doctorId', 'doctorName');
 
 //     return schedules.map(schedule => this._formatScheduleResponse(schedule));
 //   }
 
 //   _formatScheduleResponse(schedule) {
-//     if (!schedule) return null;
-
-//     schedule.startDateTime = moment(schedule.startDateTime).format("YYYY-MM-DD hh:mm A");
-//     schedule.endDateTime = moment(schedule.endDateTime).format("YYYY-MM-DD hh:mm A");
-
-//     // Flatten patientName
-//     if (schedule.patientId) {
-//       schedule.patientId = {
-//         _id: schedule.patientId._id,
-//         identityDetails: {
-//           patientName: schedule.patientId.identityDetails.patientName
-//         }
-//       };
-//     }
-
-//     return schedule;
+//     const obj = schedule.toObject();
+//     obj.startDateTime = moment(obj.startDateTime).format("YYYY-MM-DD hh:mm A");
+//     obj.endDateTime = moment(obj.endDateTime).format("YYYY-MM-DD hh:mm A");
+//     return obj;
 //   }
 
 //   _error(message) {
@@ -120,6 +104,7 @@
 // }
 
 // export default new ScheduleService();
+
 
 
 
@@ -242,7 +227,6 @@ class ScheduleService {
     schedule.startDateTime = moment(schedule.startDateTime).format("YYYY-MM-DD hh:mm A");
     schedule.endDateTime = moment(schedule.endDateTime).format("YYYY-MM-DD hh:mm A");
 
-    // Flatten patientName
     if (schedule.patientId) {
       schedule.patientId = {
         _id: schedule.patientId._id,
